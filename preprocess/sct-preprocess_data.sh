@@ -8,9 +8,11 @@
 # reference from https://github.com/spine-generic/spine-generic/blob/3aa69465063d823088b2c819d3ad9b81725b2fc8/process_data.sh#L246
 
 # Usage:
-# sct_run_batch -script preprocess_data.sh -path-data <PATH-TO-DATASET> -path-output <PATH-TO-OUTPUT> -jobs <num-cpu-cores>
-### to run on one sub only; issue with -include-list...:/
-# sct_run_batch -script sct-preprocess_data.sh -path-data data/ -path-output data_sct-preproc -include cal056 -jobs 8
+#     sct_run_batch -c <PATH_TO_REPO>/etc/config_preprocess_data.json
+# To run on one sub only; specify this sub in the config_preprocess_data_include.json config file
+#     sct_run_batch -c <PATH_TO_REPO>/etc/config_preprocess_data_include.json
+# To run on several subs only; specify these subs in the config_preprocess_data_include_list.json config file
+#     sct_run_batch -c <PATH_TO_REPO>/etc/config_preprocess_data_include_list.json
 
 
 # Manual segmentations or labels should be located under:
@@ -22,10 +24,10 @@
 # PATH_RESULTS="~/results"
 # PATH_LOG="~/log"
 # PATH_QC="~/qc"
-
-# Global variables
-CENTERLINE_METHOD="svm"  # method sct_deepseg_sc uses for centerline extraction: 'svm', 'cnn'
-
+#
+# Authors: Jan Valosek, Kiri Stern, Julien Cohen-Adad
+# Inspired by the spine-generic process_data.sh script
+#
 
 # Uncomment for full verbose
 set -x
@@ -36,53 +38,59 @@ set -e -o pipefail
 # Exit if user presses CTRL+C (Linux) or CMD+C (OSX)
 trap "echo Caught Keyboard Interrupt within script. Exiting now.; exit" INT
 
+# Print retrieved variables from sct_run_batch to the log (to allow easier debug)
+echo "Retrieved variables from from the caller sct_run_batch:"
+echo "PATH_DATA: ${PATH_DATA}"
+echo "PATH_DATA_PROCESSED: ${PATH_DATA_PROCESSED}"
+echo "PATH_RESULTS: ${PATH_RESULTS}"
+echo "PATH_LOG: ${PATH_LOG}"
+echo "PATH_QC: ${PATH_QC}"
 
 # CONVENIENCE FUNCTIONS
 # ======================================================================================================================
 
-# lesionseg_if_does_not_exist() {
-#   ###
-#   #  This function checks if a manual spinal cord segmentation file already exists, then:
-#   #    - If it does, copy it locally.
-#   #    - If it doesn't, perform automatic spinal cord segmentation.
-#   #  This allows you to add manual segmentations on a subject-by-subject basis without disrupting the pipeline.
-#   ###
-#   local file="$1"
-#   local contrast="$2"
-#   local centerline_method="$3"
-#   # Update global variable with segmentation file name
-#   FILELESION="${file}_lesionseg"
-#   FILELESIONMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELESION}-manual.nii.gz"
-#   echo
-#   echo "Looking for manual segmentation: $FILELESIONMANUAL"
-#   if [[ -e $FILELESIONMANUAL ]]; then
-#     echo "Found! Using manual segmentation."
-#     rsync -avzh $FILELESIONMANUAL ${FILELESION}.nii.gz
-#     sct_qc -i ${file}.nii.gz -s ${FILELESION}.nii.gz -p sct_deepseg_lesion -qc ${PATH_QC} -qc-subject ${SUBJECT}
-#   else
-#     echo "Not found. Proceeding with automatic segmentation."
-#     # Segment spinal cord based on the specified centerline method
-#     if [[ $centerline_method == "cnn" ]]; then
-#       sct_deepseg_lesion -i ${file}.nii.gz -c $contrast -brain 0 -centerline cnn # -qc ${PATH_QC} -qc-subject ${SUBJECT} # brain 0 because no brain in canproco sc data
-#     elif [[ $centerline_method == "svm" ]]; then
-#       sct_deepseg_lesion -i ${file}.nii.gz -c $contrast -centerline svm # -qc ${PATH_QC} -qc-subject ${SUBJECT}
-#     else
-#       echo "Centerline extraction method = ${centerline_method} is not recognized!"
-#       exit 1
-#     fi
-#   fi
-# }
+lesionseg_if_does_not_exist() {
+ ###
+ #  This function checks if a manual lesions segmentation file already exists, then:
+ #    - If it does, copy it locally.
+ #    - If it doesn't, perform automatic lesions segmentation
+ #  This allows you to add manual segmentations on a subject-by-subject basis without disrupting the pipeline.
+ ###
+ local file="$1"
+ local contrast="$2"
+ local centerline="$3"
+ # Update global variable with segmentation file name
+ FILELESION="${file}_lesionseg"
+ FILELESIONMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELESION}-manual.nii.gz"
+ echo
+ echo "Looking for manual segmentation: $FILELESIONMANUAL"
+ if [[ -e $FILELESIONMANUAL ]]; then
+   echo "Found! Using manual segmentation."
+   rsync -avzh $FILELESIONMANUAL ${FILELESION}.nii.gz
+   sct_qc -i ${file}.nii.gz -s ${FILELESION}.nii.gz -p sct_deepseg_lesion -qc ${PATH_QC} -qc-subject ${SUBJECT}
+ else
+   echo "Not found. Proceeding with automatic segmentation."
+   # Lesions segmentation
+   # Note, sct_deepseg_lesion does not have QC implemented yet, see: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3803
+   if [[ ${centerline} == "" ]];then
+      sct_deepseg_lesion -i ${file}.nii.gz -c ${contrast} -brain 0 -ofolder without_centerline # brain 0 because no brain in canproco sc data
+    else
+      sct_deepseg_lesion -i ${file}.nii.gz -file_centerline ${centerline} -c ${contrast} -brain 0 -ofolder with_centerline # brain 0 because no brain in canproco sc data
+    fi
+
+ fi
+}
 
 segment_if_does_not_exist() {
   ###
   #  This function checks if a manual spinal cord segmentation file already exists, then:
   #    - If it does, copy it locally.
-  #    - If it doesn't, perform automatic spinal cord segmentation.
+  #    - If it doesn't, perform automatic spinal cord segmentation
   #  This allows you to add manual segmentations on a subject-by-subject basis without disrupting the pipeline.
   ###
   local file="$1"
   local contrast="$2"
-  local centerline_method="$3"
+  local segmentation_method="$3"    # deepseg or propseg
   # Update global variable with segmentation file name
   FILESEG="${file}_seg"
   FILESEGMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILESEG}-manual.nii.gz"
@@ -91,18 +99,39 @@ segment_if_does_not_exist() {
   if [[ -e $FILESEGMANUAL ]]; then
     echo "Found! Using manual segmentation."
     rsync -avzh $FILESEGMANUAL ${FILESEG}.nii.gz
-    sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_lesion -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
   else
     echo "Not found. Proceeding with automatic segmentation."
-    # Segment spinal cord based on the specified centerline method
-    if [[ $centerline_method == "cnn" ]]; then
-      sct_deepseg_sc -i ${file}.nii.gz -c $contrast -brain 0 -centerline cnn # -qc ${PATH_QC} -qc-subject ${SUBJECT} # brain 0 because no brain in canproco sc data
-    elif [[ $centerline_method == "svm" ]]; then
-      sct_deepseg_sc -i ${file}.nii.gz -c $contrast -centerline svm # -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    else
-      echo "Centerline extraction method = ${centerline_method} is not recognized!"
-      exit 1
+    # Segment spinal cord
+    if [[ $segmentation_method == 'deepseg' ]];then
+      sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -o ${file}_${segmentation_method}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    elif [[ $segmentation_method == 'propseg' ]]; then
+      sct_propseg -i ${file}.nii.gz -c ${contrast} -o ${file}_${segmentation_method}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
     fi
+  fi
+}
+
+label_if_does_not_exist(){
+  ###
+  #  This function checks if a manual labels exists, then:
+  #    - If it does, copy it locally and use them to initialize vertebral labeling
+  #    - If it doesn't, perform automatic vertebral labeling
+  ###
+  local file="$1"
+  local file_seg="$2"
+  # Update global variable with segmentation file name
+  FILELABEL="${file}_labels"
+  FILELABELMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELABEL}-manual.nii.gz"
+  echo "Looking for manual label: $FILELABELMANUAL"
+  if [[ -e $FILELABELMANUAL ]]; then
+    echo "Found! Using manual labels."
+    rsync -avzh $FILELABELMANUAL ${FILELABEL}.nii.gz
+  else
+    echo "Not found. Proceeding with automatic labeling."
+    # Generate vertebral labeling
+    sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    # Create labels in the cord at C3 and C5 mid-vertebral levels
+    sct_label_utils -i ${file_seg}_labeled.nii.gz -vert-body 3,5 -o ${FILELABEL}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
   fi
 }
 
@@ -132,9 +161,9 @@ fi
 if [[ ! -f "dataset_description.json" ]]; then
   rsync -avzh $PATH_DATA/dataset_description.json .
 fi
-if [[ ! -f "README" ]]; then
-  rsync -avzh $PATH_DATA/README .
-fi
+#if [[ ! -f "README" ]]; then
+#  rsync -avzh $PATH_DATA/README .
+#fi
 
 # Copy source images
 # Note: we use '/./' in order to include the sub-folder 'ses-0X'
@@ -161,12 +190,32 @@ file_t2w=${file}_T2w
 if [[ ! -s ${file_t2w}.json ]]; then
   echo "{}" >> ${file_t2w}.json
 fi
-# lesion segmentation using the appropriate image contrast
-# lesionseg_if_does_not_exist ${file_t2w} t2 ${CENTERLINE_METHOD}
+
+# Reorient to RPI and resample to 0.8mm isotropic voxel (supposed to be the effective resolution)
+sct_image -i ${file_t2w}.nii.gz -setorient RPI -o ${file_t2w}_RPI.nii.gz
+sct_resample -i ${file_t2w}_RPI.nii.gz -mm 0.8x0.8x0.8 -o ${file_t2w}_RPI_r.nii.gz
+file_t2w="${file_t2w}_RPI_r"
+
+# Spinal cord segmentation
+# Note - now we are running both sct_deepseg_sc and sct_propseg to compare them on the whole dataset
+segment_if_does_not_exist ${file_t2w} 't2' 'deepseg'
+segment_if_does_not_exist ${file_t2w} 't2' 'propseg'
+
+# Smoothing to improve proseg leakage --> segmentation is actually worse
+#file_t2w_seg="${FILESEG}"
+#sct_smooth_spinalcord -i ${file_t2w}.nii.gz -s ${file_t2w_seg}.nii.gz -smooth 0,0,5
+#sct_propseg -i ${file_t2w}_smooth.nii.gz -c t2 -init-centerline ${file_t2w_seg}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+# Create mid-vertebral levels in the cord (only if it does not exist)
+label_if_does_not_exist ${file_t2w} ${file_t2w}_propseg
+
+# Lesions segmentation using the appropriate image contrast
+lesionseg_if_does_not_exist ${file_t2w} 't2'
+lesionseg_if_does_not_exist ${file_t2w} 't2' ${file_t2w}_centerline.nii.gz    # centerline obtained from propseg
 # file_lesionseg_t2w="${FILELESION}"
-# spinal cord segmentation using the appropriate image contrast
-segment_if_does_not_exist ${file_t2w} t2 ${CENTERLINE_METHOD}
-file_seg_t2w="${FILESEG}"
+
+exit
+# TODO - continue with preprocessing from here
 
 # Dilate spinal cord mask
 sct_maths -i ${file_seg_t2w}.nii.gz -dilate 5 -shape ball -o ${file_seg_t2w}_dilate.nii.gz
