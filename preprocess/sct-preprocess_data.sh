@@ -104,6 +104,7 @@ segment_if_does_not_exist() {
     echo "Not found. Proceeding with automatic segmentation."
     # Segment spinal cord
     if [[ $segmentation_method == 'deepseg' ]];then
+      # TODO - consider to use 3D kernel
       sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -o ${file}_${segmentation_method}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
     elif [[ $segmentation_method == 'propseg' ]]; then
       sct_propseg -i ${file}.nii.gz -c ${contrast} -o ${file}_${segmentation_method}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
