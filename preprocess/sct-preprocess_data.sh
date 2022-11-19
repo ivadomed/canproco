@@ -91,6 +91,7 @@ segment_if_does_not_exist() {
   local file="$1"
   local contrast="$2"
   local segmentation_method="$3"    # deepseg or propseg
+  local kernel="$4"                 # 2d or 3d; note: only valid for deepseg
   # Update global variable with segmentation file name
   FILESEG="${file}_seg"
   FILESEGMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILESEG}-manual.nii.gz"
@@ -104,8 +105,7 @@ segment_if_does_not_exist() {
     echo "Not found. Proceeding with automatic segmentation."
     # Segment spinal cord
     if [[ $segmentation_method == 'deepseg' ]];then
-      # TODO - consider to use 3D kernel
-      sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -o ${file}_${segmentation_method}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+      sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -k ${kernel} -o ${file}_${segmentation_method}_${kernel}_kernel.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
     elif [[ $segmentation_method == 'propseg' ]]; then
       sct_propseg -i ${file}.nii.gz -c ${contrast} -o ${file}_${segmentation_method}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
     fi
@@ -199,7 +199,8 @@ file_t2w="${file_t2w}_RPI_r"
 
 # Spinal cord segmentation
 # Note - now we are running both sct_deepseg_sc and sct_propseg to compare them on the whole dataset
-segment_if_does_not_exist ${file_t2w} 't2' 'deepseg'
+segment_if_does_not_exist ${file_t2w} 't2' 'deepseg' '2d'     # 2d kernel
+segment_if_does_not_exist ${file_t2w} 't2' 'deepseg' '3d'     # 3d kernel
 segment_if_does_not_exist ${file_t2w} 't2' 'propseg'
 
 # Smoothing to improve proseg leakage --> segmentation is actually worse
