@@ -25,7 +25,9 @@ cd <PATH_TO_DATA>
 sct_run_batch -c <PATH_TO_REPO>/etc/config_preprocess_data.json
 ```
 
-Tip: you can run also run analysis only across selected subjects, for details, see examples at the beginning of the preprocessing script
+Tip: You can run the analysis only across selected subjects. For details, see examples at the beginning of the preprocessing script.
+
+Tip: Since analysis across many subjects can take a long time, it is recommended to run the analysis within a virtual terminal such as `screen`, details [here](https://intranet.neuro.polymtl.ca/geek-tips/bash-shell/README.html#screen-for-background-processes).
 
 3. Manual correction
 
