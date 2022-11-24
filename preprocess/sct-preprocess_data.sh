@@ -90,11 +90,9 @@ segment_if_does_not_exist() {
   ###
   local file="$1"
   local contrast="$2"
-  local segmentation_method="$3"    # deepseg or propseg
-  local kernel="$4"                 # 2d or 3d; note: only valid for deepseg
   # Update global variable with segmentation file name
   FILESEG="${file}_seg"
-  FILESEGMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILESEG}-manual.nii.gz"
+  FILESEGMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILESEG/_RPI_r/}-manual.nii.gz"    # we are removing `_RPI_r` to be compatible with manual segmentation filename since BIDS does not support `_RPI_r` suffix
   echo
   echo "Looking for manual segmentation: $FILESEGMANUAL"
   if [[ -e $FILESEGMANUAL ]]; then
@@ -104,11 +102,7 @@ segment_if_does_not_exist() {
   else
     echo "Not found. Proceeding with automatic segmentation."
     # Segment spinal cord
-    if [[ $segmentation_method == 'deepseg' ]];then
-      sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -k ${kernel} -o ${file}_${segmentation_method}_${kernel}_kernel.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    elif [[ $segmentation_method == 'propseg' ]]; then
-      sct_propseg -i ${file}.nii.gz -c ${contrast} -o ${file}_${segmentation_method}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    fi
+    sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
   fi
 }
 
@@ -197,8 +191,8 @@ sct_image -i ${file_t2w}.nii.gz -setorient RPI -o ${file_t2w}_RPI.nii.gz
 sct_resample -i ${file_t2w}_RPI.nii.gz -mm 0.8x0.8x0.8 -o ${file_t2w}_RPI_r.nii.gz
 file_t2w="${file_t2w}_RPI_r"
 
-# Spinal cord segmentation using sct_deepseg_sc with 2d kernel. Generally, it works better than sct_propseg and sct_deepseg_sc with 3d kernel
-segment_if_does_not_exist ${file_t2w} 't2' 'deepseg' '2d'
+# Spinal cord segmentation using sct_deepseg_sc with 2d kernel (default). Generally, it works better than sct_propseg and sct_deepseg_sc with 3d kernel
+segment_if_does_not_exist ${file_t2w} 't2'
 
 exit
 # TODO - continue with preprocessing from here
