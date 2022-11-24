@@ -197,16 +197,11 @@ sct_image -i ${file_t2w}.nii.gz -setorient RPI -o ${file_t2w}_RPI.nii.gz
 sct_resample -i ${file_t2w}_RPI.nii.gz -mm 0.8x0.8x0.8 -o ${file_t2w}_RPI_r.nii.gz
 file_t2w="${file_t2w}_RPI_r"
 
-# Spinal cord segmentation
-# Note - now we are running both sct_deepseg_sc and sct_propseg to compare them on the whole dataset
-segment_if_does_not_exist ${file_t2w} 't2' 'deepseg' '2d'     # 2d kernel
-segment_if_does_not_exist ${file_t2w} 't2' 'deepseg' '3d'     # 3d kernel
-segment_if_does_not_exist ${file_t2w} 't2' 'propseg'
+# Spinal cord segmentation using sct_deepseg_sc with 2d kernel. Generally, it works better than sct_propseg and sct_deepseg_sc with 3d kernel
+segment_if_does_not_exist ${file_t2w} 't2' 'deepseg' '2d'
 
-# Smoothing to improve proseg leakage --> segmentation is actually worse
-#file_t2w_seg="${FILESEG}"
-#sct_smooth_spinalcord -i ${file_t2w}.nii.gz -s ${file_t2w_seg}.nii.gz -smooth 0,0,5
-#sct_propseg -i ${file_t2w}_smooth.nii.gz -c t2 -init-centerline ${file_t2w_seg}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+exit
+# TODO - continue with preprocessing from here
 
 # Create mid-vertebral levels in the cord (only if it does not exist)
 label_if_does_not_exist ${file_t2w} ${file_t2w}_propseg
@@ -215,9 +210,6 @@ label_if_does_not_exist ${file_t2w} ${file_t2w}_propseg
 lesionseg_if_does_not_exist ${file_t2w} 't2'
 lesionseg_if_does_not_exist ${file_t2w} 't2' ${file_t2w}_centerline.nii.gz    # centerline obtained from propseg
 # file_lesionseg_t2w="${FILELESION}"
-
-exit
-# TODO - continue with preprocessing from here
 
 # Dilate spinal cord mask
 sct_maths -i ${file_seg_t2w}.nii.gz -dilate 5 -shape ball -o ${file_seg_t2w}_dilate.nii.gz
