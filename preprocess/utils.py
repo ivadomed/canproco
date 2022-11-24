@@ -21,6 +21,14 @@ def get_subject(file):
     """
     return file.split('_')[0]
 
+def get_ses(file):
+    """
+    Get session from BIDS file name
+    :param file:
+    :return: ses
+    """
+    return file.split('_')[1]
+
 
 def get_contrast(file):
     """
@@ -159,7 +167,7 @@ def check_files_exist(dict_files, path_data):
     for task, files in dict_files.items():
         if files is not None:
             for file in files:
-                fname = os.path.join(path_data, get_subject(file), get_contrast(file), file)
+                fname = os.path.join(path_data, get_subject(file), get_ses(file), get_contrast(file), file)
                 if not os.path.exists(fname):
                     missing_files.append(fname)
     if missing_files:

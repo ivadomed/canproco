@@ -16,7 +16,7 @@ import shutil
 from textwrap import dedent
 import time
 import yaml
-import pipeline_ukbiobank.utils as utils
+import utils
 
 # Folder where to output manual labels, at the root of a BIDS dataset.
 # TODO: make it an input argument (with default value)
@@ -212,7 +212,7 @@ def main():
                            "corrected file: ")
 
     # Build QC report folder name
-    fname_qc = 'qc_corr_' + time.strftime('%Y%m%d%H%M%S')
+    fname_qc = os.path.join(args.path_out, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
 
     # Get list of segmentations files for all subjects in -path-in (if -add-seg-only)
     if args.add_seg_only:
@@ -233,13 +233,12 @@ def main():
         if files is not None:
             for file in files:
                 # build file names
-                subject = file.split('_')[0]    
-                ses = file.split('_')[1]
-                print(ses)
+                subject = utils.get_subject(file)   
+                ses = utils.get_ses(file)
                 contrast = utils.get_contrast(file)
                 fname = os.path.join(args.path_in, subject, ses, contrast, file)
                 fname_label = os.path.join(
-                    path_out_deriv, subject, ses, contrast, utils.add_suffix(file, get_suffix(task, '-manual')))
+                    path_out_deriv, subject, ses, contrast, utils.add_suffix(utils.remove_suffix(file, "_RPI_r"), get_suffix(task, '-manual')))
                 os.makedirs(os.path.join(path_out_deriv, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
                     if os.path.isfile(fname_label):
