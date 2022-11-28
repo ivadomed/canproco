@@ -33,4 +33,4 @@ Tip: Since analysis across many subjects can take a long time, it is recommended
 
 TODO
 
-[Yotube manual](https://www.youtube.com/watch?v=lB-F8WOHGeg)
+[Youtube manual](https://www.youtube.com/watch?v=lB-F8WOHGeg)
