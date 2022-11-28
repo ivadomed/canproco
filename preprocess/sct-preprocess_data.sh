@@ -184,12 +184,14 @@ file="${SUBJECT//[\/]/_}"
 # -------------------------------------------------------------------------
 # T2w
 # -------------------------------------------------------------------------
-# add suffix corresponding to contrast
+# Add suffix corresponding to contrast
 file_t2w=${file}_T2w
-# Make sure the image metadata is a valid JSON object
-if [[ ! -s ${file_t2w}.json ]]; then
-  echo "{}" >> ${file_t2w}.json
-fi
+# Check if T2w image exists
+if [[ -f ${file_t2w}.nii.gz ]];then
+    # Make sure the image metadata is a valid JSON object
+    if [[ ! -s ${file_t2w}.json ]]; then
+      echo "{}" >> ${file_t2w}.json
+    fi
 
     # Rename raw file
     mv ${file_t2w}.nii.gz ${file_t2w}_raw.nii.gz
