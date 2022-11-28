@@ -218,77 +218,91 @@ if [[ -f ${file_t2w}.nii.gz ]];then
     # file_lesionseg_t2w="${FILELESION}"
 
 fi
-# Crop the manual seg (Commented out because there are no manual segs)
-# sct_crop_image -i ${file_gt}.nii.gz -m ${file_seg_dil_t2w}.nii.gz -o ${file_gt}_crop.nii.gz
-# Go back to the root output path
-cd $PATH_OUTPUT
-# Create and populate clean data processed folder for training
-PATH_DATA_PROCESSED_CLEAN="${PATH_DATA_PROCESSED}_clean"
-# Copy over required BIDs files
-mkdir -p $PATH_DATA_PROCESSED_CLEAN $PATH_DATA_PROCESSED_CLEAN/${file} $PATH_DATA_PROCESSED_CLEAN/${file}/anat
-rsync -avzh $PATH_DATA_PROCESSED/dataset_description.json $PATH_DATA_PROCESSED_CLEAN/
-rsync -avzh $PATH_DATA_PROCESSED/participants.* $PATH_DATA_PROCESSED_CLEAN/
-rsync -avzh $PATH_DATA_PROCESSED/README $PATH_DATA_PROCESSED_CLEAN/
-rsync -avzh $PATH_DATA_PROCESSED/dataset_description.json $PATH_DATA_PROCESSED_CLEAN/derivatives/
-# For lesion segmentation task, copy SC crops as inputs and lesion annotations as targets
-rsync -avzh $PATH_DATA_PROCESSED/${file}/anat/${file}_crop.nii.gz $PATH_DATA_PROCESSED_CLEAN/${file}/anat/${file}.nii.gz/ $PATH_DATA_PROCESSED_CLEAN/${file}/anat/${file}.json
-mkdir -p $PATH_DATA_PROCESSED_CLEAN/derivatives $PATH_DATA_PROCESSED_CLEAN/derivatives/labels $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${file} $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${file}/anat/
-rsync -avzh $PATH_DATA_PROCESSED/derivatives/labels/${file}/anat/${file_gt}_crop.nii.gz $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${file}/anat/${file_gt}.nii.gz
-rsync -avzh $PATH_DATA_PROCESSED/derivatives/labels/${file}/anat/${file_gt}.json $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${file}/anat/${file_gt}.json
-rsync -avzh $PATH_DATA_PROCESSED/${file}/anat/${file}.json $PATH_DATA_P
+
+# -------------------------------------------------------------------------
+# PSIR
+# -------------------------------------------------------------------------
+# Add suffix corresponding to contrast
+file_psir=${file}_PSIR
+# Check if PSIR image exists
+if [[ -f ${file_psir}.nii.gz ]];then
+    # Make sure the image metadata is a valid JSON object
+    if [[ ! -s ${file_psir}.json ]]; then
+      echo "{}" >> ${file_psir}.json
+    fi
+
+    # Rename raw file
+    mv ${file_psir}.nii.gz ${file_psir}_raw.nii.gz
+
+    # Reorient to RPI
+    sct_image -i ${file_psir}_raw.nii.gz -setorient RPI -o ${file_psir}_raw_RPI.nii.gz
+
+    # Rename _raw_RPI_r file (to be BIDS compliant)
+    mv ${file_psir}_raw_RPI.nii.gz ${file_psir}.nii.gz
+
+    # Spinal cord segmentation
+    # Note: For PSIR images, we use sct_propseg. Generally, it works better than sct_deepseg_sc.
+    segment_if_does_not_exist ${file_psir} 't1' 'propseg'
+fi
+
+# -------------------------------------------------------------------------
+# STIR
+# -------------------------------------------------------------------------
+# Add suffix corresponding to contrast
+file_stir=${file}_STIR
+# Check if STIR image exists
+if [[ -f ${file_stir}.nii.gz ]];then
+    # Make sure the image metadata is a valid JSON object
+    if [[ ! -s ${file_stir}.json ]]; then
+      echo "{}" >> ${file_stir}.json
+    fi
+
+    # Rename raw file
+    mv ${file_stir}.nii.gz ${file_stir}_raw.nii.gz
+
+    # Reorient to RPI
+    sct_image -i ${file_stir}_raw.nii.gz -setorient RPI -o ${file_stir}_raw_RPI.nii.gz
+
+    # Rename _raw_RPI_r file (to be BIDS compliant)
+    mv ${file_stir}_raw_RPI.nii.gz ${file_stir}.nii.gz
+
+    # Spinal cord segmentation
+    # Note: For STIR images, we use sct_propseg. Generally, it works better than sct_deepseg_sc.
+    segment_if_does_not_exist ${file_stir} 't2' 'propseg'
+fi
 
 # ------------------------------------------------------------------------------
-# # T2s
-# # ------------------------------------------------------------------------------
-# # Go to subject folder for source images
-# cd ${SUBJECT}/anat
-# # Define variables
-# # We do a substitution '/' --> '_' in case there is a subfolder 'ses-0X/'
-# file="${SUBJECT//[\/]/_}"
+# T2star
+# ------------------------------------------------------------------------------
+# Add suffix corresponding to contrast
+file_t2s="${file}_T2star"
+# Check if T2star image exists
+if [[ -f ${file_t2s}.nii.gz ]];then
+    # Make sure the image metadata is a valid JSON object
+    if [[ ! -s ${file_t2s}.json ]]; then
+      echo "{}" >> ${file_t2s}.json
+    fi
 
-# file_t2s="${file}_T2star"
-# # Compute root-mean square across 4th dimension (if it exists), corresponding to all echoes in Philips scans.
-# sct_maths -i ${file_t2s}.nii.gz -rms t -o ${file_t2s}_rms.nii.gz
-# file_t2s="${file_t2s}_rms"
-# # Bring vertebral level into T2s space
-# # sct_register_multimodal -i label_T1w/template/PAM50_levels.nii.gz -d ${file_t2s}.nii.gz -o PAM50_levels2${file_t2s}.nii.gz -identity 1 -x nn
+    # Rename raw file
+    mv ${file_t2s}.nii.gz ${file_t2s}_raw.nii.gz
 
-# # segment lesion if does not exist
-# lesionseg_if_does_not_exist $file_t2s "t2s" ${CENTERLINE_METHOD}
-# file_lesionseg_t2s=$FILELESION
-# # Segment spinal cord (only if it does not exist)
-# segment_if_does_not_exist $file_t2s "t2s" ${CENTERLINE_METHOD}
-# file_seg_t2s=$FILESEG
+    # Reorient to RPI
+    sct_image -i ${file_t2s}_raw.nii.gz -setorient RPI -o ${file_t2s}_raw_RPI.nii.gz
+    # Compute root-mean square across 4th dimension (if it exists)
+    sct_maths -i ${file_t2s}_raw_RPI.nii.gz -rms t -o ${file_t2s}_raw_RPI_rms.nii.gz
 
-# # Dilate spinal cord mask
-# sct_maths -i ${file_seg_t2s}.nii.gz -dilate 5 -shape ball -o ${file_seg_t2s}_dilate.nii.gz
-# # Use dilated mask to crop the original image and manual MS segmentations
-# sct_crop_image -i ${file_t2s}.nii.gz -m ${file_seg_t2s}_dilate.nii.gz -o ${file_t2s}_crop.nii.gz
-# # Redefine variable for final lesion segmentation mask as path changed
-# file_seg_dil_t2s=${PATH_DATA_PROCESSED}/${SUBJECT}/anat/${file_seg_t2s}_dilate
-# # Make sure the first rater metadata is a valid JSON object
-# if [[ ! -s ${file_gt}.json ]]; then
-#   echo "{}" >> ${file_gt}.json
-# fi
-# # Crop the manual seg
-# sct_crop_image -i ${file_gt}.nii.gz -m ${file_seg_dil_t2s}.nii.gz -o ${file_gt}_crop.nii.gz
-# # Go back to the root output path
-# cd $PATH_OUTPUT
-# # Create and populate clean data processed folder for training
-# PATH_DATA_PROCESSED_CLEAN="${PATH_DATA_PROCESSED}_clean"
-# # Copy over required BIDs files
-# mkdir -p $PATH_DATA_PROCESSED_CLEAN $PATH_DATA_PROCESSED_CLEAN/${SUBJECT} $PATH_DATA_PROCESSED_CLEAN/${SUBJECT}/anat
-# rsync -avzh $PATH_DATA_PROCESSED/dataset_description.json $PATH_DATA_PROCESSED_CLEAN/
-# rsync -avzh $PATH_DATA_PROCESSED/participants.* $PATH_DATA_PROCESSED_CLEAN/
-# rsync -avzh $PATH_DATA_PROCESSED/README $PATH_DATA_PROCESSED_CLEAN/
-# rsync -avzh $PATH_DATA_PROCESSED/dataset_description.json $PATH_DATA_PROCESSED_CLEAN/derivatives/
-# # For lesion segmentation task, copy SC crops as inputs and lesion annotations as targets
-# rsync -avzh $PATH_DATA_PROCESSED/${SUBJECT}/anat/${file}_crop.nii.gz $PATH_DATA_PROCESSED_CLEAN/${SUBJECT}/anat/${file}.nii.gz
-# rsync -avzh $PATH_DATA_PROCESSED/${SUBJECT}/anat/${file}.json $PATH_DATA_PROCESSED_CLEAN/${SUBJECT}/anat/${file}.json
-# mkdir -p $PATH_DATA_PROCESSED_CLEAN/derivatives $PATH_DATA_PROCESSED_CLEAN/derivatives/labels $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${SUBJECT} $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${SUBJECT}/anat/
-# rsync -avzh $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/anat/${file_gt}_crop.nii.gz $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${SUBJECT}/anat/${file_gt}.nii.gz
-# rsync -avzh $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/anat/${file_gt}.json $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${SUBJECT}/anat/${file_gt}.json
+    # Rename _raw_RPI_rms file (to be BIDS compliant)
+    mv ${file_t2s}_raw_RPI_rms.nii.gz ${file_t2s}.nii.gz
 
+    # Spinal cord segmentation
+    # Note: For T2star images, we use sct_deepseg_sc
+    segment_if_does_not_exist ${file_t2s} 't2s' 'deepseg'
+
+    # TODO - bring vertebral levels from T2w into T2star - so far we do not have T2w_seg_labeled since we are working
+    # on manual T2w SC seg corrections
+    # sct_register_multimodal -i label_T1w/template/PAM50_levels.nii.gz -d ${file_t2s}.nii.gz -o PAM50_levels2${file_t2s}.nii.gz -identity 1 -x nn
+
+fi
 # # ------------------------------------------------------------------------------
 # # MTS
 # # ------------------------------------------------------------------------------
