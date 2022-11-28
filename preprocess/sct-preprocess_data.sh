@@ -93,7 +93,7 @@ segment_if_does_not_exist() {
   local segmentation_method="$3"  # deepseg or propseg
   # Update global variable with segmentation file name
   FILESEG="${file}_seg"
-  FILESEGMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILESEG/_RPI_r/}-manual.nii.gz"    # we are removing `_RPI_r` to be compatible with manual segmentation filename since BIDS does not support `_RPI_r` suffix
+  FILESEGMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILESEG}-manual.nii.gz"
   echo
   echo "Looking for manual segmentation: $FILESEGMANUAL"
   if [[ -e $FILESEGMANUAL ]]; then
@@ -191,13 +191,15 @@ if [[ ! -s ${file_t2w}.json ]]; then
   echo "{}" >> ${file_t2w}.json
 fi
 
-# Reorient to RPI and resample to 0.8mm isotropic voxel (supposed to be the effective resolution)
-sct_image -i ${file_t2w}.nii.gz -setorient RPI -o ${file_t2w}_RPI.nii.gz
-sct_resample -i ${file_t2w}_RPI.nii.gz -mm 0.8x0.8x0.8 -o ${file_t2w}_RPI_r.nii.gz
-file_t2w="${file_t2w}_RPI_r"
+    # Rename raw file
+    mv ${file_t2w}.nii.gz ${file_t2w}_raw.nii.gz
 
-# Spinal cord segmentation using sct_deepseg_sc with 2d kernel (default). Generally, it works better than sct_propseg and sct_deepseg_sc with 3d kernel
-segment_if_does_not_exist ${file_t2w} 't2'
+    # Reorient to RPI and resample to 0.8mm isotropic voxel (supposed to be the effective resolution)
+    sct_image -i ${file_t2w}_raw.nii.gz -setorient RPI -o ${file_t2w}_raw_RPI.nii.gz
+    sct_resample -i ${file_t2w}_raw_RPI.nii.gz -mm 0.8x0.8x0.8 -o ${file_t2w}_raw_RPI_r.nii.gz
+
+    # Rename _raw_RPI_r file (to be BIDS compliant)
+    mv ${file_t2w}_raw_RPI_r.nii.gz ${file_t2w}.nii.gz
 
 exit
 # TODO - continue with preprocessing from here
