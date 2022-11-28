@@ -199,8 +199,8 @@ if [[ -f ${file_t2w}.nii.gz ]];then
     sct_image -i ${file_t2w}_raw.nii.gz -setorient RPI -o ${file_t2w}_raw_RPI.nii.gz
     sct_resample -i ${file_t2w}_raw_RPI.nii.gz -mm 0.8x0.8x0.8 -o ${file_t2w}_raw_RPI_r.nii.gz
 
-    # Rename _raw_RPI_r file (to be BIDS compliant)
-    mv ${file_t2w}_raw_RPI_r.nii.gz ${file_t2w}.nii.gz
+    # Create a symbolic link to _raw_RPI_r file (to be BIDS compliant)
+    ln -s ${file_t2w}_raw_RPI_r.nii.gz ${file_t2w}.nii.gz
 
     # Spinal cord segmentation
     # Note: For T2w images, we use sct_deepseg_sc with 2d kernel. Generally, it works better than sct_propseg and
@@ -237,8 +237,8 @@ if [[ -f ${file_psir}.nii.gz ]];then
     # Reorient to RPI
     sct_image -i ${file_psir}_raw.nii.gz -setorient RPI -o ${file_psir}_raw_RPI.nii.gz
 
-    # Rename _raw_RPI_r file (to be BIDS compliant)
-    mv ${file_psir}_raw_RPI.nii.gz ${file_psir}.nii.gz
+    # Create a symbolic link to _raw_RPI file (to be BIDS compliant)
+    ln -s ${file_psir}_raw_RPI.nii.gz ${file_psir}.nii.gz
 
     # Spinal cord segmentation
     # Note: For PSIR images, we use sct_propseg. Generally, it works better than sct_deepseg_sc.
@@ -263,8 +263,8 @@ if [[ -f ${file_stir}.nii.gz ]];then
     # Reorient to RPI
     sct_image -i ${file_stir}_raw.nii.gz -setorient RPI -o ${file_stir}_raw_RPI.nii.gz
 
-    # Rename _raw_RPI_r file (to be BIDS compliant)
-    mv ${file_stir}_raw_RPI.nii.gz ${file_stir}.nii.gz
+    # Create a symbolic link to _raw_RPI file (to be BIDS compliant)
+    ln -s ${file_stir}_raw_RPI.nii.gz ${file_stir}.nii.gz
 
     # Spinal cord segmentation
     # Note: For STIR images, we use sct_propseg. Generally, it works better than sct_deepseg_sc.
@@ -291,8 +291,8 @@ if [[ -f ${file_t2s}.nii.gz ]];then
     # Compute root-mean square across 4th dimension (if it exists)
     sct_maths -i ${file_t2s}_raw_RPI.nii.gz -rms t -o ${file_t2s}_raw_RPI_rms.nii.gz
 
-    # Rename _raw_RPI_rms file (to be BIDS compliant)
-    mv ${file_t2s}_raw_RPI_rms.nii.gz ${file_t2s}.nii.gz
+    # Create a symbolic link to _raw_RPI_rms file (to be BIDS compliant)
+    ln -s ${file_t2s}_raw_RPI_rms.nii.gz ${file_t2s}.nii.gz
 
     # Spinal cord segmentation
     # Note: For T2star images, we use sct_deepseg_sc
