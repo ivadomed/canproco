@@ -180,7 +180,6 @@ cd ${SUBJECT}/anat
 # We do a substitution '/' --> '_' in case there is a subfolder 'ses-0X/'
 file="${SUBJECT//[\/]/_}"
 
-
 # -------------------------------------------------------------------------
 # T2w
 # -------------------------------------------------------------------------
@@ -218,15 +217,6 @@ if [[ -f ${file_t2w}.nii.gz ]];then
     #lesionseg_if_does_not_exist ${file_t2w} 't2' ${file_t2w}_centerline.nii.gz    # centerline obtained from propseg
     # file_lesionseg_t2w="${FILELESION}"
 
-# Dilate spinal cord mask
-sct_maths -i ${file_seg_t2w}.nii.gz -dilate 5 -shape ball -o ${file_seg_t2w}_dilate.nii.gz
-# Use dilated mask to crop the original image and manual MS segmentations
-sct_crop_image -i ${file_t2w}.nii.gz -m ${file_seg_t2w}_dilate.nii.gz -o ${file_t2w}_crop.nii.gz
-# Redefine variable for final SC segmentation mask as path changed
-file_seg_dil_t2w=${PATH_DATA_PROCESSED}/${file}/anat/${file_seg_t2w}_dilate
-# Make sure the first rater metadata is a valid JSON object
-if [[ ! -s ${file_gt}.json ]]; then
-  echo "{}" >> ${file_gt}.json
 fi
 # Crop the manual seg (Commented out because there are no manual segs)
 # sct_crop_image -i ${file_gt}.nii.gz -m ${file_seg_dil_t2w}.nii.gz -o ${file_gt}_crop.nii.gz
