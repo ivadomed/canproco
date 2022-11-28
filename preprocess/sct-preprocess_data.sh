@@ -201,16 +201,20 @@ fi
     # Rename _raw_RPI_r file (to be BIDS compliant)
     mv ${file_t2w}_raw_RPI_r.nii.gz ${file_t2w}.nii.gz
 
-exit
-# TODO - continue with preprocessing from here
+    # Spinal cord segmentation
+    # Note: For T2w images, we use sct_deepseg_sc with 2d kernel. Generally, it works better than sct_propseg and
+    # sct_deepseg_sc with 3d kernel.
+    segment_if_does_not_exist ${file_t2w} 't2' 'deepseg'
 
-# Create mid-vertebral levels in the cord (only if it does not exist)
-label_if_does_not_exist ${file_t2w} ${file_t2w}_propseg
+    # Create mid-vertebral levels in the cord (only if it does not exist)
+    # TODO - wait for manually corrected SC segmentation
+    #label_if_does_not_exist ${file_t2w} ${file_t2w}_seg
 
-# Lesions segmentation using the appropriate image contrast
-lesionseg_if_does_not_exist ${file_t2w} 't2'
-lesionseg_if_does_not_exist ${file_t2w} 't2' ${file_t2w}_centerline.nii.gz    # centerline obtained from propseg
-# file_lesionseg_t2w="${FILELESION}"
+    # Lesions segmentation using the appropriate image contrast
+    # TODO - explore why sct_deepseg_lesion produces different results with manually provided centerline
+    #lesionseg_if_does_not_exist ${file_t2w} 't2'
+    #lesionseg_if_does_not_exist ${file_t2w} 't2' ${file_t2w}_centerline.nii.gz    # centerline obtained from propseg
+    # file_lesionseg_t2w="${FILELESION}"
 
 # Dilate spinal cord mask
 sct_maths -i ${file_seg_t2w}.nii.gz -dilate 5 -shape ball -o ${file_seg_t2w}_dilate.nii.gz
