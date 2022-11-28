@@ -5,7 +5,7 @@ Code for preprocessing the CanProCo brain and spinal cord dataset
 ## Requirements
 
 * SCT
-* Python 3.X
+* Python 3
     * pyyalm
     * coloredlogs
 * [ITK-SNAP](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.SNAP3) for correcting cord segmentations
@@ -61,16 +61,16 @@ FILES_SEG:
 - sub-1000083_T2w.nii.gz
 ~~~
 
-For the next steps, the script `/preprocess/manual_correction.py` loops through all the files listed in .yml file and opens an interactive window to either manually correct segmentation. Each manually-corrected segmentation is saved under `derivatives/labels/` folder at the root of `PATH_DATA` according to the BIDS convention. Each manually-corrected file has the suffix `-manual`.
+For the next steps, the script `/preprocess/manual_correction.py` loops through all the files listed in .yml file and opens an interactive window to manually correct segmentation. Each manually-corrected segmentation is saved under `derivatives/labels/` folder at the root of `PATH_DATA` according to the BIDS convention. Each manually-corrected file has the suffix `-manual`.
 
 #### 2. Correct segmentations
 For manual segmentation, you will need ITK-SNAP and this repository only. See **[Requirements](#requirements)**.
 
-Here is a tutorial for manually correcting segmentations. Note that the new QC report format with interactive features (✅/❌/⚠️) is not included in the tutorial.
+Here is a tutorial to manually correct segmentations. Note that the new QC report format with interactive features (✅/❌/⚠️) is not included in the tutorial.
 
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/vCVEGmKKY3o/sddefault.jpg)](https://youtu.be/vCVEGmKKY3o "Correcting segmentations across multiple subjects")
 
-Run the following line and specify the .yml list for cord segmentation with the flag `-config`:
+Run the following line and specify the .yml list for spinal cord segmentation with the flag `-config`:
 ~~~
 cd canproco
 python preprocess/manual_correction.py -config <.yml file> -path-in <PATH-PREPROCESSING>/data_processed -path-out <PATH_DATA>
@@ -78,7 +78,7 @@ python preprocess/manual_correction.py -config <.yml file> -path-in <PATH-PREPRO
 
 After all corrections are done, you can generate a QC report by adding the flag `-qc-only-` to the command above. Note that SCT is required for generating QC report.
 
-Here is another video for correcting manual segmentation: [Yotube manual](https://www.youtube.com/watch?v=lB-F8WOHGeg)
+Here is another video for correcting manual segmentation: [Youtube manual](https://www.youtube.com/watch?v=lB-F8WOHGeg)
 
 #### 3. Adding corrected segmentations to git-annex
 After validating in the QC report the manual corrections, upload the manually-corrected segmentations in git-annex (see internal [documentation](https://intranet.neuro.polymtl.ca/computing-resources/data/git-datasets.html#upload)).
