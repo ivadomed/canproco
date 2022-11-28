@@ -90,6 +90,7 @@ segment_if_does_not_exist() {
   ###
   local file="$1"
   local contrast="$2"
+  local segmentation_method="$3"  # deepseg or propseg
   # Update global variable with segmentation file name
   FILESEG="${file}_seg"
   FILESEGMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILESEG/_RPI_r/}-manual.nii.gz"    # we are removing `_RPI_r` to be compatible with manual segmentation filename since BIDS does not support `_RPI_r` suffix
@@ -102,7 +103,11 @@ segment_if_does_not_exist() {
   else
     echo "Not found. Proceeding with automatic segmentation."
     # Segment spinal cord
-    sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    if [[ $segmentation_method == 'deepseg' ]];then
+        sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    elif [[ $segmentation_method == 'propseg' ]]; then
+        sct_propseg -i ${file}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    fi
   fi
 }
 
