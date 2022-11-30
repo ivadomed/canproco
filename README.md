@@ -84,5 +84,3 @@ Here is another video for correcting manual segmentation: [Youtube manual](https
 After validating in the QC report the manual corrections, upload the manually-corrected segmentations in git-annex (see internal [documentation](https://intranet.neuro.polymtl.ca/computing-resources/data/git-datasets.html#upload)).
 
 To update the dataset, add all manually-corrected files `derivatives/labels/`,  and include the qc zip file in the body of the PR.
-
-
