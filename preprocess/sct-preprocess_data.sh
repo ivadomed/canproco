@@ -3,7 +3,7 @@
 # Preprocess data.
 #
 # Dependencies (versions):
-# - SCT (5.4.0)
+# - SCT (5.x.x)
 #
 # reference from https://github.com/spine-generic/spine-generic/blob/3aa69465063d823088b2c819d3ad9b81725b2fc8/process_data.sh#L246
 
@@ -25,7 +25,7 @@
 # PATH_LOG="~/log"
 # PATH_QC="~/qc"
 #
-# Authors: Jan Valosek, Kiri Stern, Julien Cohen-Adad
+# Authors: Jan Valosek, Sandrine Bédard, Kiri Stern, Julien Cohen-Adad
 # Inspired by the spine-generic process_data.sh script
 #
 
