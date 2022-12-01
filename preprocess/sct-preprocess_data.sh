@@ -126,12 +126,12 @@ label_if_does_not_exist(){
   if [[ -e $FILELABELMANUAL ]]; then
     echo "Found! Using manual labels."
     rsync -avzh $FILELABELMANUAL ${FILELABEL}.nii.gz
+    # Generate labeled segmentation from manual disc labels
+    sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -discfile ${FILELABEL}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
   else
     echo "Not found. Proceeding with automatic labeling."
     # Generate vertebral labeling
     sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    # Create labels in the cord at C3 and C5 mid-vertebral levels
-    sct_label_utils -i ${file_seg}_labeled.nii.gz -vert-body 3,5 -o ${FILELABEL}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
   fi
 }
 
