@@ -207,9 +207,12 @@ if [[ -f ${file_t2w}.nii.gz ]];then
     # sct_deepseg_sc with 3d kernel.
     segment_if_does_not_exist ${file_t2w} 't2' 'deepseg'
 
-    # Create mid-vertebral levels in the cord (only if it does not exist)
-    # TODO - wait for manually corrected SC segmentation
-    #label_if_does_not_exist ${file_t2w} ${file_t2w}_seg
+    # Do vertebral labeling
+    label_if_does_not_exist ${file_t2w} ${file_t2w}_seg
+    # Delete _seg_labeled_discs file if exists
+    if [[ -f ${file_t2w}_seg_labeled_discs.nii.gz ]];then rm -f ${file_t2w}_seg_labeled_discs.nii.gz; fi
+    if [[ -f warp_curve2straight.nii.gz ]];then rm -f warp_curve2straight.nii.gz warp_straight2curve.nii.gz straight_ref.nii.gz straightening.cache; fi
+
 
     # Lesions segmentation using the appropriate image contrast
     # TODO - explore why sct_deepseg_lesion produces different results with manually provided centerline
