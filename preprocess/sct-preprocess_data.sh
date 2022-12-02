@@ -201,8 +201,6 @@ if [[ -f ${file_t2w}.nii.gz ]];then
 
     # Rename _raw_RPI_r file (to be BIDS compliant)
     mv ${file_t2w}_raw_RPI_r.nii.gz ${file_t2w}.nii.gz
-    # And remove temporary files
-    rm -f ${file_t2w}_raw_RPI.nii.gz ${file_t2w}_raw.nii.gz
 
     # Spinal cord segmentation
     # Note: For T2w images, we use sct_deepseg_sc with 2d kernel. Generally, it works better than sct_propseg and
@@ -211,10 +209,6 @@ if [[ -f ${file_t2w}.nii.gz ]];then
 
     # Do vertebral labeling
     label_if_does_not_exist ${file_t2w} ${file_t2w}_seg
-    # Delete _seg_labeled_discs file if exists
-    if [[ -f ${file_t2w}_seg_labeled_discs.nii.gz ]];then rm -f ${file_t2w}_seg_labeled_discs.nii.gz; fi
-    if [[ -f warp_curve2straight.nii.gz ]];then rm -f warp_curve2straight.nii.gz warp_straight2curve.nii.gz straight_ref.nii.gz straightening.cache; fi
-
 
     # Lesions segmentation using the appropriate image contrast
     # TODO - explore why sct_deepseg_lesion produces different results with manually provided centerline
@@ -244,14 +238,10 @@ if [[ -f ${file_psir}.nii.gz ]];then
 
     # Create a symbolic link to _raw_RPI file (to be BIDS compliant)
     mv ${file_psir}_raw_RPI.nii.gz ${file_psir}.nii.gz
-    # And remove temporary files
-    rm -f ${file_psir}_raw.nii.gz
 
     # Spinal cord segmentation
     # Note: For PSIR images, we use sct_propseg. Generally, it works better than sct_deepseg_sc.
     segment_if_does_not_exist ${file_psir} 't1' 'propseg'
-    # Delete centerline file if exists
-    if [[ -f ${file_psir}_centerline.nii.gz ]];then rm -f ${file_psir}_centerline.nii.gz; fi
 fi
 
 # -------------------------------------------------------------------------
@@ -274,14 +264,10 @@ if [[ -f ${file_stir}.nii.gz ]];then
 
     # Create a symbolic link to _raw_RPI file (to be BIDS compliant)
     mv ${file_stir}_raw_RPI.nii.gz ${file_stir}.nii.gz
-    # And remove temporary files
-    rm -f ${file_stir}_raw.nii.gz
 
     # Spinal cord segmentation
     # Note: For STIR images, we use sct_propseg. Generally, it works better than sct_deepseg_sc.
     segment_if_does_not_exist ${file_stir} 't2' 'propseg'
-    # Delete centerline file if exists
-    if [[ -f ${file_stir}_centerline.nii.gz ]];then rm -f ${file_stir}_centerline.nii.gz; fi
 fi
 
 # ------------------------------------------------------------------------------
@@ -306,8 +292,6 @@ if [[ -f ${file_t2s}.nii.gz ]];then
 
     # Create a symbolic link to _raw_RPI_rms file (to be BIDS compliant)
     mv ${file_t2s}_raw_RPI_rms.nii.gz ${file_t2s}.nii.gz
-    # And remove temporary files
-    rm -f ${file_t2s}_raw_RPI.nii.gz ${file_t2s}_raw.nii.gz
 
     # Spinal cord segmentation
     # Note: For T2star images, we use sct_deepseg_sc
