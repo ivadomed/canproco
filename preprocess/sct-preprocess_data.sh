@@ -73,9 +73,9 @@ lesionseg_if_does_not_exist() {
    # Lesions segmentation
    # Note, sct_deepseg_lesion does not have QC implemented yet, see: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3803
    if [[ ${centerline} == "" ]];then
-      sct_deepseg_lesion -i ${file}.nii.gz -c ${contrast} -brain 0 -ofolder without_centerline # brain 0 because no brain in canproco sc data
+      sct_deepseg_lesion -i ${file}.nii.gz -c ${contrast} -ofolder without_centerline
     else
-      sct_deepseg_lesion -i ${file}.nii.gz -file_centerline ${centerline} -c ${contrast} -brain 0 -ofolder with_centerline # brain 0 because no brain in canproco sc data
+      sct_deepseg_lesion -i ${file}.nii.gz -centerline file -file_centerline ${centerline} -c ${contrast} -ofolder with_centerline
     fi
 
  fi
@@ -208,14 +208,15 @@ if [[ -f ${file_t2w}.nii.gz ]];then
     segment_if_does_not_exist ${file_t2w} 't2' 'deepseg'
 
     # Do vertebral labeling
-    label_if_does_not_exist ${file_t2w} ${file_t2w}_seg
+    #label_if_does_not_exist ${file_t2w} ${file_t2w}_seg
 
-    # Lesions segmentation using the appropriate image contrast
+    # MS lesions segmentation
     # TODO - explore why sct_deepseg_lesion produces different results with manually provided centerline
-    #lesionseg_if_does_not_exist ${file_t2w} 't2'
-    #lesionseg_if_does_not_exist ${file_t2w} 't2' ${file_t2w}_centerline.nii.gz    # centerline obtained from propseg
-    # file_lesionseg_t2w="${FILELESION}"
-
+    lesionseg_if_does_not_exist ${file_t2w} 't2'
+    # Get centerline from deppeseg SC seg
+    sct_get_centerline -i ${file_t2w}_seg.nii.gz -method fitseg
+    lesionseg_if_does_not_exist ${file_t2w} 't2' ${file_t2w}_seg_centerline.nii.gz
+    exit
 fi
 
 # -------------------------------------------------------------------------
