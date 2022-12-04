@@ -1,3 +1,3 @@
-t2w:
-  - sub-cal088_ses-M0   # Poor data quality
-  - sub-cal209_ses-M0   # Missing T2w file
+# t2w
+- sub-cal088_ses-M0   # Poor data quality
+- sub-cal209_ses-M0   # Missing T2w file
