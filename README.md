@@ -6,7 +6,7 @@ Code for preprocessing the CanProCo brain and spinal cord dataset
 
 * SCT
 * Python 3
-    * pyyalm
+    * pyyaml
     * coloredlogs
 * [ITK-SNAP](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.SNAP3) for correcting cord segmentations
 
