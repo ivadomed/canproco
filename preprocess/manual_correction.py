@@ -144,7 +144,7 @@ def correct_vertebral_labeling(fname, fname_label):
     :return:
     """
     message = "Click at the posterior tip of the disc between C1-C2, C2-C3 and C3-C4 vertebral levels, then click 'Save and Quit'."
-    os.system('sct_label_utils -i {} -create-viewer 2,3,4 -o {} -msg "{}"'.format(fname, fname_label, message))
+    os.system('sct_label_utils -i {} -create-viewer 1:20 -o {} -msg "{}"'.format(fname, fname_label, message))
 
 
 def correct_pmj_label(fname, fname_label):
