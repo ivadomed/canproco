@@ -66,9 +66,11 @@ def get_parser():
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
-        help="Path to the BIDS dataset where the corrected labels will be generated. Note: if the derivatives/ folder "
-             "does not already exist, it will be created."
-             "Example: ~/data-ukbiobank",
+        help=
+        "R|Path to the BIDS dataset where the corrected labels will be generated. Example: ~/data-ukbiobank\n"
+        "Note: if the derivatives/ folder does not already exist, it will be created.\n"
+        "Note: if segmentation or labels already exist and you would like to correct them, provide path to them within "
+        "this flag.",
         default='./'
     )
     parser.add_argument(
