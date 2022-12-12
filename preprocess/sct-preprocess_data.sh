@@ -203,12 +203,15 @@ if [[ -f ${file_t2w}.nii.gz ]];then
     mv ${file_t2w}_raw_RPI_r.nii.gz ${file_t2w}.nii.gz
 
     # Spinal cord segmentation
-    # Note: For T2w images, we use sct_deepseg_sc with 2d kernel. Generally, it works better than sct_propseg and
-    # sct_deepseg_sc with 3d kernel.
+    # Note: For T2w images, we use sct_deepseg_sc with 2d kernel. Generally, it works better than sct_propseg and sct_deepseg_sc with 3d kernel.
     segment_if_does_not_exist ${file_t2w} 't2' 'deepseg'
 
-    # Do vertebral labeling
-    #label_if_does_not_exist ${file_t2w} ${file_t2w}_seg
+    # Vertebral labeling
+    label_if_does_not_exist ${file_t2w} ${file_t2w}_seg
+
+    # Compute average cord CSA between C2 and C3
+    sct_process_segmentation -i ${file_t2w}_seg.nii.gz -vert 2:3 -vertfile ${file_t2w}_seg_labeled.nii.gz -o ${PATH_RESULTS}/csa-SC_T2w.csv -append 1
+    exit
 
     # MS lesions segmentation
     # TODO - explore why sct_deepseg_lesion produces different results with manually provided centerline
