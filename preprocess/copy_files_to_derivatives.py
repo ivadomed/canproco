@@ -37,8 +37,8 @@ def get_parser():
         metavar="<folder>",
         required=True,
         type=str,
-        help='Path to the BIDS dataset where manually corrected files will be copied. Files will be copied to the '
-             'derivatives/label folder.'
+        help='Path to the BIDS dataset where manually corrected files will be copied. Include also derivatives folder '
+             'in the path. Files will be copied to the derivatives/label folder.'
     )
 
     return parser
@@ -61,12 +61,13 @@ def fetch_subject_and_session(filename_path):
     subjectID = subject.group(0)[:-1] if subject else ""    # [:-1] removes the last underscore or slash
     session = re.findall(r'ses-..', filename_path)
     sessionID = session[0] if session else ""               # Return None if there is no session
+    contrast = 'dwi' if 'dwi' in filename_path else 'anat'  # Return contrast (dwi or anat)
     # REGEX explanation
     # \d - digit
     # \d? - no or one occurrence of digit
     # *? - match the previous element as few times as possible (zero or more times)
 
-    return subjectID, sessionID, filename
+    return subjectID, sessionID, filename, contrast
 
 
 def main():
@@ -89,11 +90,11 @@ def main():
 
     # Loop across files in input dataset
     for path_file_in in sorted(glob.glob(path_in + '/**/*.nii.gz', recursive=True)):
-        sub, ses, filename = fetch_subject_and_session(path_file_in)
+        sub, ses, filename, contrast = fetch_subject_and_session(path_file_in)
         # Construct path for the output file
-        path_file_out = os.path.join(path_out, sub, ses, filename)
+        path_file_out = os.path.join(path_out, sub, ses, contrast, filename)
         # Check if subject's folder exists in the output dataset, if not, create it
-        path_subject_folder_out = os.path.join(path_out, sub, ses)
+        path_subject_folder_out = os.path.join(path_out, sub, ses, contrast)
         if not os.path.isdir(path_subject_folder_out):
             os.makedirs(path_subject_folder_out)
             print(f'Creating directory: {path_subject_folder_out}')
