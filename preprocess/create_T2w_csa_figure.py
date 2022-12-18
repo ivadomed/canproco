@@ -127,6 +127,7 @@ def create_rainplot(metric_pd, fname_fig):
                       x='site',
                       y='MEAN(area)',
                       hue='phenotype',
+                      order=site_to_vendor.keys(),
                       palette="Set1",
                       width_viol=.5,     # violinplot width
                       width_box=.3,     # boxplot width
