@@ -129,8 +129,9 @@ def create_rainplot(metric_pd, fname_fig):
                       hue='phenotype',
                       order=site_to_vendor.keys(),
                       palette="Set1",
+                      linewidth=0,       # violionplot border line (0 - no line)
                       width_viol=.5,     # violinplot width
-                      width_box=.3,     # boxplot width
+                      width_box=.3,      # boxplot width
                       dodge=True,        # move boxplots next to each other
                       move=0,            # move individual observations next to the boxplots (0 - no move)
                       rain_alpha=1,      # individual points transparency - https://github.com/pog87/PtitPrince/blob/master/ptitprince/PtitPrince.py
@@ -144,7 +145,7 @@ def create_rainplot(metric_pd, fname_fig):
     # Add horizontal grid lines
     ax.yaxis.grid(True)
 
-    # Modify x-ticks labels
+    # Modify x-ticks labels (set full site name and scanner type)
     ax.set_xticklabels(site_to_vendor.values())
     # Increase size of xticks and yticks
     plt.setp(ax.xaxis.get_majorticklabels(), fontsize=FONTSIZE)
