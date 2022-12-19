@@ -169,12 +169,12 @@ def create_rainplot(metric_pd, fname_fig):
     _, labels = ax.get_legend_handles_labels()
     n_plots = 3     # violinplot + boxplot + pointplot = 3
     # create colorful lines
-    lines = [Line2D([0], [0], color=value, linestyle='-', linewidth=5)
+    lines = [Line2D([0], [0], color=value, linestyle='-', linewidth=10)
              for value in get_cmap('Set1').colors[:4]]
     # Move legend closer to the plot (bbox_to_anchor) and preserve text labels
-    legend = plt.legend(lines, labels[0:len(labels) // n_plots],
-                   bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,
-                   title='Phenotype', fontsize=FONTSIZE, title_fontsize=FONTSIZE)
+    # Note: 'handlelength' sets the length of the '-'
+    legend = plt.legend(lines, labels[0:len(labels) // n_plots], bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,
+                        handlelength=1, title='Phenotype', fontsize=FONTSIZE, title_fontsize=FONTSIZE)
     # Change box's frame color to black
     frame = legend.get_frame()
     frame.set_edgecolor('black')
