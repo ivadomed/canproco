@@ -174,10 +174,15 @@ def create_rainplot(metric_pd, fname_fig):
     # create colorful lines
     lines = [Line2D([0], [0], color=value, linestyle='-', linewidth=10)
              for value in get_cmap('Set1').colors[:4]]
-    # Move legend closer to the plot (bbox_to_anchor) and preserve text labels
-    # Note: 'handlelength' sets the length of the '-'
-    legend = plt.legend(lines, labels[0:len(labels) // n_plots], bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,
-                        handlelength=1, title='Phenotype', fontsize=FONTSIZE, title_fontsize=FONTSIZE)
+    # crete a line for spine-generic
+    line_spine_generic = Line2D([0], [0], color='gray', linestyle='--', linewidth=3)
+    lines.append(line_spine_generic)
+    # legend labels
+    legend_labels = labels[0:len(labels) // n_plots]
+    legend_labels.append(u'spine-generic\nmean \u00B1 SD')
+    # Move legend closer to the plot (bbox_to_anchor) and set the length of the '-' (handlelength)
+    legend = plt.legend(lines, legend_labels, bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,
+                        handlelength=2, title='Phenotype', fontsize=FONTSIZE-3, title_fontsize=FONTSIZE)
     # Change box's frame color to black
     frame = legend.get_frame()
     frame.set_edgecolor('black')
