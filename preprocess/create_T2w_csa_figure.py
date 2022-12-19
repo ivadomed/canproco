@@ -24,19 +24,23 @@ FONTSIZE=18
 # T2w C2-C3 CSA values as in spine-generic SciData paper (doi: 10.1038/s41597-021-00941-8)
 # Average +/− standard deviation (SD)
 spine_generic_values = {
-    "ge": (72.16, 3.06),
-    "philips": (72.76, 2.47),
-    "siemens": (75.44, 3.83)
+    "cal": (72.16, 3.06),       # ge
+    "van": (72.76, 2.47),       # philips
+    "mon": (72.76, 2.47),       # philips
+    "edm": (75.44, 3.83),       # siemens
+    "tor": (75.44, 3.83)        # siemens
 }
 
-# plot position within figure
-# (0, 0) means that plots for GE are located around x-coordinate 0
-# similarly, (1, 2) means that plots for Philips are located from x-coordinate 1 to x-coordinate 2
-vendor_x_axis = {
-    "ge": (0, 0),
-    "philips": (1, 2),
-    "siemens": (3, 4)
+
+# x position of individual sites
+site_x_axis = {
+    "cal": 0,
+    "van": 1,
+    "mon": 2,
+    "edm": 3,
+    "tor": 4
 }
+
 
 site_to_vendor = {
     "cal": "Calgary\nGE Discovery MR750",
@@ -89,29 +93,28 @@ def fetch_subject_and_site(filename_path):
     return subject_id, site
 
 
-def add_spine_generic_values_per_vendor(ax, vendor, shift_i=0.15, shift_j=0.45):
+def add_spine_generic_values_per_vendor(ax, site, shift_i=0.15, shift_j=0.45):
     """
     Add mean and SD spine-generic values represented by rectangle and dashed line, respectively
     :param ax:
-    :param vendor:
+    :param site:
     :param shift_i: left shift from boxplots
     :param shift_j: right shift from boxplots
     :return:
     """
-    mean = spine_generic_values[vendor][0]
-    std = spine_generic_values[vendor][1]
-    x_i = vendor_x_axis[vendor][0]
-    x_j = vendor_x_axis[vendor][1]
+    mean = spine_generic_values[site][0]
+    std = spine_generic_values[site][1]
+    x = site_x_axis[site]
     # add rectangle for variance
-    rect = patches.Rectangle(xy=(x_i - shift_i, mean-std),      # 0.15 is used to cover boxplots (but not violinpltos)
-                             width=x_j - x_i + shift_j,         # 0.45 is used to cover also individual points
+    rect = patches.Rectangle(xy=(x - shift_i, mean - std),      # shift_i is used to cover boxplots (but not violinpltos)
+                             width=shift_j,                 # shift_j is used to cover also individual points (when 'move' rainplot param is used)
                              height=2*std,
                              edgecolor=None,
                              facecolor='gray',
                              alpha=0.3)
     ax.add_patch(rect)
     # add dashed line for mean value
-    ax.plot([x_i - shift_i, x_j + shift_j-shift_i], [mean, mean], "k--", alpha=0.3)      # 0.3 is simply 0.45-0.15
+    ax.plot([x - shift_i, x + shift_j-shift_i], [mean, mean], "k--", alpha=0.3)
 
 
 def create_rainplot(metric_pd, fname_fig):
@@ -162,8 +165,8 @@ def create_rainplot(metric_pd, fname_fig):
         patch.set_facecolor((r, g, b, .0))
 
     # Add mean and SD spine-generic values
-    for vendor in vendor_x_axis.keys():
-        add_spine_generic_values_per_vendor(ax, vendor, shift_i=0.17, shift_j=0.34)
+    for site in site_to_vendor.keys():
+        add_spine_generic_values_per_vendor(ax, site, shift_i=0.17, shift_j=0.34)
 
     # LEGEND
     _, labels = ax.get_legend_handles_labels()
@@ -224,8 +227,8 @@ def create_violinplot(metric_pd, fname_fig):
     plt.setp(ax.get_legend().get_texts(), fontsize=FONTSIZE)
 
     # Add mean and SD spine-generic values
-    for vendor in vendor_x_axis.keys():
-        add_spine_generic_values_per_vendor(ax, vendor)
+    for site in site_to_vendor.keys():
+        add_spine_generic_values_per_vendor(ax, site)
 
     plt.tight_layout()
 
