@@ -106,8 +106,9 @@ def add_spine_generic_values_per_vendor(ax, site, shift_i=0.15, shift_j=0.45):
     std = spine_generic_values[site][1]
     x = site_x_axis[site]
     # add rectangle for variance
+    # https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Rectangle.html#matplotlib-patches-rectangle
     rect = patches.Rectangle(xy=(x - shift_i, mean - std),      # shift_i is used to cover boxplots (but not violinpltos)
-                             width=shift_j,                 # shift_j is used to cover also individual points (when 'move' rainplot param is used)
+                             width=shift_j,                     # shift_j is used to cover also individual points (when 'move' rainplot param is used)
                              height=2*std,
                              edgecolor=None,
                              facecolor='gray',
