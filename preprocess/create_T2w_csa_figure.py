@@ -21,6 +21,10 @@ from matplotlib.lines import Line2D
 
 FONTSIZE=18
 
+# Drop subjects, see: https://github.com/ivadomed/canproco/issues/13
+subjects_to_exclude = ['sub-cal091', 'sub-cal155', 'sub-mon066', 'sub-mon033', 'sub-edm165', 'sub-mon006']
+
+
 # T2w C2-C3 CSA values as in spine-generic SciData paper (doi: 10.1038/s41597-021-00941-8)
 # Average +/− standard deviation (SD)
 spine_generic_values = {
@@ -307,11 +311,9 @@ def main():
                          left_on='subject_id', right_on='participant_id')
 
     # Drop subjects, see: https://github.com/ivadomed/canproco/issues/13
-    metric_pd.drop(metric_pd.loc[metric_pd['subject_id'] == 'sub-cal091'].index, inplace=True)
-    metric_pd.drop(metric_pd.loc[metric_pd['subject_id'] == 'sub-cal155'].index, inplace=True)
-    metric_pd.drop(metric_pd.loc[metric_pd['subject_id'] == 'sub-mon066'].index, inplace=True)
-    metric_pd.drop(metric_pd.loc[metric_pd['subject_id'] == 'sub-mon033'].index, inplace=True)
-    metric_pd.drop(metric_pd.loc[metric_pd['subject_id'] == 'sub-edm165'].index, inplace=True)
+    for subject in subjects_to_exlude:
+        metric_pd.drop(metric_pd.loc[metric_pd['subject_id'] ==subject].index, inplace=True)
+        print(f'Dropping {subject}')
 
     # Replace n/a in phenotype by HC to allow sorting in violinplot
     metric_pd['phenotype'].fillna(metric_pd['pathology'], inplace=True)
