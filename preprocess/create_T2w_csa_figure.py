@@ -250,7 +250,7 @@ def create_violinplot(metric_pd, fname_fig):
 
 def compute_anova(metric_pd):
     """
-    Compute ANOVA and Kruskal-Wallis H-test among phenotypes
+    Compute ANOVA among phenotypes
     :param metric_pd:
     :return:
     """
@@ -267,14 +267,30 @@ def compute_anova(metric_pd):
                                         metric_pd_site[metric_pd_site['phenotype'] == 'HC']['MEAN(area)'])
         print(f'ANOVA p-value: {pvalue}')
 
+
+def compute_kruskal(metric_pd):
+    """
+    Compute Kruskal-Wallis H-test among phenotypes
+    :param metric_pd:
+    :return:
+    """
+    # Loop across sites
+    for site in site_to_vendor.keys():
+        # Get values only for given site
+        metric_pd_site = metric_pd[metric_pd['site'] == site]
+        # Compute one-way ANOVA
+        print(f'{site}')
+        print(metric_pd_site.groupby(['phenotype']).size())
         # Compute Kruskal-Wallis H-test
         fvalue, pvalue = stats.kruskal(metric_pd_site[metric_pd_site['phenotype'] == 'RRMS']['MEAN(area)'],
                                        metric_pd_site[metric_pd_site['phenotype'] == 'PPMS']['MEAN(area)'],
                                        metric_pd_site[metric_pd_site['phenotype'] == 'RIS']['MEAN(area)'],
                                        metric_pd_site[metric_pd_site['phenotype'] == 'HC']['MEAN(area)'])
-        print(f'Kruskal-Wallis H-test p-value: {pvalue}')
-        print(f'\n')
-        # TODO - add posthoc tests
+        print(f'Kruskal-Wallis H-test p-value: {pvalue}\n')
+        # Post hoc Conover’s test
+        # https://scikit-posthocs.readthedocs.io/en/latest/tutorial/#non-parametric-anova-with-post-hoc-tests
+        posthoc = sp.posthoc_conover(metric_pd_site, val_col='MEAN(area)', group_col='phenotype', p_adjust='holm')
+        print(f'{posthoc}\n')
 
 
 def main():
@@ -328,6 +344,8 @@ def main():
 
     # Compute ANOVA among phenotypes
     compute_anova(metric_pd)
+    # Kruskal-Wallis H-test among phenotypes
+    compute_kruskal(metric_pd)
 
     # # Compute median, mean, std, cov persite
     # statistic = metric_pd.groupby(['site']).agg([np.median, np.mean, np.std, stats.variation])
