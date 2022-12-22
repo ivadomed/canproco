@@ -197,7 +197,7 @@ def create_rainplot(metric_pd, fname_fig):
     # save figure
     plt.savefig(fname_fig, dpi=200)
     plt.close()
-    print('Created: {}.'.format(fname_fig))
+    print(f'Created: {fname_fig}.\n')
 
 
 def create_violinplot(metric_pd, fname_fig):
@@ -245,7 +245,7 @@ def create_violinplot(metric_pd, fname_fig):
     # save figure
     plt.savefig(fname_fig, dpi=200)
     plt.close()
-    print('Created: {}.'.format(fname_fig))
+    print(f'Created: {fname_fig}.\n')
 
 
 def compute_anova(metric_pd):
