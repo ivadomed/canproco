@@ -55,6 +55,8 @@ cd ${SUBJECT}/anat/
 file="${SUBJECT//[\/]/_}_PSIR"
 
 if [[ -e ${file}.nii.gz ]]; then
+    echo "Enter your name (Firstname Lastname). It will be used to generate a json sidecar with each corrected file: "
+    read -r name_for_json
     # Create a subject folder under the derivatives
     mkdir -p ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/
     # create an empty mask
@@ -62,9 +64,9 @@ if [[ -e ${file}.nii.gz ]]; then
     # convert mask to proper datatype
     sct_image -i ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz -type uint16 -o ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz
     fsleyes ${file}.nii.gz ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz
-    # create a json sidecar
+    # create a json sidecar (4 spaces are used for indentation)
     cur_time=$(python <<< "import time;print(time.strftime('%Y-%m-%d %H:%M:%S'))")
-    echo -e "{\n    \"Author\": \"Michelle Chen\",\n    \"Label\": \"lesion-manual\",\n    \"Date\": \"${cur_time}\"\n}" > ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.json
+    echo -e "{\n    \"Author\": \"${name_for_json}\",\n    \"Label\": \"lesion-manual\",\n    \"Date\": \"${cur_time}\"\n}" > ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.json
 fi
 
 
