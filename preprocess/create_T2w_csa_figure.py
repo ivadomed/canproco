@@ -143,8 +143,11 @@ def create_rainplot(metric_pd, fname_fig):
                       width_box=.3,      # boxplot width
                       dodge=True,        # move boxplots next to each other
                       move=0,            # move individual observations next to the boxplots (0 - no move)
-                      rain_alpha=1,      # individual points transparency - https://github.com/pog87/PtitPrince/blob/master/ptitprince/PtitPrince.py
-                      alpha=.7           # violin plot transparency
+                      rain_alpha=1,      # individual points transparency - https://github.com/pog87/PtitPrince/blob/23debd9b70fca94724a06e72e049721426235f50/ptitprince/PtitPrince.py#L707
+                      alpha=.7,          # violin plot transparency
+                      box_showmeans=True,   # show mean value inside the boxplots
+                      box_meanprops={'marker': '^', 'markerfacecolor': 'black', 'markeredgecolor': 'black',
+                                     'markersize': '6'}
                       )
     plt.title('C2-C3 spinal cord cross-sectional area (CSA) from T2w', fontsize=FONTSIZE)
     ax.set_ylabel('CSA [$mm^2$]', fontsize=FONTSIZE)
