@@ -327,7 +327,7 @@ def main():
                          left_on='subject_id', right_on='participant_id')
 
     # Drop subjects, see: https://github.com/ivadomed/canproco/issues/13
-    for subject in subjects_to_exlude:
+    for subject in subjects_to_exclude:
         metric_pd.drop(metric_pd.loc[metric_pd['subject_id'] ==subject].index, inplace=True)
         print(f'Dropping {subject}')
 
