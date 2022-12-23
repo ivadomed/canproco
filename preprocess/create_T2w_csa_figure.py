@@ -8,6 +8,7 @@ import os
 import re
 import argparse
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -347,9 +348,9 @@ def main():
     # Kruskal-Wallis H-test among phenotypes
     compute_kruskal(metric_pd)
 
-    # # Compute median, mean, std, cov persite
-    # statistic = metric_pd.groupby(['site']).agg([np.median, np.mean, np.std, stats.variation])
-    # print(f'\nDescriptive statistics:\n{statistic}')
+    # Compute median, mean, std, cov per site and phenotype
+    statistic = metric_pd.groupby(['site', 'phenotype']).agg([np.median, np.mean, np.std, stats.variation])
+    print(f'\nDescriptive statistics:\n{statistic}')
 
 
 if __name__ == "__main__":
