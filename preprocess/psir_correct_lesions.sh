@@ -62,7 +62,9 @@ if [[ -e ${file}.nii.gz ]]; then
     # Create a subject folder under the derivatives
     mkdir -p ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/
     # create an empty mask
-    sct_create_mask -i ${file}.nii.gz -o ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz -p center -size 0
+    # Note: sct_create_mask generates a lot of warnings --> using sct_crop_image
+    #sct_create_mask -i ${file}.nii.gz -o ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz -p center -size 0
+    sct_crop_image -i ${file}.nii.gz -o ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz -b 0 -xmin 1 -ymin 1 -zmin 1 -xmax 0 -ymax 0 -zmax 0
     # convert mask to proper datatype
     sct_image -i ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz -type uint16 -o ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz
     fsleyes ${file}.nii.gz ${PATH_DATA_PROCESSED}/derivatives/labels/${SUBJECT}/anat/${file}_lesion-manual.nii.gz
