@@ -12,6 +12,8 @@
 #
 # How to use: sct_run_batch -jobs 1 -path-data <> -path-output <> -script psir_correct_lesions.sh
 
+# TODO: this script could be merged with manual_correction.py
+
 set -x
 # Immediately exit if error
 set -e -o pipefail
