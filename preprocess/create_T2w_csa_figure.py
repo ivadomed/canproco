@@ -252,9 +252,9 @@ def create_violinplot(metric_pd, fname_fig):
     print(f'Created: {fname_fig}.\n')
 
 
-def compute_anova(metric_pd):
+def compute_anova_per_site(metric_pd):
     """
-    Compute ANOVA among phenotypes
+    Compute ANOVA among phenotypes persite
     :param metric_pd:
     :return:
     """
@@ -272,9 +272,9 @@ def compute_anova(metric_pd):
         print(f'ANOVA p-value: {pvalue}')
 
 
-def compute_kruskal(metric_pd):
+def compute_kruskal_per_site(metric_pd):
     """
-    Compute Kruskal-Wallis H-test among phenotypes
+    Compute Kruskal-Wallis H-test among phenotypes persite
     :param metric_pd:
     :return:
     """
@@ -282,10 +282,9 @@ def compute_kruskal(metric_pd):
     for site in site_to_vendor.keys():
         # Get values only for given site
         metric_pd_site = metric_pd[metric_pd['site'] == site]
-        # Compute one-way ANOVA
+        # Compute Kruskal-Wallis H-test
         print(f'{site}')
         print(metric_pd_site.groupby(['phenotype']).size())
-        # Compute Kruskal-Wallis H-test
         fvalue, pvalue = stats.kruskal(metric_pd_site[metric_pd_site['phenotype'] == 'RRMS']['MEAN(area)'],
                                        metric_pd_site[metric_pd_site['phenotype'] == 'PPMS']['MEAN(area)'],
                                        metric_pd_site[metric_pd_site['phenotype'] == 'RIS']['MEAN(area)'],
@@ -295,6 +294,26 @@ def compute_kruskal(metric_pd):
         # https://scikit-posthocs.readthedocs.io/en/latest/tutorial/#non-parametric-anova-with-post-hoc-tests
         posthoc = sp.posthoc_conover(metric_pd_site, val_col='MEAN(area)', group_col='phenotype', p_adjust='holm')
         print(f'{posthoc}\n')
+
+
+def compute_kruskal(metric_pd):
+    """
+    Compute Kruskal-Wallis H-test among phenotypes on the whole cohort
+    :param metric_pd:
+    :return:
+    """
+    # Compute Kruskal-Wallis H-test
+    print(f'Whole cohort')
+    print(metric_pd.groupby(['phenotype']).size())
+    fvalue, pvalue = stats.kruskal(metric_pd[metric_pd['phenotype'] == 'RRMS']['MEAN(area)'],
+                                   metric_pd[metric_pd['phenotype'] == 'PPMS']['MEAN(area)'],
+                                   metric_pd[metric_pd['phenotype'] == 'RIS']['MEAN(area)'],
+                                   metric_pd[metric_pd['phenotype'] == 'HC']['MEAN(area)'])
+    print(f'Kruskal-Wallis H-test p-value: {pvalue}\n')
+    # Post hoc Conover’s test
+    # https://scikit-posthocs.readthedocs.io/en/latest/tutorial/#non-parametric-anova-with-post-hoc-tests
+    posthoc = sp.posthoc_conover(metric_pd, val_col='MEAN(area)', group_col='phenotype', p_adjust='holm')
+    print(f'{posthoc}\n')
 
 
 def main():
@@ -347,12 +366,18 @@ def main():
     create_rainplot(metric_pd, fname_fig)
 
     # Compute ANOVA among phenotypes
-    compute_anova(metric_pd)
+    compute_anova_per_site(metric_pd)
     # Kruskal-Wallis H-test among phenotypes
+    compute_kruskal_per_site(metric_pd)
+    # Compute Kruskal-Wallis H-test among phenotypes on the whole cohort
     compute_kruskal(metric_pd)
 
-    # Compute median, mean, std, cov per site and phenotype
+    # Compute median, mean, std, cov persite and phenotype
     statistic = metric_pd.groupby(['site', 'phenotype']).agg([np.median, np.mean, np.std, stats.variation])
+    print(f'\nDescriptive statistics:\n{statistic}')
+
+    # Compute median, mean, std, cov per phenotype on the whole cohort
+    statistic = metric_pd.groupby(['phenotype']).agg([np.median, np.mean, np.std, stats.variation])
     print(f'\nDescriptive statistics:\n{statistic}')
 
 
