@@ -352,12 +352,27 @@ def read_csv_file(file_path, subjects_to_exclude, columns_to_read=['Filename', '
     return metric_pd
 
 
+def read_participants_file(file_path):
+    """
+    Read participants.tsv file and return Pandas DataFrame
+    :param file_path:
+    :return:
+    """
+    if os.path.isfile(file_path):
+        participants_pd = pd.read_csv(file_path, sep='\t')
+        return participants_pd
+    else:
+        raise FileNotFoundError(f'{file_path} not found')
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
 
     # Read .csv file for canproco subjects
-    canproco_pd = read_csv_file(args.i, subjects_to_exclude_canproco)
+    canproco_pd = read_csv_file(args.i_canproco, subjects_to_exclude_canproco)
+    # Read canproco participants.tsv file (includes pathology and phenotype columns)
+    canproco_participants_pd = read_participants_file(args.participants_file_canproco)
 
     if os.path.isfile(args.participants_file):
         # Read participants.tsv file (includes pathology and phenotype columns)
