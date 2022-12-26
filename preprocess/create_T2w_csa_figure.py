@@ -22,20 +22,13 @@ from matplotlib.lines import Line2D
 
 FONTSIZE=18
 
-# Drop subjects, see: https://github.com/ivadomed/canproco/issues/13
+# Drop canproco subjects, see: https://github.com/ivadomed/canproco/issues/13
 subjects_to_exclude_canproco = ['sub-cal091', 'sub-cal155', 'sub-mon066', 'sub-mon033', 'sub-edm165', 'sub-mon006']
 
-
-# T2w C2-C3 CSA values as in spine-generic SciData paper (doi: 10.1038/s41597-021-00941-8)
-# Average +/− standard deviation (SD)
-spine_generic_values = {
-    "cal": (72.16, 3.06),       # ge
-    "van": (72.76, 2.47),       # philips
-    "mon": (72.76, 2.47),       # philips
-    "edm": (75.44, 3.83),       # siemens
-    "tor": (75.44, 3.83)        # siemens
-}
-
+# Drop spine-generic subjects
+# site beijingVerio - different TR and FA causing biases in the segmentation volume; see doi:10.1038/s41597-021-00941-8
+subjects_to_exclude_spinegeneric = ['sub-beijingVerio01', 'sub-beijingVerio02', 'sub-beijingVerio03',
+                                    'sub-beijingVerio04']
 
 # x position of individual sites
 site_x_axis = {
@@ -46,13 +39,21 @@ site_x_axis = {
     "tor": 4
 }
 
-
+# xticks labels
 site_to_vendor = {
     "cal": "Calgary\nGE Discovery MR750",
     "van": "Vancouver\nPhilips Ingenia",
     "mon": "Montreal\n Philips Ingenia",
     "edm": "Edmonton\n Siemens Prisma",
     "tor": "Toronto\nSiemens Skyra",
+}
+
+site_to_manufacturer = {
+    "cal": "GE",
+    "van": "Philips",
+    "mon": "Philips",
+    "edm": "Siemens",
+    "tor": "Siemens",
 }
 
 
@@ -108,17 +109,23 @@ def fetch_subject_and_site(filename_path):
     return subject_id, site
 
 
-def add_spine_generic_values_per_vendor(ax, site, shift_i=0.15, shift_j=0.45):
+def add_spine_generic_values_per_vendor(ax, site, spinegeneric_pd, shift_i=0.15, shift_j=0.45):
     """
     Add mean and SD spine-generic values represented by rectangle and dashed line, respectively
     :param ax:
     :param site:
+    :param spinegeneric_pd: Pandas DataFrame with spine-generic CSA values
     :param shift_i: left shift from boxplots
     :param shift_j: right shift from boxplots
     :return:
     """
-    mean = spine_generic_values[site][0]
-    std = spine_generic_values[site][1]
+    # compute mean within vendor (mean of the within-site means)
+    # https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L423
+    mean = float(spinegeneric_pd[spinegeneric_pd['manufacturer'] == site_to_manufacturer[site]].groupby(['site']).agg([np.mean]).mean())
+    # compute std within vendor (std of the within-site means)
+    # https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L425
+    std = float(spinegeneric_pd[spinegeneric_pd['manufacturer'] == site_to_manufacturer[site]].groupby(['site']).agg([np.mean]).std())
+    print(f'{site_to_manufacturer[site]}: {mean} +- {std}')
     x = site_x_axis[site]
     # add rectangle for variance
     # https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Rectangle.html#matplotlib-patches-rectangle
@@ -133,11 +140,12 @@ def add_spine_generic_values_per_vendor(ax, site, shift_i=0.15, shift_j=0.45):
     ax.plot([x - shift_i, x + shift_j-shift_i], [mean, mean], "k--", alpha=0.3)
 
 
-def create_rainplot(metric_pd, fname_fig):
+def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     """
     Create a rainplot (box + strip + violin)
     https://github.com/pog87/PtitPrince/blob/master/tutorial_python/raincloud_tutorial_python.ipynb
-    :param metric_pd:
+    :param metric_pd: Pandas DataFrame with canproco CSA values
+    :param spinegeneric_pd: Pandas DataFrame with spine-generic CSA values
     :param fname_fig:
     :return:
     """
@@ -185,7 +193,7 @@ def create_rainplot(metric_pd, fname_fig):
 
     # Add mean and SD spine-generic values
     for site in site_to_vendor.keys():
-        add_spine_generic_values_per_vendor(ax, site, shift_i=0.17, shift_j=0.34)
+        add_spine_generic_values_per_vendor(ax, site, spinegeneric_pd,  shift_i=0.17, shift_j=0.34)
 
     # LEGEND
     _, labels = ax.get_legend_handles_labels()
