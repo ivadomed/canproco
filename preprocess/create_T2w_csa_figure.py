@@ -61,15 +61,25 @@ def get_parser():
         description="Generate figure for T2w C2-C3 CSA. The figure is saved to the same folder as the input .csv file."
     )
     parser.add_argument(
-        '-i',
+        '-i-canproco',
         required=True,
         metavar='<file_path>',
-        help="input .csv file with CSA values")
+        help="input .csv file with canproco CSA values")
     parser.add_argument(
-        '-participants-file',
+        '-i-spinegeneric',
         required=True,
         metavar='<file_path>',
-        help="participants.tsv file (includes pathology and phenotype columns)")
+        help="input .csv file with spine-generic CSA values")
+    parser.add_argument(
+        '-participants-file-canproco',
+        required=True,
+        metavar='<file_path>',
+        help="canproco participants.tsv file (includes pathology and phenotype columns)")
+    parser.add_argument(
+        '-participants-file-spinegeneric',
+        required=True,
+        metavar='<file_path>',
+        help="spine-generic participants.tsv file (includes vendor column)")
 
     return parser
 
@@ -374,26 +384,25 @@ def main():
     # Read canproco participants.tsv file (includes pathology and phenotype columns)
     canproco_participants_pd = read_participants_file(args.participants_file_canproco)
 
-    if os.path.isfile(args.participants_file):
-        # Read participants.tsv file (includes pathology and phenotype columns)
-        participants_pd = pd.read_csv(args.participants_file, sep='\t')
-    else:
-        raise FileNotFoundError(f'{args.participants_file} not found')
+    # Read .csv file for spine-generic subjects
+    spinegeneric_pd = read_csv_file(args.i_spinegeneric, subjects_to_exclude_spinegeneric)
+    # Read spine-generic participants.tsv file (includes manufacturer column)
+    spinegeneric_participants_pd = read_participants_file(args.participants_file_spinegeneric)
 
-    # Merge pathology and phenotype columns to the dataframe with CSA values
-    canproco_pd = pd.merge(canproco_pd, participants_pd[['participant_id', 'pathology', 'phenotype']], how='left',
-                           left_on='subject_id', right_on='participant_id')
+    # Merge pathology and phenotype columns to the canproco dataframe with CSA values
+    canproco_pd = pd.merge(canproco_pd, canproco_participants_pd[['participant_id', 'pathology', 'phenotype']],
+                           how='left', left_on='subject_id', right_on='participant_id')
 
     # Replace n/a in phenotype by HC to allow sorting in violinplot
     canproco_pd['phenotype'].fillna(canproco_pd['pathology'], inplace=True)
 
-    # Create violin plot
-    fname_fig = args.i.replace('.csv', '_violinplot.png')
-    create_violinplot(canproco_pd, fname_fig)
+    # Merge manufacturer column to the spine-generic dataframe with CSA values
+    spinegeneric_pd = pd.merge(spinegeneric_pd, spinegeneric_participants_pd[['participant_id', 'manufacturer']],
+                               how='left', left_on='subject_id', right_on='participant_id')
 
     # Create rain plot
-    fname_fig = args.i.replace('.csv', '_rainplot.png')
-    create_rainplot(canproco_pd, fname_fig)
+    fname_fig = args.i_canproco.replace('.csv', '_rainplot.png')
+    create_rainplot(canproco_pd, spinegeneric_pd, fname_fig)
 
     # Compute ANOVA among phenotypes
     compute_anova_per_site(canproco_pd)
