@@ -222,54 +222,6 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     print(f'Created: {fname_fig}.\n')
 
 
-def create_violinplot(metric_pd, fname_fig):
-    """
-    Create a violinplot
-    :param metric_pd:
-    :param fname_fig:
-    :return:
-    """
-    fig, ax = plt.subplots(figsize=(21, 7))
-    ax = sns.violinplot(data=metric_pd,
-                        x='site',
-                        y='MEAN(area)',
-                        hue='phenotype',
-                        inner='point',      # include individual dots to the violin plots
-                        cut=0               # limit the violin range within the range of the observed data
-                        )
-    # Change transparency
-    for violin, alpha in zip(ax.collections[::2], len(ax.collections[::2]) * [0.8]):
-        violin.set_alpha(alpha)
-    plt.title('C2-C3 spinal cord cross-sectional area (CSA) from T2w', fontsize=FONTSIZE)
-    ax.set_ylabel('CSA [$mm^2$]', fontsize=FONTSIZE)
-    ax.set_xlabel('')
-    # Move grid to background (i.e. behind other elements)
-    ax.set_axisbelow(True)
-    # Add horizontal grid lines
-    ax.yaxis.grid(True)
-
-    # Modify x-ticks labels
-    ax.set_xticklabels(site_to_vendor.values())
-    # Increase size of xticks and yticks
-    plt.setp(ax.xaxis.get_majorticklabels(), fontsize=FONTSIZE)
-    plt.setp(ax.yaxis.get_majorticklabels(), fontsize=FONTSIZE)
-
-    # Increase legend title and text
-    plt.setp(ax.get_legend().get_title(), fontsize=FONTSIZE)
-    plt.setp(ax.get_legend().get_texts(), fontsize=FONTSIZE)
-
-    # Add mean and SD spine-generic values
-    for site in site_to_vendor.keys():
-        add_spine_generic_values_per_vendor(ax, site)
-
-    plt.tight_layout()
-
-    # save figure
-    plt.savefig(fname_fig, dpi=200)
-    plt.close()
-    print(f'Created: {fname_fig}.\n')
-
-
 def compute_anova_per_site(metric_pd):
     """
     Compute ANOVA among phenotypes persite
