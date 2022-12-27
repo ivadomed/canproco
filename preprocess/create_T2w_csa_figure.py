@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 #
-# Generate figure for T2w C2-C3 CSA
+# The script performs:
+#   - generate rainplots for T2w C2-C3 canproco CSA per site and includes also spine-generic values
+#   - compute Kruskal-Wallis H-test among phenotypes persite and on the whole cohort
+#   - compare CSA values between canproco healthy controls and spine-generic per manufacturer
 #
 # Authors: Jan Valosek, Julien Cohen-Adad
 
