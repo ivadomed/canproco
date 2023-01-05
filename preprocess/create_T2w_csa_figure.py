@@ -114,9 +114,10 @@ def fetch_subject_and_site(filename_path):
 
 def add_spine_generic_values_per_vendor(ax, site, spinegeneric_pd, shift_i=0.15, shift_j=0.45):
     """
-    Add mean and SD spine-generic values represented by rectangle and dashed line, respectively
+    Add mean and SD spine-generic values represented by rectangle and dashed line, respectively.
+    Mean and SD values are added per-vendor (Philips, GE, or Siemens), depending on the MR vendor for given site.
     :param ax:
-    :param site:
+    :param site: currently processed site
     :param spinegeneric_pd: Pandas DataFrame with spine-generic CSA values
     :param shift_i: left shift from boxplots
     :param shift_j: right shift from boxplots
