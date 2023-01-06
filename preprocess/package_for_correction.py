@@ -62,6 +62,11 @@ def get_parser():
         default='data_to_correct'
     )
     parser.add_argument(
+        '-suffix-files-seg',
+        help="FILES-SEG suffix. For example _seg or _label-SC_mask",
+        default='_seg'
+    )
+    parser.add_argument(
         '-v', '--verbose',
         help="Full verbose (for debugging)",
         action='store_true'
@@ -116,7 +121,7 @@ def main():
     for task, files in dict_yml.items():
         for file in files:
             if task == 'FILES_SEG':
-                suffix_label = '_seg'
+                suffix_label = args.suffix_files_seg		# e.g., _seg or _label-SC_mask
             elif task == 'FILES_LABEL':
                 suffix_label = None
             elif task == 'FILES_PMJ':
