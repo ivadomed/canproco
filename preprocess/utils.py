@@ -12,22 +12,30 @@ import shutil
 from pathlib import Path
 from enum import Enum
 
+
 # BIDS utility tool
 def get_subject(file):
     """
     Get subject from BIDS file name
-    :param file:
-    :return: subject
+    :param file: input nifti filename (e.g., sub-001_ses-01_T1w.nii.gz) or file path
+    (e.g., /home/user/MRI/bids/derivatives/labels/sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz
+    :return: subject_id: subject ID (e.g., sub-001)
     """
-    return file.split('_')[0]
+    subject = re.search('sub-(.*?)[_/]', file)                # [_/] slash or underscore
+    subject_id = subject.group(0)[:-1] if subject else ""    # [:-1] removes the last underscore or slash
+    return subject_id
+
 
 def get_ses(file):
     """
     Get session from BIDS file name
-    :param file:
-    :return: ses
+    :param file: input nifti filename (e.g., sub-001_ses-01_T1w.nii.gz) or file path
+    (e.g., /home/user/MRI/bids/derivatives/labels/sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz
+    :return: sessionID: session ID (e.g., ses-01)
     """
-    return file.split('_')[1]
+    session = re.findall(r'ses-..', file)                   # .. - any two characters (e.g., ses-01 or ses-M0)
+    sessionID = session[0] if session else ""             # Return None if there is no session
+    return sessionID
 
 
 def get_contrast(file):
