@@ -24,6 +24,10 @@ from matplotlib.cm import get_cmap
 from matplotlib.lines import Line2D
 
 FONTSIZE=18
+FONTSIZE_CORR=25
+
+colormap = 'Set1'
+color_pallete = get_cmap(colormap).colors[:4]
 
 # Drop canproco subjects, see: https://github.com/ivadomed/canproco/issues/13
 # 'sub-van175' - pending EDSS
@@ -161,7 +165,7 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
                       y='MEAN(area)',
                       hue='phenotype',
                       order=site_to_vendor.keys(),
-                      palette="Set1",
+                      palette=colormap,
                       linewidth=0,       # violionplot border line (0 - no line)
                       width_viol=.5,     # violinplot width
                       width_box=.3,      # boxplot width
@@ -206,7 +210,7 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     n_plots = 3     # violinplot + boxplot + pointplot = 3
     # create colorful lines
     lines = [Line2D([0], [0], color=value, linestyle='-', linewidth=10)
-             for value in get_cmap('Set1').colors[:4]]
+             for value in color_pallete]
     # crete a line for spine-generic
     line_spine_generic = Line2D([0], [0], color='gray', linestyle='--', linewidth=3)
     lines.append(line_spine_generic)
