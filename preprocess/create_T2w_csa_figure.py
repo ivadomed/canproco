@@ -16,12 +16,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import ptitprince as pt
+import pingouin as pg
 
 from scipy import stats
 import scikit_posthocs as sp
 import matplotlib.patches as patches
 from matplotlib.cm import get_cmap
 from matplotlib.lines import Line2D
+from sklearn.linear_model import LinearRegression
 
 FONTSIZE=18
 FONTSIZE_CORR=25
@@ -232,6 +234,133 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     print(f'Created: {fname_fig}.\n')
 
 
+def format_pvalue(p_value, alpha=0.001, decimal_places=3, include_space=False, include_equal=True):
+    """
+    Format p-value.
+    If the p-value is lower than alpha, format it to "<0.001", otherwise, round it to three decimals
+    :param p_value: input p-value as a float
+    :param alpha: significance level
+    :param decimal_places: number of decimal places the p-value will be rounded
+    :param include_space: include space or not (e.g., ' = 0.06')
+    :param include_equal: include equal sign ('=') to the p-value (e.g., '=0.06') or not (e.g., '0.06')
+    :return: p_value: the formatted p-value (e.g., '<0.05') as a str
+    """
+    if include_space:
+        space = ' '
+    else:
+        space = ''
+
+    # If the p-value is lower than alpha, return '<alpha' (e.g., <0.001)
+    if p_value < alpha:
+        p_value = space + "<" + space + str(alpha)
+    # If the p-value is greater than alpha, round it number of decimals specified by decimal_places
+    else:
+        if include_equal:
+            p_value = space + '=' + space + str(round(p_value, decimal_places))
+        else:
+            p_value = space + str(round(p_value, decimal_places))
+
+    return p_value
+
+
+def compute_partial_correlation(canproco_pd, site):
+    # Work only with MS patients
+    ms_pd = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]
+    # Convert str to int (to be compatible with partial correlation)
+    ms_pd = ms_pd.replace({'phenotype': {'RRMS': 0, 'PPMS': 1, 'RIS': 2}})
+    stats = pg.partial_corr(data=ms_pd, x='MEAN(area)', y='edss_M0', covar='phenotype', method='spearman')
+    r = float(stats['r'])
+    p_val = float(stats['p-val'])
+    print(f'{site}: Partial correlation EDSS vs CSA: r={r}, p-value{format_pvalue(p_val)}')
+
+    return r, p_val
+
+
+def compute_regression(x, y):
+    """
+    Compute a linear regression between x and y:
+    y = Slope * x + Intercept
+    https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
+    :param x: ndarray: input - regressor
+    :param y: ndarray: output - response
+    :return x_vals: ndarray: x values for the linear fit plot
+    :return y_vals: ndarray: y values for the linear fit plot
+    """
+    # Make sure we are working with numpy arrays
+    if isinstance(x, pd.Series):
+        x = x.to_numpy()
+    if isinstance(y, pd.Series):
+        y = y.to_numpy()
+
+    # Create an instance of the class LinearRegression, which will represent the regression model
+    linear_regression = LinearRegression()
+    # Perform linear regression (compute slope and intercept)
+    linear_regression.fit(x.reshape(-1, 1), y.reshape(-1, 1))
+    intercept = linear_regression.intercept_        # underscore indicates that an attribute is estimated
+    slope = linear_regression.coef_                 # underscore indicates that an attribute is estimated
+
+    # Get x and y values to plot the linear fit
+    x_vals = np.array([x.min(), x.max()])
+    y_vals = intercept + slope * x_vals
+    y_vals = np.squeeze(y_vals)                     # change shape from (1,N) to (N,)
+
+    return x_vals, y_vals
+
+
+def create_csa_edss_correlation_figure(canproco_pd, fname_fig):
+
+    # Create main figure
+    fig, axes = plt.subplots(1, 5, figsize=(30, 7), sharey=True)
+    # Flatten 2D array into 1D to allow iteration by loop
+    ax = axes.ravel()
+    # Loop across sites
+    for index, site in enumerate(site_to_vendor.keys()):
+        # Compute partial correlation (with phenotype as a covariate)
+        r, p_val = compute_partial_correlation(canproco_pd, site)
+        # Compute linear regression for all MS patients together (i.e., across all phenotypes)
+        csa = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['MEAN(area)']
+        edss = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['edss_M0']
+        x_vals, y_vals = compute_regression(csa, edss)
+        ax[index].plot(x_vals, y_vals, '--', color='black', alpha=.5, linewidth=3)
+
+        # Insert text with corr coef and pval into every subplot/axis
+        ax[index].annotate('r={}; p{}'.format(round(r, 2), format_pvalue(p_val, alpha=0.05)), xy=(.97, .87),
+                           xycoords='axes fraction', fontsize=FONTSIZE_CORR, xytext=(-5, 5), textcoords='offset points',
+                           ha='right', va='bottom', bbox=dict(edgecolor='black', facecolor='none', boxstyle='round'))
+
+        for color, phenotype in enumerate(['RRMS', 'PPMS', 'RIS']):
+            # Prepare variables for plotting
+            csa = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['MEAN(area)']
+            edss = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['edss_M0']
+            # Plot individual scatter plots
+            ax[index].scatter(csa, edss, color=color_pallete[color], alpha=.8, label=phenotype, s=100)
+            x_vals, y_vals = compute_regression(csa, edss)
+            ax[index].plot(x_vals, y_vals, '--', color=color_pallete[color], alpha=.8, linewidth=3)
+            ax[index].set_title(site_to_vendor[site], fontsize=FONTSIZE_CORR)
+            ax[index].set_xlabel('CSA [$mm^2$]', fontsize=FONTSIZE_CORR)
+
+            # # Set fixed number of y-ticks
+            # xmin, xmax = ax[index].get_xlim()
+            # custom_ticks = np.linspace(50, xmax, 5, dtype=int)
+            # ax[index].set_xticks(custom_ticks)
+            # ax[index].set_xticklabels(custom_ticks)
+
+            if index == 0:
+                ax[index].set_ylabel('EDSS', fontsize=FONTSIZE_CORR)
+            # Increase size of xticks and yticks
+            plt.setp(ax[index].xaxis.get_majorticklabels(), fontsize=FONTSIZE_CORR)
+            plt.setp(ax[index].yaxis.get_majorticklabels(), fontsize=FONTSIZE_CORR)
+            # Show legend only for the last axis
+            #if index == 4:
+            #    ax[index].legend(fontsize=FONTSIZE-3)
+    plt.subplots_adjust(wspace=-0.1)
+    plt.tight_layout()
+    # save figure
+    plt.savefig(fname_fig, dpi=200)
+    plt.close()
+    print(f'Created: {fname_fig}.\n')
+
+
 def compute_anova_per_site(metric_pd):
     """
     Compute ANOVA among phenotypes persite
@@ -379,8 +508,11 @@ def main():
     spinegeneric_participants_pd = read_participants_file(args.participants_file_spinegeneric)
 
     # Merge pathology and phenotype columns to the canproco dataframe with CSA values
-    canproco_pd = pd.merge(canproco_pd, canproco_participants_pd[['participant_id', 'pathology', 'phenotype']],
+    canproco_pd = pd.merge(canproco_pd, canproco_participants_pd[['participant_id', 'pathology', 'phenotype', 'edss_M0']],
                            how='left', left_on='subject_id', right_on='participant_id')
+
+    # get MS patients with 'n/a' for EDSS
+    # canproco_pd[(canproco_pd['edss_M0'].isna()) & (canproco_pd['pathology'] == 'MS')]['subject_id']
 
     # Replace n/a in phenotype by HC to allow sorting in violinplot
     canproco_pd['phenotype'].fillna(canproco_pd['pathology'], inplace=True)
@@ -410,6 +542,10 @@ def main():
 
     # Compare CSA values between canproco healthy controls and spine-generic per manufacturer
     compare_healthy_controls(canproco_pd, spinegeneric_pd)
+
+    # Compute and plot correlation between EDSS and CSA
+    fname_fig = args.i_canproco.replace('.csv', '_correlation.png')
+    create_csa_edss_correlation_figure(canproco_pd, fname_fig)
 
 
 if __name__ == "__main__":
