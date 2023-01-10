@@ -26,7 +26,9 @@ from matplotlib.lines import Line2D
 FONTSIZE=18
 
 # Drop canproco subjects, see: https://github.com/ivadomed/canproco/issues/13
-subjects_to_exclude_canproco = ['sub-cal091', 'sub-cal155', 'sub-mon066', 'sub-mon033', 'sub-edm165', 'sub-mon006']
+# 'sub-van175' - pending EDSS
+subjects_to_exclude_canproco = ['sub-cal091', 'sub-cal155', 'sub-mon066', 'sub-mon033', 'sub-edm165', 'sub-mon006',
+                                'sub-van175']
 
 # Drop spine-generic subjects
 # site beijingVerio - different TR and FA causing biases in the segmentation volume; see doi:10.1038/s41597-021-00941-8
