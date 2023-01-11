@@ -120,7 +120,7 @@ label_if_does_not_exist(){
   local file="$1"
   local file_seg="$2"
   # Update global variable with segmentation file name
-  FILELABEL="${file}_labels"
+  FILELABEL="${file}_labels-disc"
   FILELABELMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELABEL}-manual.nii.gz"
   echo "Looking for manual label: $FILELABELMANUAL"
   if [[ -e $FILELABELMANUAL ]]; then
@@ -167,7 +167,7 @@ fi
 
 # Copy source images
 # Note: we use '/./' in order to include the sub-folder 'ses-0X'
-rsync -Ravzh $PATH_DATA/./$SUBJECT .
+rsync -Ravzh $PATH_DATA/./$SUBJECT/anat/${SUBJECT}_T2w.* .
 
 # # Copy segmentation ground truths (GT)
 # mkdir -p derivatives/labels
