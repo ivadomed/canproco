@@ -43,15 +43,17 @@ subjects_to_exclude_spinegeneric = ['sub-beijingVerio01', 'sub-beijingVerio02', 
 
 # x position of individual sites
 site_x_axis = {
-    "cal": 0,
-    "van": 1,
-    "mon": 2,
-    "edm": 3,
-    "tor": 4
+    "all": 0,
+    "cal": 1,
+    "van": 2,
+    "mon": 3,
+    "edm": 4,
+    "tor": 5
 }
 
 # xticks labels
 site_to_vendor = {
+    "all": "All sites",
     "cal": "Calgary\nGE Discovery MR750",
     "van": "Vancouver\nPhilips Ingenia",
     "mon": "Montreal\nPhilips Ingenia",
@@ -59,7 +61,18 @@ site_to_vendor = {
     "tor": "Toronto\nSiemens Skyra",
 }
 
+# title for EDSS vs CSA correlation figure
+site_to_vendor_title = {
+    "all": "All sites",
+    "cal": "Calgary - GE Discovery MR750",
+    "van": "Vancouver - Philips Ingenia",
+    "mon": "Montreal - Philips Ingenia",
+    "edm": "Edmonton - Siemens Prisma",
+    "tor": "Toronto - Siemens Skyra",
+}
+
 site_to_manufacturer = {
+    "all": "All sites",
     "cal": "GE",
     "van": "Philips",
     "mon": "Philips",
@@ -131,12 +144,23 @@ def add_spine_generic_values_per_vendor(ax, site, spinegeneric_pd, shift_i=0.15,
     :param shift_j: right shift from boxplots
     :return:
     """
-    # compute mean within vendor (mean of the within-site means)
-    # https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L423
-    mean = float(spinegeneric_pd[spinegeneric_pd['manufacturer'] == site_to_manufacturer[site]].groupby(['site']).agg([np.mean]).mean())
-    # compute std within vendor (std of the within-site means)
-    # https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L425
-    std = float(spinegeneric_pd[spinegeneric_pd['manufacturer'] == site_to_manufacturer[site]].groupby(['site']).agg([np.mean]).std())
+    if site == 'all':
+        # compute mean within vendor (mean of the within-site means)
+        # https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L423
+        mean = float(spinegeneric_pd.groupby(['site']).agg([np.mean]).mean())
+        # compute std within vendor (std of the within-site means)
+        # https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L425
+        std = float(spinegeneric_pd.groupby(['site']).agg([np.mean]).std())
+    else:
+        # compute mean within vendor (mean of the within-site means)
+        # https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L423
+        mean = float(spinegeneric_pd[spinegeneric_pd['manufacturer'] == site_to_manufacturer[site]].groupby(['site']).
+                     agg([np.mean]).mean())
+        # compute std within vendor (std of the within-site means)
+        # https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L425
+        std = float(spinegeneric_pd[spinegeneric_pd['manufacturer'] == site_to_manufacturer[site]].groupby(['site']).
+                    agg([np.mean]).std())
+
     print(f'{site_to_manufacturer[site]}: {mean} +- {std}')
     x = site_x_axis[site]
     # add rectangle for variance
@@ -161,8 +185,13 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     :param fname_fig:
     :return:
     """
+    # duplicated the whole dataframe, but change site to 'all' --> this will allow to add 'All sites' to rainplot
+    temp_pd = metric_pd.copy()
+    temp_pd['site'] = 'all'
+    concat_pd = pd.concat([metric_pd, temp_pd])
+
     fig, ax = plt.subplots(figsize=(21, 7))
-    ax = pt.RainCloud(data=metric_pd,
+    ax = pt.RainCloud(data=concat_pd,
                       x='site',
                       y='MEAN(area)',
                       hue='phenotype',
@@ -181,6 +210,9 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
                       )
     plt.title('C2-C3 spinal cord cross-sectional area (CSA) from T2w', fontsize=FONTSIZE)
     ax.set_ylabel('CSA [$mm^2$]', fontsize=FONTSIZE)
+    # Set ylim to have space for markers of significance
+    ax.set_ylim([50, 105])
+
     ax.set_xlabel('')
     # Move grid to background (i.e. behind other elements)
     ax.set_axisbelow(True)
@@ -189,6 +221,10 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
 
     # Modify x-ticks labels (set full site name and scanner type)
     ax.set_xticklabels(site_to_vendor.values())
+    # Make 'All sites' label bold
+    label_all_sites = ax.get_xticklabels()[0]
+    label_all_sites.set_fontweight('bold')
+
     # Increase size of xticks and yticks
     plt.setp(ax.xaxis.get_majorticklabels(), fontsize=FONTSIZE)
     plt.setp(ax.yaxis.get_majorticklabels(), fontsize=FONTSIZE)
@@ -202,6 +238,8 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     for patch in ax.patches:
         r, g, b, a = patch.get_facecolor()
         patch.set_facecolor((r, g, b, .0))
+
+    #plt.text(0, 50, '20', fontsize=10, horizontalalignment='center')
 
     # Add mean and SD spine-generic values
     for site in site_to_vendor.keys():
@@ -264,14 +302,29 @@ def format_pvalue(p_value, alpha=0.001, decimal_places=3, include_space=False, i
 
 
 def compute_partial_correlation(canproco_pd, site):
+    """
+    Compute partial correlation with phenotype as a covariate
+    :param canproco_pd:
+    :param site:
+    :return:
+    """
     # Work only with MS patients
-    ms_pd = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]
+    if site == 'all':
+        ms_pd = canproco_pd[canproco_pd['pathology'] == 'MS']
+    else:
+        ms_pd = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]
     # Convert str to int (to be compatible with partial correlation)
     ms_pd = ms_pd.replace({'phenotype': {'RRMS': 0, 'PPMS': 1, 'RIS': 2}})
     stats = pg.partial_corr(data=ms_pd, x='MEAN(area)', y='edss_M0', covar='phenotype', method='spearman')
     r = float(stats['r'])
     p_val = float(stats['p-val'])
-    print(f'{site}: Partial correlation EDSS vs CSA: r={r}, p-value{format_pvalue(p_val)}')
+
+    return r, p_val
+
+
+def compute_correlation(csa, edss):
+
+    r, p_val = stats.pearsonr(csa, edss)
 
     return r, p_val
 
@@ -307,37 +360,61 @@ def compute_regression(x, y):
     return x_vals, y_vals
 
 
-def create_csa_edss_correlation_figure(canproco_pd, fname_fig):
-
+def create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig):
+    """
+    Plot the relationship between EDSS score and CSA per-site and per-phenotype. Also, plot linear fit per-phenotype and
+    for the whole cohort.
+    :param canproco_pd:
+    :param fname_fig:
+    :return:
+    """
     # Create main figure
-    fig, axes = plt.subplots(1, 5, figsize=(30, 7), sharey=True)
+    fig, axes = plt.subplots(2, 3, figsize=(20, 14), sharey=True)
     # Flatten 2D array into 1D to allow iteration by loop
     ax = axes.ravel()
-    # Loop across sites
-    for index, site in enumerate(site_to_vendor.keys()):
+    # Loop across sites (all means all sites together)
+    for index, site in enumerate(site_to_vendor_title.keys()):
         # Compute partial correlation (with phenotype as a covariate)
         r, p_val = compute_partial_correlation(canproco_pd, site)
-        # Compute linear regression for all MS patients together (i.e., across all phenotypes)
-        csa = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['MEAN(area)']
-        edss = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['edss_M0']
+        print(f'{site}: Partial correlation EDSS vs CSA: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
+        # Compute linear regression for all MS patients together (i.e., across all phenotypes) --> ['pathology'] == 'MS'
+        if site == 'all':
+            csa = canproco_pd[canproco_pd['pathology'] == 'MS']['MEAN(area)']
+            edss = canproco_pd[canproco_pd['pathology'] == 'MS']['edss_M0']
+            #phen = canproco_pd[canproco_pd['pathology'] == 'MS']['phenotype']
+        else:
+            csa = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['MEAN(area)']
+            edss = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['edss_M0']
+            #phen = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['phenotype']
         x_vals, y_vals = compute_regression(csa, edss)
         ax[index].plot(x_vals, y_vals, '--', color='black', alpha=.5, linewidth=3)
 
         # Insert text with corr coef and pval into every subplot/axis
-        ax[index].annotate('r={}; p{}'.format(round(r, 2), format_pvalue(p_val, alpha=0.05)), xy=(.97, .87),
-                           xycoords='axes fraction', fontsize=FONTSIZE_CORR, xytext=(-5, 5), textcoords='offset points',
+        ax[index].annotate('r={}; p{}'.format(round(r, 2), format_pvalue(p_val, alpha=0.05)), xy=(.98, .9),
+                           xycoords='axes fraction', fontsize=FONTSIZE_CORR-5, xytext=(-5, 5), textcoords='offset points',
                            ha='right', va='bottom', bbox=dict(edgecolor='black', facecolor='none', boxstyle='round'))
 
         for color, phenotype in enumerate(['RRMS', 'PPMS', 'RIS']):
             # Prepare variables for plotting
-            csa = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['MEAN(area)']
-            edss = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['edss_M0']
+            if site == 'all':
+                csa = canproco_pd[canproco_pd['phenotype'] == phenotype]['MEAN(area)']
+                edss = canproco_pd[canproco_pd['phenotype'] == phenotype]['edss_M0']
+                r, p_val = compute_correlation(csa, edss)
+            else:
+                csa = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['MEAN(area)']
+                edss = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['edss_M0']
+                r, p_val = compute_correlation(csa, edss)
+            print(f'{site}, {phenotype}: Correlation EDSS vs CSA: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
             # Plot individual scatter plots
             ax[index].scatter(csa, edss, color=color_pallete[color], alpha=.8, label=phenotype, s=100)
             x_vals, y_vals = compute_regression(csa, edss)
             ax[index].plot(x_vals, y_vals, '--', color=color_pallete[color], alpha=.8, linewidth=3)
-            ax[index].set_title(site_to_vendor[site], fontsize=FONTSIZE_CORR)
-            ax[index].set_xlabel('CSA [$mm^2$]', fontsize=FONTSIZE_CORR)
+            if site == 'all':
+                ax[index].set_title(site_to_vendor_title[site], fontsize=FONTSIZE_CORR, fontweight='bold')
+            else:
+                ax[index].set_title(site_to_vendor_title[site], fontsize=FONTSIZE_CORR)
+            if index > 2:
+                ax[index].set_xlabel('CSA [$mm^2$]', fontsize=FONTSIZE_CORR)
 
             # # Set fixed number of y-ticks
             # xmin, xmax = ax[index].get_xlim()
@@ -345,14 +422,19 @@ def create_csa_edss_correlation_figure(canproco_pd, fname_fig):
             # ax[index].set_xticks(custom_ticks)
             # ax[index].set_xticklabels(custom_ticks)
 
-            if index == 0:
+            if index == 0 or index == 3:
                 ax[index].set_ylabel('EDSS', fontsize=FONTSIZE_CORR)
             # Increase size of xticks and yticks
             plt.setp(ax[index].xaxis.get_majorticklabels(), fontsize=FONTSIZE_CORR)
             plt.setp(ax[index].yaxis.get_majorticklabels(), fontsize=FONTSIZE_CORR)
             # Show legend only for the last axis
-            #if index == 4:
-            #    ax[index].legend(fontsize=FONTSIZE-3)
+            # loc is used to move the legend below the text with corr coef and pval
+            if index == 5:
+                #legend = ax[index].legend(fontsize=FONTSIZE_CORR - 5, loc=(.65, .63))      # 5 sites
+                legend = ax[index].legend(fontsize=FONTSIZE_CORR - 5, loc=(.68, .66))      # all + 5 sites
+                #legend = ax[index].legend(fontsize=FONTSIZE_CORR - 5, loc=(.68, .75))       # all + 5 sites; no text
+                frame = legend.get_frame()  # sets up for color, edge, and transparency
+                frame.set_edgecolor('black')  # edge color of legend
     plt.subplots_adjust(wspace=-0.1)
     plt.tight_layout()
     # save figure
@@ -389,6 +471,8 @@ def compute_kruskal_per_site(metric_pd):
     """
     # Loop across sites
     for site in site_to_vendor.keys():
+        if site == 'all':
+            continue        # TODO: include 'all' to the df
         # Get values only for given site
         metric_pd_site = metric_pd[metric_pd['site'] == site]
         # Compute Kruskal-Wallis H-test
@@ -543,9 +627,9 @@ def main():
     # Compare CSA values between canproco healthy controls and spine-generic per manufacturer
     compare_healthy_controls(canproco_pd, spinegeneric_pd)
 
-    # Compute and plot correlation between EDSS and CSA
-    fname_fig = args.i_canproco.replace('.csv', '_correlation.png')
-    create_csa_edss_correlation_figure(canproco_pd, fname_fig)
+    # Compute and plot correlation between EDSS and CSA persite
+    fname_fig = args.i_canproco.replace('.csv', '_correlation_persite.png')
+    create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig)
 
 
 if __name__ == "__main__":
