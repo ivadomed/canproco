@@ -54,8 +54,8 @@ site_x_axis = {
 site_to_vendor = {
     "cal": "Calgary\nGE Discovery MR750",
     "van": "Vancouver\nPhilips Ingenia",
-    "mon": "Montreal\n Philips Ingenia",
-    "edm": "Edmonton\n Siemens Prisma",
+    "mon": "Montreal\nPhilips Ingenia",
+    "edm": "Edmonton\nSiemens Prisma",
     "tor": "Toronto\nSiemens Skyra",
 }
 
