@@ -319,87 +319,23 @@ if [[ -f ${file_stir}.nii.gz ]];then
 
 fi
 
-# ------------------------------------------------------------------------------
-# T2star
-# ------------------------------------------------------------------------------
-# Add suffix corresponding to contrast
-file_t2s="${file}_T2star"
-# Check if T2star image exists
-if [[ -f ${file_t2s}.nii.gz ]];then
-    # Make sure the image metadata is a valid JSON object
-    if [[ ! -s ${file_t2s}.json ]]; then
-      echo "{}" >> ${file_t2s}.json
-    fi
-
-    # Rename raw file
-    mv ${file_t2s}.nii.gz ${file_t2s}_raw.nii.gz
-
-    # Reorient to RPI
-    sct_image -i ${file_t2s}_raw.nii.gz -setorient RPI -o ${file_t2s}_raw_RPI.nii.gz
-    # Compute root-mean square across 4th dimension (if it exists)
-    sct_maths -i ${file_t2s}_raw_RPI.nii.gz -rms t -o ${file_t2s}_raw_RPI_rms.nii.gz
-
-    # Create a symbolic link to _raw_RPI_rms file (to be BIDS compliant)
-    mv ${file_t2s}_raw_RPI_rms.nii.gz ${file_t2s}.nii.gz
-
+# # ------------------------------------------------------------------------------
+# # MT
+# # ------------------------------------------------------------------------------
+if [[ -f ${file_t1_mts}.nii.gz ]];then
     # Spinal cord segmentation
-    # Note: For T2star images, we use sct_deepseg_sc
-    segment_if_does_not_exist ${file_t2s} 't2s' 'deepseg'
-
-    # TODO - bring vertebral levels from T2w into T2star - so far we do not have T2w_seg_labeled since we are working
-    # on manual T2w SC seg corrections
-    # sct_register_multimodal -i label_T1w/template/PAM50_levels.nii.gz -d ${file_t2s}.nii.gz -o PAM50_levels2${file_t2s}.nii.gz -identity 1 -x nn
-
+    segment_if_does_not_exist ${file_t1_mts} 't1' 'deepseg'
 fi
-# # ------------------------------------------------------------------------------
-# # MTS
-# # ------------------------------------------------------------------------------
-# # Go to subject folder for source images
-# cd ${SUBJECT}/anat
-# # Define variables
-# # We do a substitution '/' --> '_' in case there is a subfolder 'ses-0X/'
-# file="${SUBJECT//[\/]/_}"
 
-# file_t1w="${file}_acq-T1w_MTS"
-# file_mton="${file}_acq-MTon_MTS"
-# file_mtoff="${file}_acq-MToff_MTS"
-# file_mt="${file}_acq-MT_MTS"
+if [[ -f ${file_mton_mts}.nii.gz ]];then
+    # Spinal cord segmentation
+    segment_if_does_not_exist ${file_mton_mts} 't2s' 'deepseg'
+fi
 
-# if [[ -e "${file_t1w}.nii.gz" && -e "${file_mton}.nii.gz" && -e "${file_mtoff}.nii.gz" && -e "${file_mt}.nii.gz" ]]; then
-#   # Segment lesion (only if it does not exist)
-#   lesionseg_if_does_not_exist $file_t1w "t1" ${CENTERLINE_METHOD}
-#   file_lesionseg_t1w=$FILELESION
-
-#   # Create mask
-#   sct_create_mask -i ${file_t1w}.nii.gz -p centerline,${file_t1w_seg}.nii.gz -size 35mm -o ${file_t1w}_mask.nii.gz
-#   # Crop data for faster processing
-#   sct_crop_image -i ${file_t1w}.nii.gz -m ${file_t1w}_mask.nii.gz -o ${file_t1w}_crop.nii.gz
-#   # file_t1w="${file_t1w}_crop"
-
-#   # Redefine variable for final SC segmentation mask as path changed
-#   file_seg_dil_t1w=${PATH_DATA_PROCESSED}/${SUBJECT}/anat/${file_t1w_seg}_dilate
-#   # Make sure the first rater metadata is a valid JSON object
-#   if [[ ! -s ${file_gt}.json ]]; then
-#     echo "{}" >> ${file_gt}.json
-#   fi
-#   # Crop the manual seg
-#   sct_crop_image -i ${file_gt}.nii.gz -m ${file_seg_dil_t1w}.nii.gz -o ${file_gt}_crop.nii.gz
-#   # Go back to the root output path
-#   cd $PATH_OUTPUT
-#   # Create and populate clean data processed folder for training
-#   PATH_DATA_PROCESSED_CLEAN="${PATH_DATA_PROCESSED}_clean"
-#   # Copy over required BIDs files
-#   mkdir -p $PATH_DATA_PROCESSED_CLEAN $PATH_DATA_PROCESSED_CLEAN/${SUBJECT} $PATH_DATA_PROCESSED_CLEAN/${SUBJECT}/anat
-#   rsync -avzh $PATH_DATA_PROCESSED/dataset_description.json $PATH_DATA_PROCESSED_CLEAN/
-#   rsync -avzh $PATH_DATA_PROCESSED/participants.* $PATH_DATA_PROCESSED_CLEAN/
-#   rsync -avzh $PATH_DATA_PROCESSED/README $PATH_DATA_PROCESSED_CLEAN/
-#   rsync -avzh $PATH_DATA_PROCESSED/dataset_description.json $PATH_DATA_PROCESSED_CLEAN/derivatives/
-#   # For lesion segmentation task, copy SC crops as inputs and lesion annotations as targets
-#   rsync -avzh $PATH_DATA_PROCESSED/${SUBJECT}/anat/${file}_crop.nii.gz $PATH_DATA_PROCESSED_CLEAN/${SUBJECT}/anat/${file}.nii.gzROCESSED_CLEAN/${SUBJECT}/anat/${file}.json
-#   mkdir -p $PATH_DATA_PROCESSED_CLEAN/derivatives $PATH_DATA_PROCESSED_CLEAN/derivatives/labels $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${SUBJECT} $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${SUBJECT}/anat/
-#   rsync -avzh $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/anat/${file_gt}_crop.nii.gz $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${SUBJECT}/anat/${file_gt}.nii.gz
-#   rsync -avzh $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/anat/${file_gt}.json $PATH_DATA_PROCESSED_CLEAN/derivatives/labels/${SUBJECT}/anat/${file_gt}.json
-
+if [[ -f ${file_mtoff_mts}.nii.gz ]];then
+    # Spinal cord segmentation
+    segment_if_does_not_exist ${file_mtoff_mts} 't1' 'deepseg'
+fi
 
 #   # Register PD (mtoff)->T1w
 #   # Tips: here we only use rigid transformation because both images have very similar sequence parameters. We don't want to use SyN/BSplineSyN to avoid introducing spurious deformations.
