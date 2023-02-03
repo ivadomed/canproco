@@ -269,27 +269,27 @@ done
 # -------------------------------------------------------------------------
 # PSIR
 # -------------------------------------------------------------------------
-# Add suffix corresponding to contrast
-file_psir=${file}_PSIR
 # Check if PSIR image exists
 if [[ -f ${file_psir}.nii.gz ]];then
-    # Make sure the image metadata is a valid JSON object
-    if [[ ! -s ${file_psir}.json ]]; then
-      echo "{}" >> ${file_psir}.json
-    fi
-
-    # Rename raw file
-    mv ${file_psir}.nii.gz ${file_psir}_raw.nii.gz
-
-    # Reorient to RPI
-    sct_image -i ${file_psir}_raw.nii.gz -setorient RPI -o ${file_psir}_raw_RPI.nii.gz
-
-    # Create a symbolic link to _raw_RPI file (to be BIDS compliant)
-    mv ${file_psir}_raw_RPI.nii.gz ${file_psir}.nii.gz
+    # Warp T2w SC seg to PSIR
+    # NOTE: we cannot warp the T2w centerline to PSIR because interpolation causes missing centerline in some slices
+    # Thus, we warp T2w SC seg to PSIR, and then extract the centerline from the warped seg
+    sct_apply_transfo -i ${FILESEG}.nii.gz -d ${file_psir}.nii.gz -w warp_${file_t2w}2${file_psir}.nii.gz -o ${FILESEG}2${file_psir}.nii.gz -x nn
+    # Fit a regularized centerline on an existing cord segmentation.
+    # Note, -centerline-algo bspline and -centerline-smooth 30 is the default setting in SCT v5.8. We make these parameters explicit in case the default values change in future SCT version.
+    sct_get_centerline -i ${FILESEG}2${file_psir}.nii.gz -method fitseg -centerline-algo bspline -centerline-smooth 30 -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
     # Spinal cord segmentation
-    # Note: For PSIR images, we use sct_propseg. Generally, it works better than sct_deepseg_sc.
-    segment_if_does_not_exist ${file_psir} 't1' 'propseg'
+    # Try different sct_propseg settings
+    sct_propseg -i ${file_psir}.nii.gz -c t1 -o ${file_psir}_seg_propseg_t1.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_propseg -i ${file_psir}.nii.gz -c t1 -init-centerline ${FILESEG}2${file_psir}_centerline.nii.gz -o ${file_psir}_seg_propseg_t1_initcenterline.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_propseg -i ${file_psir}.nii.gz -c t2 -o ${file_psir}_seg_propseg_t2.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_propseg -i ${file_psir}.nii.gz -c t2 -init-centerline ${FILESEG}2${file_psir}_centerline.nii.gz -o ${file_psir}_seg_propseg_t2_initcenterline.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    # Try different sct_deepseg_sc settings
+    sct_deepseg_sc -i ${file_psir}.nii.gz -c t1 -o ${file_psir}_seg_deepseg_sc_t1.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_deepseg_sc -i ${file_psir}.nii.gz -c t1 -centerline file -file_centerline ${FILESEG}2${file_psir}_centerline.nii.gz -o ${file_psir}_seg_deepseg_sc_t1_centerline.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_deepseg_sc -i ${file_psir}.nii.gz -c t2 -o ${file_psir}_seg_deepseg_sc_t2.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_deepseg_sc -i ${file_psir}.nii.gz -c t2 -centerline file -file_centerline ${FILESEG}2${file_psir}_centerline.nii.gz -o ${file_psir}_seg_deepseg_sc_t2_centerline.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 fi
 
 # -------------------------------------------------------------------------
