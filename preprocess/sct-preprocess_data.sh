@@ -219,6 +219,54 @@ if [[ -f ${file_t2w}.nii.gz ]];then
 fi
 
 # -------------------------------------------------------------------------
+# Co-register other contrast to T2w
+# -------------------------------------------------------------------------
+# Initialize filenames
+file_stir="${file}_STIR"
+file_psir="${file}_PSIR"
+file_t2s="${file}_T2star"
+file_t1_mts="${file}_acq-T1w_MTS"
+file_mton_mts="${file}_acq-MTon_MTS"
+file_mtoff_mts="${file}_acq-MToff_MTS"
+
+contrasts=($file_stir $file_psir $file_t2s $file_t1_mts $file_mton_mts $file_mtoff_mts)
+
+
+# Prepare T2star images
+# Check if T2star image exists
+if [[ -f ${file_t2s}.nii.gz ]];then
+    # Rename raw file
+    mv ${file_t2s}.nii.gz ${file_t2s}_raw.nii.gz
+    file_t2s="${file_t2s}_raw"
+    # Compute root-mean square across 4th dimension (if it exists), corresponding to all echoes in Philips scans.
+    sct_maths -i ${file_t2s}.nii.gz -rms t -o ${file_t2s}_rms.nii.gz
+    file_t2s="${file_t2s}_rms"
+    # Rename _rms file
+    mv ${file_t2s}.nii.gz ${file}_T2star.nii.gz
+
+    # Spinal cord segmentation
+    # Note: For T2star images, we use sct_deepseg_sc
+    segment_if_does_not_exist ${file_t2s} 't2s' 'deepseg'
+    # TODO - bring vertebral levels from T2w into T2star
+fi
+
+
+# Loop across contrasts
+for contrast in "${contrasts[@]}"; do
+    # Check if contrast exists
+    if [[ -f ${contrast}.nii.gz ]];then
+        # Bring contrast to T2w space
+        sct_register_multimodal -i ${contrast}.nii.gz -d ${file_t2w}.nii.gz -o ${contrast}2${file_t2w}.nii.gz -identity 1 -x nn
+
+        # Create QC report to assess registration quality
+        # Note: registration quality is assessed by comparing the ${contrast} image to the T2w centerline
+        sct_qc -i ${contrast}2${file_t2w}.nii.gz -s ${FILESEG}.nii.gz -p sct_get_centerline -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_qc -i ${contrast}2${file_t2w}.nii.gz -s ${FILESEG}.nii.gz -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
+   fi
+done
+
+
+# -------------------------------------------------------------------------
 # PSIR
 # -------------------------------------------------------------------------
 # Add suffix corresponding to contrast
