@@ -161,9 +161,6 @@ fi
 if [[ ! -f "dataset_description.json" ]]; then
   rsync -avzh $PATH_DATA/dataset_description.json .
 fi
-#if [[ ! -f "README" ]]; then
-#  rsync -avzh $PATH_DATA/README .
-#fi
 
 # Copy source images
 # Note: we use '/./' in order to include the sub-folder 'ses-0X'
