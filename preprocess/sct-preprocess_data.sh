@@ -187,7 +187,6 @@ if [[ -f ${file_t2w}.nii.gz ]];then
     if [[ ! -s ${file_t2w}.json ]]; then
       echo "{}" >> ${file_t2w}.json
     fi
-
     # Rename raw file
     mv ${file_t2w}.nii.gz ${file_t2w}_raw.nii.gz
 
