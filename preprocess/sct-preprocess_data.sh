@@ -229,7 +229,7 @@ if [[ -f ${file_t2s}.nii.gz ]];then
 
     # Spinal cord segmentation
     # Note: For T2star images, we use sct_deepseg_sc
-    segment_if_does_not_exist ${file_t2s} 't2s' 'deepseg'
+    segment_if_does_not_exist ${file}_T2star 't2s' 'deepseg'
     # TODO - bring vertebral levels from T2w into T2star
 fi
 
