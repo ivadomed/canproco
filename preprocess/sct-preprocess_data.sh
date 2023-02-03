@@ -337,43 +337,7 @@ if [[ -f ${file_mtoff_mts}.nii.gz ]];then
     segment_if_does_not_exist ${file_mtoff_mts} 't1' 'deepseg'
 fi
 
-#   # Register PD (mtoff)->T1w
-#   # Tips: here we only use rigid transformation because both images have very similar sequence parameters. We don't want to use SyN/BSplineSyN to avoid introducing spurious deformations.
-#   sct_register_multimodal -i ${file_mtoff}.nii.gz -d ${file_t1w}.nii.gz -dseg ${file_t1w_seg}.nii.gz -param step=1,type=im,algo=rigid,slicewise=1,metric=CC -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
-#   file_mtoff="${file_mtoff}_reg"
-#   # Register MTon->T1w
-#   sct_register_multimodal -i ${file_mton}.nii.gz -d ${file_t1w}.nii.gz -dseg ${file_t1w_seg}.nii.gz -param step=1,type=im,algo=rigid,slicewise=1,metric=CC -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
-#   file_mton="${file_mton}_reg"
-#     # Register MT->T1w
-#   sct_register_multimodal -i ${file_mt}.nii.gz -d ${file_t1w}.nii.gz -dseg ${file_t1w_seg}.nii.gz -param step=1,type=im,algo=rigid,slicewise=1,metric=CC -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
-#   file_mton="${file_mton}_reg"
-#   # Copy json files to match file basename (it will later be used by sct_compute_mtsat)
-#   cp ${SUBJECT}_acq-T1w_MTS.json ${file_t1w}.json
-#   cp ${SUBJECT}_acq-MToff_MTS.json ${file_mtoff}.json
-#   cp ${SUBJECT}_acq-MTon_MTS.json ${file_mton}.json
-#   # # Register template->T1w_ax (using template-T1w as initial transformation)
-#   # sct_register_multimodal -i $SCT_DIR/data/PAM50/template/PAM50_t1.nii.gz -iseg $SCT_DIR/data/PAM50/template/PAM50_cord.nii.gz -d ${file_t1w}.nii.gz -dseg ${file_t1w_seg}.nii.gz -param step=1,type=seg,algo=slicereg,metric=MeanSquares,smooth=2:step=2,type=im,algo=syn,metric=CC,iter=5,gradStep=0.5 -initwarp warp_template2T1w.nii.gz -initwarpinv warp_T1w2template.nii.gz
-#   # # Rename warping field for clarity
-#   # mv warp_PAM50_t12${file_t1w}.nii.gz warp_template2axT1w.nii.gz
-#   # mv warp_${file_t1w}2PAM50_t1.nii.gz warp_axT1w2template.nii.gz
-#   # # Warp template
-#   # sct_warp_template -d ${file_t1w}.nii.gz -w warp_template2axT1w.nii.gz -ofolder label_axT1w -qc ${PATH_QC} -qc-subject ${SUBJECT}
-#   # # Compute MTR
-#   # sct_compute_mtr -mt0 ${file_mtoff}.nii.gz -mt1 ${file_mton}.nii.gz
-#   # # Compute MTsat
-#   # sct_compute_mtsat -mt ${file_mton}.nii.gz -pd ${file_mtoff}.nii.gz -t1 ${file_t1w}.nii.gz
-#   # # Extract MTR, MTsat and T1 in WM between C2 and C5 vertebral levels
-#   # sct_extract_metric -i mtr.nii.gz -f label_axT1w/atlas -l 51 -vert 2:5 -vertfile label_axT1w/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/MTR.csv -append 1
-#   # sct_extract_metric -i mtsat.nii.gz -f label_axT1w/atlas -l 51 -vert 2:5 -vertfile label_axT1w/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/MTsat.csv -append 1
-#   # sct_extract_metric -i t1map.nii.gz -f label_axT1w/atlas -l 51 -vert 2:5 -vertfile label_axT1w/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/T1.csv -append 1
-#   # # Compute MTR in LCST between C2 and C5 vertebral levels
-#   # sct_extract_metric -i mtr.nii.gz -f label_axT1w/atlas -l 2,17 -vert 2:5 -vertfile label_axT1w/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/MTR_LCST.csv -append 1 -combine 1
-#   # # Compute MTR in LCST between C2 and C5 vertebral levels
-#   # sct_extract_metric -i mtr.nii.gz -f label_axT1w/atlas -l 0,1,15,16 -vert 2:5 -vertfile label_axT1w/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/MTR_DC.csv -append 1 -combine 1
-# else
-#   echo "WARNING: MTS dataset is incomplete."
-# fi
-
+# # ------------------------------------------------------------------------------
 # Display useful info for the log
 end=`date +%s`
 runtime=$((end-start))
@@ -383,63 +347,3 @@ echo "SCT version: `sct_version`"
 echo "Ran on:      `uname -nsr`"
 echo "Duration:    $(($runtime / 3600))hrs $((($runtime / 60) % 60))min $(($runtime % 60))sec"
 echo "~~~"
-
-
-
-
-
-
-
-# # # Add suffix corresponding to contrast
-# # if [[ ! -f ${file}MT_MTS.nii.gz ]]; then 
-# #   file=${file}_acq-MT_MTS
-# # elif [[ ! -f ${file}_STIR.nii.gz ]]; then
-# #   file=${file}_STIR
-# # elif [[ ! -f ${file}_T2star.nii.gz ]]; then
-# # file=${file}_T2star
-# # elif [[ ! -f ${file}_T2w.nii.gz ]]; 
-# # file=${file}_T2w
-# # elif [[ ! -f ${file}_PSIR.nii.gz ]]; then
-# #   file=${file}_PSIR
-# # elif [[ ! -f ${file}T1w_MTS.nii.gz ]]; 
-# #   file=${file}_T1w_MTS
-# # elif [[ ! -f ${file}T1w.nii.gz ]]; 
-# #   file=${file}_T1w
-# # elif [[ ! -f ${file}MTon_MTS.nii.gz ]]; then
-# #   file=${file}_acq-MTon_MTS
-# # else [[ ! -f ${file}MToff_MTS.nii.gz ]];
-# #   file=${file}_acq-MToff_MTS
-# # fi
-
-# # Make sure the image metadata is a valid JSON object
-# if [[ ! -s ${file}.json ]]; then
-#   echo "{}" >> ${file}.json
-# fi
-
-# # Spinal cord segmentation using the appropriate image contrast
-# # for fil in file;do
-# #   if [[ "$fil" == *"$T2w"* ]];then
-# #     segment_if_does_not_exist ${file} t2 ${CENTERLINE_METHOD}
-# #     file_seg="${FILESEG}"
-# #   elif [[ "$fil" == *"$T2star"* ]];then
-# #     segment_if_does_not_exist ${file} t2s ${CENTERLINE_METHOD}
-# #     file_seg="${FILESEG}"
-# #   elif [[ "$fil" == *"$T1w"* ]];then
-# #     segment_if_does_not_exist ${file} t1 ${CENTERLINE_METHOD}
-# #     file_seg="${FILESEG}"
-# #   else 
-# #     echo "contrast not supported. Skipping"
-# #   fi
-
-# segment_if_does_not_exist ${file} t2 ${CENTERLINE_METHOD}
-# file_seg="${FILESEG}"
-
-# # get image dims from nifti header info
-# ## get header
-# ## | = from that output, apply next function / call
-# ### -f1 = select 1st col; -d ',' = using ',' as the delimiter 
-# ####  grep dim = get all lines that have word 'dim' 
-# ##### sed -n '1p' = select first line. See https://riptutorial.com/sed/example/13752/specific-range-of-lines 
-# ###### -f2 = select 2nd col; -d '[' = delimited by '['
-# ####### $( ) = assign to shell variable
-# # dims=$(sct_image -i ${file}.nii.gz -header | cut -f1 -d ',' | grep dim | sed -n '1p' | cut -f2 -d '[')
