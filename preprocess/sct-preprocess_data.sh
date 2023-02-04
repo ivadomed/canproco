@@ -279,28 +279,12 @@ fi
 # -------------------------------------------------------------------------
 # STIR
 # -------------------------------------------------------------------------
+file_stir="${file}_STIR"
 # Check if STIR image exists
 if [[ -f ${file_stir}.nii.gz ]];then
-    # Warp T2w SC seg to STIR
-    # NOTE: we cannot warp the T2w centerline to STIR because interpolation causes missing centerline in some slices
-    # Thus, we warp T2w SC seg to STIR, and then extract the centerline from the warped seg
-    sct_apply_transfo -i ${FILESEG_T2w}.nii.gz -d ${file_stir}.nii.gz -w warp_${file_t2w}2${file_stir}.nii.gz -o ${FILESEG_T2w}2${file_stir}.nii.gz -x nn
-    # Fit a regularized centerline on an existing cord segmentation.
-    # Note, -centerline-algo bspline and -centerline-smooth 30 is the default setting in SCT v5.8. We make these parameters explicit in case the default values change in future SCT version.
-    sct_get_centerline -i ${FILESEG_T2w}2${file_stir}.nii.gz -method fitseg -centerline-algo bspline -centerline-smooth 30 -qc ${PATH_QC} -qc-subject ${SUBJECT}
-
     # Spinal cord segmentation
-    # Try different sct_propseg settings
-    sct_propseg -i ${file_stir}.nii.gz -c t1 -o ${file_stir}_seg_propseg_t1.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    sct_propseg -i ${file_stir}.nii.gz -c t1 -init-centerline ${FILESEG_T2w}2${file_stir}_centerline.nii.gz -o ${file_stir}_seg_propseg_t1_initcenterline.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    sct_propseg -i ${file_stir}.nii.gz -c t2 -o ${file_stir}_seg_propseg_t2.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    sct_propseg -i ${file_stir}.nii.gz -c t2 -init-centerline ${FILESEG_T2w}2${file_stir}_centerline.nii.gz -o ${file_stir}_seg_propseg_t2_initcenterline.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    # Try different sct_deepseg_sc settings
-    sct_deepseg_sc -i ${file_stir}.nii.gz -c t1 -o ${file_stir}_seg_deepseg_sc_t1.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    sct_deepseg_sc -i ${file_stir}.nii.gz -c t1 -centerline file -file_centerline ${FILESEG_T2w}2${file_stir}_centerline.nii.gz -o ${file_stir}_seg_deepseg_sc_t1_centerline.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    sct_deepseg_sc -i ${file_stir}.nii.gz -c t2 -o ${file_stir}_seg_deepseg_sc_t2.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-    sct_deepseg_sc -i ${file_stir}.nii.gz -c t2 -centerline file -file_centerline ${FILESEG_T2w}2${file_stir}_centerline.nii.gz -o ${file_stir}_seg_deepseg_sc_t2_centerline.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-
+    # Note: we use the T2w contrast for STIR segmentation
+    segment_if_does_not_exist $file_stir 't2' 'deepseg'
 fi
 
 # # ------------------------------------------------------------------------------
