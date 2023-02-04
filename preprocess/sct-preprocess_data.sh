@@ -202,20 +202,9 @@ if [[ -f ${file_t2w}.nii.gz ]];then
 fi
 
 # -------------------------------------------------------------------------
-# Co-register other contrast to T2w
+# T2star
 # -------------------------------------------------------------------------
-# Initialize filenames
-file_stir="${file}_STIR"
-file_psir="${file}_PSIR"
 file_t2s="${file}_T2star"
-file_t1_mts="${file}_acq-T1w_MTS"
-file_mton_mts="${file}_acq-MTon_MTS"
-file_mtoff_mts="${file}_acq-MToff_MTS"
-
-contrasts=($file_stir $file_psir $file_t2s $file_t1_mts $file_mton_mts $file_mtoff_mts)
-
-
-# Prepare T2star images
 # Check if T2star image exists
 if [[ -f ${file_t2s}.nii.gz ]];then
     # Rename raw file
@@ -232,23 +221,6 @@ if [[ -f ${file_t2s}.nii.gz ]];then
     segment_if_does_not_exist ${file}_T2star 't2s' 'deepseg'
     # TODO - bring vertebral levels from T2w into T2star
 fi
-
-
-# Loop across contrasts
-for contrast in "${contrasts[@]}"; do
-    # Check if contrast exists
-    if [[ -f ${contrast}.nii.gz ]];then
-        # Bring contrast to T2w space
-        sct_register_multimodal -i ${contrast}.nii.gz -d ${file_t2w}.nii.gz -o ${contrast}2${file_t2w}.nii.gz -identity 1 -x nn
-
-        FILESEG_T2w=${file_t2w}_seg
-        # Create QC report to assess registration quality
-        # Note: registration quality is assessed by comparing the ${contrast} image to the T2w SC seg
-        sct_qc -i ${contrast}2${file_t2w}.nii.gz -s ${FILESEG_T2w}.nii.gz -p sct_get_centerline -qc ${PATH_QC} -qc-subject ${SUBJECT}
-        sct_qc -i ${contrast}2${file_t2w}.nii.gz -s ${FILESEG_T2w}.nii.gz -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
-   fi
-done
-
 
 # -------------------------------------------------------------------------
 # PSIR
@@ -278,6 +250,9 @@ fi
 # # ------------------------------------------------------------------------------
 # # MT
 # # ------------------------------------------------------------------------------
+file_t1_mts="${file}_acq-T1w_MTS"
+file_mton_mts="${file}_acq-MTon_MTS"
+file_mtoff_mts="${file}_acq-MToff_MTS"
 if [[ -f ${file_t1_mts}.nii.gz ]];then
     # Spinal cord segmentation
     segment_if_does_not_exist ${file_t1_mts} 't1' 'deepseg'
