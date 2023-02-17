@@ -117,3 +117,5 @@ python manual_correction.py -path-in <INPUT_PATH> -config <CONFIG_FILE> -path-ou
   ```
 
   </details>
+
+Here are several helpful videos reviewing how to correct manual lesion segmentations: [1](https://www.dropbox.com/s/j1f81vtmmmkddtv/Screen%20Recording%202023-01-09%20at%209.45.40%20AM.mov?dl=0), [2](https://www.dropbox.com/s/bm6vpcqe062t2j0/Screen%20Recording%202023-01-11%20at%201.54.36%20PM.mov?dl=0), [3](https://www.dropbox.com/s/00xjsk917wwkp7b/Screen%20Recording%202023-01-11%20at%202.20.58%20PM.mov?dl=0), [4](https://www.dropbox.com/s/3gkrfslf6gflsjg/Screen%20Recording%202023-01-11%20at%203.38.47%20PM.mov?dl=0).
