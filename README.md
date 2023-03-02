@@ -94,11 +94,12 @@ Lesions are segmented on the PSIR or STIR contrasts (when available). The workfl
 - User create/adjust the segmentation mask using editing tools. Toggle the lesion overlay on/off to help validate the accuracy of the label ('Command F' on a Mac),
 - Save the mask
 
-We created a script to do this, which you can download [here](https://github.com/spinalcordtoolbox/manual-correction). 
+We created a script to do this, which you can download [here](https://github.com/spinalcordtoolbox/manual-correction/tree/r20230302). 
 
 Then, run:
+
 ```bash
-python manual_correction.py -path-in <INPUT_PATH> -config <CONFIG_FILE> -path-out <OUTPUT_PATH> -viewer fsleyes
+python manual_correction.py -path-in <INPUT_PATH> -config <CONFIG_FILE> -path-out <OUTPUT_PATH>
 ```
 
 - `INPUT_PATH`: BIDS dataset from which manual lesions will be identified
