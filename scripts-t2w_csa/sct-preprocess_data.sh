@@ -220,8 +220,10 @@ if [[ -f ${file_stir}.nii.gz ]];then
     mv ${file_stir}_raw_RPI.nii.gz ${file_stir}.nii.gz
 
     # Bring T2w segmentation into STIR space
-    # Note: we are bringing the segmentation into the STIR space to be able to run sct_analyze_lesion on the STIR image.
-    sct_register_multimodal -i ${file_t2w}_seg.nii.gz -d ${file_stir}.nii.gz -identity 1 -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    # Note: we cannot generate QC because QC for sct_register_multimodal requires '-dseg' (which is not available for STIR images)
+    sct_register_multimodal -i ${file_t2w}.nii.gz -d ${file_stir}.nii.gz -identity 1 -x nn
+    # Bring T2w segmentation into STIR space to be able to run sct_analyze_lesion on the STIR image
+    sct_apply_transfo -i ${file_t2w}_seg.nii.gz -d ${file_stir}.nii.gz -w warp_${file_t2w}2${file_stir}.nii.gz -x linear -o ${file_t2w}_seg_reg.nii.gz
     # Generate QC to assess registered segmentation
     sct_qc -i ${file_stir}.nii.gz -s ${file_t2w}_seg_reg.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
@@ -247,8 +249,10 @@ if [[ -f ${file_psir}.nii.gz ]];then
     mv ${file_psir}_raw_RPI.nii.gz ${file_psir}.nii.gz
 
     # Bring T2w segmentation into PSIR space
-    # Note: we are bringing the segmentation into the PSIR space to be able to run sct_analyze_lesion on the PSIR image.
-    sct_register_multimodal -i ${file_t2w}_seg.nii.gz -d ${file_psir}.nii.gz -identity 1 -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    # Note: we cannot generate QC because QC for sct_register_multimodal requires '-dseg' (which is not available for PSIR images)
+    sct_register_multimodal -i ${file_t2w}.nii.gz -d ${file_psir}.nii.gz -identity 1 -x nn
+    # Bring T2w segmentation into PSIR space to be able to run sct_analyze_lesion on the STIR image
+    sct_apply_transfo -i ${file_t2w}_seg.nii.gz -d ${file_psir}.nii.gz -w warp_${file_t2w}2${file_psir}.nii.gz -x linear -o ${file_t2w}_seg_reg.nii.gz
     # Generate QC to assess registered segmentation
     sct_qc -i ${file_psir}.nii.gz -s ${file_t2w}_seg_reg.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
