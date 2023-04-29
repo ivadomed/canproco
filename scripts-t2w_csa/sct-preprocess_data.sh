@@ -103,6 +103,27 @@ label_if_does_not_exist(){
   fi
 }
 
+analyze_lesion(){
+  ###
+  #  This function checks if a manual lesion segmentation exists, then:
+  #    - If it does, copy it locally and use it to compute lesion metrics
+  #    - If it doesn't, skip lesion analysis
+  ###
+  local file_lesion="$1"
+  local file_sc="$2"
+  # Update global variable with segmentation file name
+  FILELESION="${file_lesion}_lesion"
+  FILELESIONMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELESION}-manual.nii.gz"
+  echo "Looking for manual lesion segmentation: $FILELESIONMANUAL"
+  if [[ -e $FILELESIONMANUAL ]]; then
+    echo "Found! Using manual lesion segmentation."
+    rsync -avzh $FILELESIONMANUAL ${FILELESION}.nii.gz
+    sct_analyze_lesion -m ${FILELESION}.nii.gz -s ${file_sc}.nii.gz -ofolder ${PATH_RESULTS}
+  else
+    echo "Lesion segmentation not found. Skipping lesion analysis."
+  fi
+}
+
 # Retrieve input params and other params
 SUBJECT=$1
 
@@ -180,6 +201,64 @@ if [[ -f ${file_t2w}.nii.gz ]];then
     # Compute average cord CSA between C2 and C3
     sct_process_segmentation -i ${file_t2w}_seg.nii.gz -vert 2:3 -vertfile ${file_t2w}_seg_labeled.nii.gz -o ${PATH_RESULTS}/csa-SC_T2w.csv -append 1
 fi
+
+# -------------------------------------------------------------------------
+# STIR
+# -------------------------------------------------------------------------
+# Add suffix corresponding to contrast
+file_stir=${file}_STIR
+# Check if STIR image exists
+if [[ -f ${file_stir}.nii.gz ]];then
+
+    # Rename raw file
+    mv ${file_stir}.nii.gz ${file_stir}_raw.nii.gz
+
+    # Reorient to RPI
+    sct_image -i ${file_stir}_raw.nii.gz -setorient RPI -o ${file_stir}_raw_RPI.nii.gz
+
+    # Create a symbolic link to _raw_RPI file (to be BIDS compliant)
+    mv ${file_stir}_raw_RPI.nii.gz ${file_stir}.nii.gz
+
+    # Bring T2w segmentation into STIR space
+    # Note: we are bringing the segmentation into the STIR space to be able to run sct_analyze_lesion on the STIR image.
+    sct_register_multimodal -i ${file_t2w}_seg.nii.gz -d ${file_stir}.nii.gz -identity 1 -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    # Generate QC to assess registered segmentation
+    sct_qc -i ${file_stir}.nii.gz -s ${file_t2w}_seg_reg.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+    # Compute statistics on MS lesions
+    analyze_lesion ${file_stir} ${file_t2w}_seg_reg
+fi
+
+# -------------------------------------------------------------------------
+# PSIR
+# -------------------------------------------------------------------------
+# Add suffix corresponding to contrast
+file_psir=${file}_PSIR
+# Check if PSIR image exists
+if [[ -f ${file_psir}.nii.gz ]];then
+
+    # Rename raw file
+    mv ${file_psir}.nii.gz ${file_psir}_raw.nii.gz
+
+    # Reorient to RPI
+    sct_image -i ${file_psir}_raw.nii.gz -setorient RPI -o ${file_psir}_raw_RPI.nii.gz
+
+    # Create a symbolic link to _raw_RPI file (to be BIDS compliant)
+    mv ${file_psir}_raw_RPI.nii.gz ${file_psir}.nii.gz
+
+    # Bring T2w segmentation into PSIR space
+    # Note: we are bringing the segmentation into the PSIR space to be able to run sct_analyze_lesion on the PSIR image.
+    sct_register_multimodal -i ${file_t2w}_seg.nii.gz -d ${file_psir}.nii.gz -identity 1 -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    # Generate QC to assess registered segmentation
+    sct_qc -i ${file_psir}.nii.gz -s ${file_t2w}_seg_reg.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+    # Compute statistics on MS lesions
+    analyze_lesion ${file_psir} ${file_t2w}_seg_reg
+fi
+
+# -------------------------------------------------------------------------
+# END
+# -------------------------------------------------------------------------
 
 # Display useful info for the log
 end=`date +%s`
