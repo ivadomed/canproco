@@ -185,13 +185,9 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     :param fname_fig:
     :return:
     """
-    # duplicated the whole dataframe, but change site to 'all' --> this will allow to add 'All sites' to rainplot
-    temp_pd = metric_pd.copy()
-    temp_pd['site'] = 'all'
-    concat_pd = pd.concat([metric_pd, temp_pd])
 
     fig, ax = plt.subplots(figsize=(21, 7))
-    ax = pt.RainCloud(data=concat_pd,
+    ax = pt.RainCloud(data=metric_pd,
                       x='site',
                       y='MEAN(area)',
                       hue='phenotype',
@@ -465,54 +461,32 @@ def compute_anova_per_site(metric_pd):
 
 def compute_kruskal_per_site(metric_pd):
     """
-    Compute Kruskal-Wallis H-test among phenotypes persite
+    Compute Kruskal-Wallis H-test among phenotypes persite (and also on the whole cohort)
     :param metric_pd:
     :return:
     """
-    # Loop across sites
+    # Loop across sites (including the whole cohort)
     for site in site_to_vendor.keys():
-        if site == 'all':
-            continue        # TODO: include 'all' to the df
         # Get values only for given site
         metric_pd_site = metric_pd[metric_pd['site'] == site]
         # Compute Kruskal-Wallis H-test
-        print(f'{site}')
+        print(f'\nSite: {site}. \nNumber of subjects per phenotype:')
         print(metric_pd_site.groupby(['phenotype']).size())
         fvalue, pvalue = stats.kruskal(metric_pd_site[metric_pd_site['phenotype'] == 'RRMS']['MEAN(area)'],
                                        metric_pd_site[metric_pd_site['phenotype'] == 'PPMS']['MEAN(area)'],
                                        metric_pd_site[metric_pd_site['phenotype'] == 'RIS']['MEAN(area)'],
                                        metric_pd_site[metric_pd_site['phenotype'] == 'HC']['MEAN(area)'])
-        print(f'Kruskal-Wallis H-test p-value: {pvalue}\n')
+        print(f'Kruskal-Wallis H-test p-value: {pvalue}\nPostohoc tests:\n')
         # Post hoc Conover’s test
         # https://scikit-posthocs.readthedocs.io/en/latest/tutorial/#non-parametric-anova-with-post-hoc-tests
         posthoc = sp.posthoc_conover(metric_pd_site, val_col='MEAN(area)', group_col='phenotype', p_adjust='holm')
         print(f'{posthoc}\n')
 
 
-def compute_kruskal(metric_pd):
-    """
-    Compute Kruskal-Wallis H-test among phenotypes on the whole cohort
-    :param metric_pd:
-    :return:
-    """
-    # Compute Kruskal-Wallis H-test
-    print(f'Whole cohort')
-    print(metric_pd.groupby(['phenotype']).size())
-    fvalue, pvalue = stats.kruskal(metric_pd[metric_pd['phenotype'] == 'RRMS']['MEAN(area)'],
-                                   metric_pd[metric_pd['phenotype'] == 'PPMS']['MEAN(area)'],
-                                   metric_pd[metric_pd['phenotype'] == 'RIS']['MEAN(area)'],
-                                   metric_pd[metric_pd['phenotype'] == 'HC']['MEAN(area)'])
-    print(f'Kruskal-Wallis H-test p-value: {pvalue}\n')
-    # Post hoc Conover’s test
-    # https://scikit-posthocs.readthedocs.io/en/latest/tutorial/#non-parametric-anova-with-post-hoc-tests
-    posthoc = sp.posthoc_conover(metric_pd, val_col='MEAN(area)', group_col='phenotype', p_adjust='holm')
-    print(f'{posthoc}\n')
-
-
 def compare_healthy_controls(canproco_pd, spinegeneric_pd):
     """
-    Compare CSA values between canproco healthy controls and spine-generic per manufacturer. For example, Calgary site
-    (GE) is compared to spine-generic GE values.
+    Compare CSA values between canproco healthy controls and spine-generic per manufacturer.
+    For example, Calgary site (GE) is compared to spine-generic GE values.
     :param canproco_pd:
     :param spinegeneric_pd:
     :return:
@@ -525,7 +499,8 @@ def compare_healthy_controls(canproco_pd, spinegeneric_pd):
         spinegeneric_values = spinegeneric_pd[spinegeneric_pd['manufacturer'] == manufacturer]['MEAN(area)']
         # Perform the Mann-Whitney U rank test
         _, pvalue = stats.mannwhitneyu(canproco_values, spinegeneric_values)
-        print(f'canproco site {site}, spine-generic manufacturer {manufacturer}: {pvalue}')
+        print(f'Mann-Whitney U rank test between healthy controls. Canproco site: {site}, '
+              f'spine-generic manufacturer: {manufacturer}, p-value: {pvalue}')
 
 
 def read_csv_file(file_path, subjects_to_exclude, columns_to_read=['Filename', 'MEAN(area)']):
@@ -605,17 +580,6 @@ def main():
     spinegeneric_pd = pd.merge(spinegeneric_pd, spinegeneric_participants_pd[['participant_id', 'manufacturer']],
                                how='left', left_on='subject_id', right_on='participant_id')
 
-    # Create rain plot
-    fname_fig = args.i_canproco.replace('.csv', '_rainplot.png')
-    create_rainplot(canproco_pd, spinegeneric_pd, fname_fig)
-
-    # Compute ANOVA among phenotypes
-    compute_anova_per_site(canproco_pd)
-    # Kruskal-Wallis H-test among phenotypes
-    compute_kruskal_per_site(canproco_pd)
-    # Compute Kruskal-Wallis H-test among phenotypes on the whole cohort
-    compute_kruskal(canproco_pd)
-
     # Compute median, mean, std, cov persite and phenotype
     statistic = canproco_pd.groupby(['site', 'phenotype']).agg([np.median, np.mean, np.std, stats.variation])
     print(f'\nDescriptive statistics:\n{statistic}')
@@ -623,6 +587,26 @@ def main():
     # Compute median, mean, std, cov per phenotype on the whole cohort
     statistic = canproco_pd.groupby(['phenotype']).agg([np.median, np.mean, np.std, stats.variation])
     print(f'\nDescriptive statistics:\n{statistic}')
+
+    # duplicate whole canproco dataframe, but change site to 'all' --> this will allow to add 'All sites' to rainplot
+    temp_pd = canproco_pd.copy()
+    temp_pd['site'] = 'all'
+    canproco_pd = pd.concat([canproco_pd, temp_pd])
+
+    # Create rain plot
+    fname_fig = args.i_canproco.replace('.csv', '_rainplot.png')
+    create_rainplot(canproco_pd, spinegeneric_pd, fname_fig)
+
+    # Compute ANOVA among phenotypes
+    #compute_anova_per_site(canproco_pd)
+    # Kruskal-Wallis H-test among phenotypes per site (including also the whole cohort)
+    compute_kruskal_per_site(canproco_pd)
+
+    # duplicate whole spine-generic dataframe, but change manufacturer to 'All sites' --> this will allow selection
+    # of the whole cohort
+    temp_pd = spinegeneric_pd.copy()
+    temp_pd['manufacturer'] = 'All sites'
+    spinegeneric_pd = pd.concat([spinegeneric_pd, temp_pd])
 
     # Compare CSA values between canproco healthy controls and spine-generic per manufacturer
     compare_healthy_controls(canproco_pd, spinegeneric_pd)
