@@ -556,6 +556,9 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
+    # ------------------------------------------------------
+    # Read input files as pandas DataFrames
+    # ------------------------------------------------------
     # Read .csv file for canproco subjects
     canproco_pd = read_csv_file(args.csa_canproco, subjects_to_exclude_canproco)
     # Read canproco participants.tsv file (includes pathology and phenotype columns)
@@ -566,6 +569,9 @@ def main():
     # Read spine-generic participants.tsv file (includes manufacturer column)
     spinegeneric_participants_pd = read_participants_file(args.participants_spinegeneric)
 
+    # ------------------------------------------------------
+    # Merge and prepare DataFrames for further analysis
+    # ------------------------------------------------------
     # Merge pathology and phenotype columns to the canproco dataframe with CSA values
     canproco_pd = pd.merge(canproco_pd, canproco_participants_pd[['participant_id', 'pathology', 'phenotype', 'edss_M0']],
                            how='left', left_on='subject_id', right_on='participant_id')
@@ -580,6 +586,9 @@ def main():
     spinegeneric_pd = pd.merge(spinegeneric_pd, spinegeneric_participants_pd[['participant_id', 'manufacturer']],
                                how='left', left_on='subject_id', right_on='participant_id')
 
+    # ------------------------------------------------------
+    # Compute descriptive statistics
+    # ------------------------------------------------------
     # Compute median, mean, std, cov persite and phenotype
     statistic = canproco_pd.groupby(['site', 'phenotype']).agg([np.median, np.mean, np.std, stats.variation])
     print(f'\nDescriptive statistics:\n{statistic}')
@@ -593,6 +602,9 @@ def main():
     temp_pd['site'] = 'all'
     canproco_pd = pd.concat([canproco_pd, temp_pd])
 
+    # ------------------------------------------------------
+    # Create plots and compute between sites statistics
+    # ------------------------------------------------------
     # Create rain plot
     fname_fig = args.csa_canproco.replace('.csv', '_rainplot.png')
     create_rainplot(canproco_pd, spinegeneric_pd, fname_fig)
