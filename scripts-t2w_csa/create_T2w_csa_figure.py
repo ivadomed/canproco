@@ -86,25 +86,25 @@ def get_parser():
         description="Generate figure for T2w C2-C3 CSA. The figure is saved to the same folder as the input .csv file."
     )
     parser.add_argument(
-        '-i-canproco',
+        '-csa-canproco',
         required=True,
         metavar='<file_path>',
-        help="input .csv file with canproco CSA values")
+        help="Path to the input .csv file with canproco CSA values.")
     parser.add_argument(
-        '-i-spinegeneric',
+        '-csa-spinegeneric',
         required=True,
         metavar='<file_path>',
-        help="input .csv file with spine-generic CSA values")
+        help="Path to the  input .csv file with spine-generic CSA values.")
     parser.add_argument(
-        '-participants-file-canproco',
+        '-participants-canproco',
         required=True,
         metavar='<file_path>',
-        help="canproco participants.tsv file (includes pathology and phenotype columns)")
+        help="Path to the canproco participants.tsv file (includes pathology and phenotype columns).")
     parser.add_argument(
-        '-participants-file-spinegeneric',
+        '-participants-spinegeneric',
         required=True,
         metavar='<file_path>',
-        help="spine-generic participants.tsv file (includes vendor column)")
+        help="Path to the spine-generic participants.tsv file (includes vendor column).")
 
     return parser
 
@@ -557,14 +557,14 @@ def main():
     args = parser.parse_args()
 
     # Read .csv file for canproco subjects
-    canproco_pd = read_csv_file(args.i_canproco, subjects_to_exclude_canproco)
+    canproco_pd = read_csv_file(args.csa_canproco, subjects_to_exclude_canproco)
     # Read canproco participants.tsv file (includes pathology and phenotype columns)
-    canproco_participants_pd = read_participants_file(args.participants_file_canproco)
+    canproco_participants_pd = read_participants_file(args.participants_canproco)
 
     # Read .csv file for spine-generic subjects
-    spinegeneric_pd = read_csv_file(args.i_spinegeneric, subjects_to_exclude_spinegeneric)
+    spinegeneric_pd = read_csv_file(args.csa_spinegeneric, subjects_to_exclude_spinegeneric)
     # Read spine-generic participants.tsv file (includes manufacturer column)
-    spinegeneric_participants_pd = read_participants_file(args.participants_file_spinegeneric)
+    spinegeneric_participants_pd = read_participants_file(args.participants_spinegeneric)
 
     # Merge pathology and phenotype columns to the canproco dataframe with CSA values
     canproco_pd = pd.merge(canproco_pd, canproco_participants_pd[['participant_id', 'pathology', 'phenotype', 'edss_M0']],
@@ -594,7 +594,7 @@ def main():
     canproco_pd = pd.concat([canproco_pd, temp_pd])
 
     # Create rain plot
-    fname_fig = args.i_canproco.replace('.csv', '_rainplot.png')
+    fname_fig = args.csa_canproco.replace('.csv', '_rainplot.png')
     create_rainplot(canproco_pd, spinegeneric_pd, fname_fig)
 
     # Compute ANOVA among phenotypes
@@ -612,7 +612,7 @@ def main():
     compare_healthy_controls(canproco_pd, spinegeneric_pd)
 
     # Compute and plot correlation between EDSS and CSA persite
-    fname_fig = args.i_canproco.replace('.csv', '_correlation_persite.png')
+    fname_fig = args.csa_canproco.replace('.csv', '_correlation_persite.png')
     create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig)
 
 
