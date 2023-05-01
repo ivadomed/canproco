@@ -310,10 +310,7 @@ def compute_partial_correlation(canproco_pd, site):
     :return:
     """
     # Work only with MS patients
-    if site == 'all':
-        ms_pd = canproco_pd[canproco_pd['pathology'] == 'MS']
-    else:
-        ms_pd = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]
+    ms_pd = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]
     # Convert str to int (to be compatible with partial correlation)
     ms_pd = ms_pd.replace({'phenotype': {'RRMS': 0, 'PPMS': 1, 'RIS': 2}})
     stats = pg.partial_corr(data=ms_pd, x='MEAN(area)', y='edss_M0', covar='phenotype', method='spearman')
