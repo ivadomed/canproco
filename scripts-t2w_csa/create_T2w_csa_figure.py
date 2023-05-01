@@ -558,13 +558,13 @@ def read_lesion_files(lesion_folder):
     list_of_files.sort()
 
     # Initialize pandas dataFrame where lesion volume across all subjects will be stored
-    lesion_df = pd.DataFrame(columns=['subject_id', 'volume', 'number_of_lesions'])
+    lesion_df = pd.DataFrame(columns=['subject_id', 'lesion_volume', 'number_of_lesions'])
 
     # Loop across subjects
     for file in list_of_files:
         # Get subject ID
         subject_id = file.split('_')[0]
-        lesion_dict = {'subject_id': [], 'volume': [], 'number_of_lesions': []}
+        lesion_dict = {'subject_id': [], 'lesion_volume': [], 'number_of_lesions': []}
         # Construct path to xls file
         file_path = os.path.join(lesion_folder, file)
         # Read xls file as pandas dataFrame
@@ -572,7 +572,7 @@ def read_lesion_files(lesion_folder):
         df = pd.read_excel(file_path)
         lesion_dict['subject_id'] = subject_id
         # Sum lesion volume across all lesions
-        lesion_dict['volume'] = df['volume [mm3]'].sum()
+        lesion_dict['lesion_volume'] = df['volume [mm3]'].sum()
         # Get number of lesions (number of rows in the dataFrame)
         lesion_dict['number_of_lesions'] = df.shape[0]
         # Insert lesion_dict into lesion_df as a new row
@@ -613,6 +613,11 @@ def main():
 
     # Replace n/a in phenotype by HC to allow sorting in violinplot
     canproco_pd['phenotype'].fillna(canproco_pd['pathology'], inplace=True)
+
+    # Merge lesion_df to the canproco dataframe with CSA values
+    if args.lesion_folder:
+        canproco_pd = pd.merge(canproco_pd, lesion_df[['subject_id', 'lesion_volume', 'number_of_lesions']],
+                               how='left', left_on='subject_id', right_on='subject_id')
 
     # Merge manufacturer column to the spine-generic dataframe with CSA values
     spinegeneric_pd = pd.merge(spinegeneric_pd, spinegeneric_participants_pd[['participant_id', 'manufacturer']],
