@@ -379,14 +379,9 @@ def create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig):
         r, p_val = compute_partial_correlation(canproco_pd, site)
         print(f'{site}: Partial correlation EDSS vs CSA: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
         # Compute linear regression for all MS patients together (i.e., across all phenotypes) --> ['pathology'] == 'MS'
-        if site == 'all':
-            csa = canproco_pd[canproco_pd['pathology'] == 'MS']['MEAN(area)']
-            edss = canproco_pd[canproco_pd['pathology'] == 'MS']['edss_M0']
-            #phen = canproco_pd[canproco_pd['pathology'] == 'MS']['phenotype']
-        else:
-            csa = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['MEAN(area)']
-            edss = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['edss_M0']
-            #phen = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['phenotype']
+        csa = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['MEAN(area)']
+        edss = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['edss_M0']
+        #phen = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['phenotype']
         x_vals, y_vals = compute_regression(csa, edss)
         ax[index].plot(x_vals, y_vals, '--', color='black', alpha=.5, linewidth=3)
 
@@ -397,14 +392,9 @@ def create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig):
 
         for color, phenotype in enumerate(['RRMS', 'PPMS', 'RIS']):
             # Prepare variables for plotting
-            if site == 'all':
-                csa = canproco_pd[canproco_pd['phenotype'] == phenotype]['MEAN(area)']
-                edss = canproco_pd[canproco_pd['phenotype'] == phenotype]['edss_M0']
-                r, p_val = compute_correlation(csa, edss)
-            else:
-                csa = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['MEAN(area)']
-                edss = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['edss_M0']
-                r, p_val = compute_correlation(csa, edss)
+            csa = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['MEAN(area)']
+            edss = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['edss_M0']
+            r, p_val = compute_correlation(csa, edss)
             print(f'{site}, {phenotype}: Correlation EDSS vs CSA: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
             # Plot individual scatter plots
             ax[index].scatter(csa, edss, color=color_pallete[color], alpha=.8, label=phenotype, s=100)
