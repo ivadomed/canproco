@@ -80,6 +80,12 @@ site_to_manufacturer = {
     "tor": "Siemens",
 }
 
+variable_to_label = {
+    'MEAN(area)': 'CSA [$mm^2$]',
+    'edss_M0': 'EDSS',
+    'lesion_volume': 'Lesion volume [$mm^3$]',
+}
+
 
 def get_parser():
     parser = argparse.ArgumentParser(
@@ -358,28 +364,32 @@ def compute_regression(x, y):
     return x_vals, y_vals
 
 
-def create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig):
+def create_correlation_figures_persite(canproco_pd, pair, fname_fig):
     """
-    Plot the relationship between EDSS score and CSA per-site and per-phenotype. Also, plot linear fit per-phenotype and
+    Plot the relationship between pairs of variables per-site and per-phenotype. Also, plot linear fit per-phenotype and
     for the whole cohort.
-    :param canproco_pd:
-    :param fname_fig:
+    :param canproco_pd: pandas dataframe: canproco data
+    :param pair: tuple: pairs of variables for which correlation will be computed, for example ('MEAN(area)', 'edss_M0')
+    :param fname_fig: str: figure name
     :return:
     """
+    # Drop rows with NaN values for the pair of variables
+    canproco_pd = canproco_pd.dropna(subset=list(pair))
     # Create main figure
-    fig, axes = plt.subplots(2, 3, figsize=(20, 14), sharey=True)
+    fig, axes = plt.subplots(2, 3, figsize=(20, 14), sharex=True, sharey=True)
     # Flatten 2D array into 1D to allow iteration by loop
     ax = axes.ravel()
     # Loop across sites (all means all sites together)
     for index, site in enumerate(site_to_vendor_title.keys()):
         # Compute partial correlation (with phenotype as a covariate)
         r, p_val = compute_partial_correlation(canproco_pd, site)
-        print(f'{site}: Partial correlation EDSS vs CSA: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
+        print(f'{site}: Partial correlation {pair[0]} vs {pair[1]}: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
         # Compute linear regression for all MS patients together (i.e., across all phenotypes) --> ['pathology'] == 'MS'
-        csa = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['MEAN(area)']
-        edss = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['edss_M0']
+        var1 = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)][pair[0]]
+        var2 = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)][pair[1]]
         #phen = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['phenotype']
-        x_vals, y_vals = compute_regression(csa, edss)
+        x_vals, y_vals = compute_regression(var1, var2)
+        # TODO - Consider replacing by sns.regplot
         ax[index].plot(x_vals, y_vals, '--', color='black', alpha=.5, linewidth=3)
 
         # Insert text with corr coef and pval into every subplot/axis
@@ -389,20 +399,20 @@ def create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig):
 
         for color, phenotype in enumerate(['RRMS', 'PPMS', 'RIS']):
             # Prepare variables for plotting
-            csa = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['MEAN(area)']
-            edss = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)]['edss_M0']
-            r, p_val = compute_correlation(csa, edss)
-            print(f'{site}, {phenotype}: Correlation EDSS vs CSA: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
+            var1 = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)][pair[0]]
+            var2 = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)][pair[1]]
+            r, p_val = compute_correlation(var1, var2)
+            print(f'{site}, {phenotype}: Correlation {pair[0]} vs {pair[1]}: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
             # Plot individual scatter plots
-            ax[index].scatter(csa, edss, color=color_pallete[color], alpha=.8, label=phenotype, s=100)
-            x_vals, y_vals = compute_regression(csa, edss)
+            ax[index].scatter(var1, var2, color=color_pallete[color], alpha=.8, label=phenotype, s=100)
+            x_vals, y_vals = compute_regression(var1, var2)
             ax[index].plot(x_vals, y_vals, '--', color=color_pallete[color], alpha=.8, linewidth=3)
             if site == 'all':
                 ax[index].set_title(site_to_vendor_title[site], fontsize=FONTSIZE_CORR, fontweight='bold')
             else:
                 ax[index].set_title(site_to_vendor_title[site], fontsize=FONTSIZE_CORR)
             if index > 2:
-                ax[index].set_xlabel('CSA [$mm^2$]', fontsize=FONTSIZE_CORR)
+                ax[index].set_xlabel(variable_to_label[pair[0]], fontsize=FONTSIZE_CORR)
 
             # # Set fixed number of y-ticks
             # xmin, xmax = ax[index].get_xlim()
@@ -411,7 +421,7 @@ def create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig):
             # ax[index].set_xticklabels(custom_ticks)
 
             if index == 0 or index == 3:
-                ax[index].set_ylabel('EDSS', fontsize=FONTSIZE_CORR)
+                ax[index].set_ylabel(variable_to_label[pair[1]], fontsize=FONTSIZE_CORR)
             # Increase size of xticks and yticks
             plt.setp(ax[index].xaxis.get_majorticklabels(), fontsize=FONTSIZE_CORR)
             plt.setp(ax[index].yaxis.get_majorticklabels(), fontsize=FONTSIZE_CORR)
@@ -657,9 +667,16 @@ def main():
     # Compare CSA values between canproco healthy controls and spine-generic per manufacturer
     compare_healthy_controls(canproco_pd, spinegeneric_pd)
 
-    # Compute and plot correlation between EDSS and CSA persite
-    fname_fig = args.csa_canproco.replace('.csv', '_correlation_persite.png')
-    create_csa_edss_correlation_figure_persite(canproco_pd, fname_fig)
+    # Define pairs of variables for which correlation will be computed
+    variable_pairs = [('MEAN(area)', 'edss_M0'),]
+    if args.lesion_folder:
+        variable_pairs.append(('MEAN(area)', 'lesion_volume'))
+        variable_pairs.append(('edss_M0', 'lesion_volume'))
+    # Compute and plot correlation between variables persite (including also the whole cohort).
+    # For example between EDSS and CSA, or between EDSS and lesion volume
+    for pair in variable_pairs:
+        fname_fig = args.csa_canproco.replace('.csv', '_correlation_' + pair[0] + '_vs_' + pair[1] + '_persite.png')
+        create_correlation_figures_persite(canproco_pd, pair, fname_fig)
 
 
 if __name__ == "__main__":
