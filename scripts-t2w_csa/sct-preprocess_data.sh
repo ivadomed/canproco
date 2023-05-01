@@ -121,6 +121,7 @@ analyze_lesion(){
     sct_analyze_lesion -m ${FILELESION}.nii.gz -s ${file_sc}.nii.gz -ofolder ${PATH_RESULTS}
   else
     echo "Lesion segmentation not found. Skipping lesion analysis."
+    echo "file_lesion" >> ${PATH_LOG}/missing_files.log
   fi
 }
 
