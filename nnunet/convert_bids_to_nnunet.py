@@ -14,26 +14,6 @@ from tqdm import tqdm
 import nibabel as nib
 import numpy as np
 
-def label_encoding(subject_path, label_path, label_gm_path, label_wm_path, threshold=1e-12):
-    #Encoding of the label images with background=0 , GM=1 and WM=2
-    #We consider that GM and WM don't overlap (maybe need to change that ?)
-
-    #For grey matter
-    label_gm_npy = nib.load(label_gm_path).get_fdata() 
-    label_gm_npy = np.where(label_gm_npy > threshold, 1, 0)
-    #For white matter
-    label_wm_npy = nib.load(label_wm_path).get_fdata() 
-    label_wm_npy = np.where(label_wm_npy > threshold, 2, 0)
-    
-    #Addition of both
-    label_npy = label_gm_npy + label_wm_npy
-    
-    ref = nib.load(subject_path)
-    label_bin = nib.Nifti1Image(label_npy, ref.affine, ref.header)
-    # overwrite the original label file with the binarized version
-    nib.save(label_bin, label_path)
-
-
 # parse command line arguments
 parser = argparse.ArgumentParser(description='Convert BIDS-structured database to nnUNet format.')
 parser.add_argument('--path-data', required=True,
@@ -44,7 +24,6 @@ parser.add_argument('--taskname', default='MSSpineLesion', type=str,
 parser.add_argument('--tasknumber', default=501,type=int, 
                     help='Specify the task number, has to be greater than 500 but less than 999. e.g 502')
 parser.add_argument('--label-folder', help='Path to the label folders in derivatives', default='labels', type=str)
-#parser.add_argument('--mri-protocols', help='protocols to select', default='STIR,PSIR', type=str)
 
 args = parser.parse_args()
 
@@ -52,7 +31,6 @@ path_in_images = Path(args.path_data)
 label_folder = args.label_folder
 path_in_labels = Path(os.path.join(args.path_data, 'derivatives', label_folder))
 path_out = Path(os.path.join(os.path.abspath(args.path_out), f'Dataset{args.tasknumber}_{args.taskname}'))
-#mri_protocols = args.mri_protocols.split(',')
 
 # define paths for train and test folders 
 path_out_imagesTr = Path(os.path.join(path_out, 'imagesTr'))
@@ -74,15 +52,11 @@ if __name__ == '__main__':
     pathlib.Path(path_out_labelsTs).mkdir(parents=True, exist_ok=True)
 
     conversion_dict = {}
-    
 
     #------------- EXTRACTION OF THE LABELED IMAGES NAMES--------------------------
     labelled_imgs = []
     
-    # We first extract all the label files' names
-    
-    #label_dirs = sorted(list(path_in_labels.glob('*/')))
-    
+    # We first extract all the label files' names    
     label_files = sorted(list(path_in_labels.rglob('*_STIR_lesion-manual.nii.gz')) + list(path_in_labels.rglob('*PSIR_lesion-manual.nii.gz') ))
     labelled_imgs += [str(k) for k in label_files]
     
@@ -95,9 +69,6 @@ if __name__ == '__main__':
     valid_test_imgs = []
 
     #The image folders
-    #dirs = sorted(list(path_in_images.glob('*/')))
-    #dirs = [str(x) for x in dirs]
-
     image_files = sorted(list(path_in_images.rglob('*_STIR.nii.gz')) + list(path_in_images.rglob('*_PSIR.nii.gz')))
     
     for image_file in image_files:
