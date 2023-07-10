@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# This script brings the segmentation of the T2w image onto the STIR/PSIR space and generates lesion QC (using SCT) for STIR/PSIR images. More context in: https://github.com/ivadomed/canproco/issues/31
+# This script brings the segmentation of the T2w image onto the STIR/PSIR space and generates lesion QC (using SCT) for
+# STIR/PSIR images. More context in: https://github.com/ivadomed/canproco/issues/31
 #
 # Dependencies (versions):
 # - SCT (5.8)
