@@ -29,7 +29,7 @@ FONTSIZE=18
 FONTSIZE_CORR=25
 
 colormap = 'Set1'
-color_pallete = get_cmap(colormap).colors[:4]
+color_pallete = get_cmap(colormap).colors[:5]
 
 # Drop canproco subjects, see: https://github.com/ivadomed/canproco/issues/13
 # 'sub-van175' - pending EDSS
@@ -196,9 +196,36 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     :param fname_fig:
     :return:
     """
+    # ------------------------------------------------------
+    # Prepare dataframes for plotting
+    # ------------------------------------------------------
+    # Spine-generic CSA values for all subjects --> will be plotted for 'all sites'
+    temp_pd = spinegeneric_pd.copy()
+    temp_pd['site'] = 'all'
+    # Drop manufacturer column
+    temp_pd.drop(columns=['manufacturer'], inplace=True)
+    # Add new phenotype column
+    temp_pd['phenotype'] = 'spine-generic'
 
+    # Combine temp_pd and metric_pd
+    final_pd = pd.concat([metric_pd, temp_pd], ignore_index=True)
+
+    # Loop over sites and add spine-generic values per vendor (based on the MR vendor for given site)
+    for site in ['cal', 'van', 'mon', 'edm', 'tor']:
+        temp_pd = spinegeneric_pd[spinegeneric_pd['manufacturer'] == site_to_manufacturer[site]]
+        temp_pd['site'] = site
+        # Drop manufacturer column
+        temp_pd.drop(columns=['manufacturer'], inplace=True)
+        # Add new phenotype column
+        temp_pd['phenotype'] = 'spine-generic'
+        # Combine temp_pd and metric_pd
+        final_pd = pd.concat([final_pd, temp_pd], ignore_index=True)
+
+    # ------------------------------------------------------
+    # Plotting
+    # ------------------------------------------------------
     fig, ax = plt.subplots(figsize=(21, 7))
-    ax = pt.RainCloud(data=metric_pd,
+    ax = pt.RainCloud(data=final_pd,
                       x='site',
                       y='MEAN(area)',
                       hue='phenotype',
@@ -209,7 +236,7 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
                       width_box=.3,      # boxplot width
                       dodge=True,        # move boxplots next to each other
                       move=0,            # move individual observations next to the boxplots (0 - no move)
-                      rain_alpha=1,      # individual points transparency - https://github.com/pog87/PtitPrince/blob/23debd9b70fca94724a06e72e049721426235f50/ptitprince/PtitPrince.py#L707
+                      rain_alpha=.7,      # individual points transparency - https://github.com/pog87/PtitPrince/blob/23debd9b70fca94724a06e72e049721426235f50/ptitprince/PtitPrince.py#L707
                       alpha=.7,          # violin plot transparency
                       box_showmeans=True,   # show mean value inside the boxplots
                       box_meanprops={'marker': '^', 'markerfacecolor': 'black', 'markeredgecolor': 'black',
@@ -246,27 +273,15 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
         r, g, b, a = patch.get_facecolor()
         patch.set_facecolor((r, g, b, .0))
 
-    #plt.text(0, 50, '20', fontsize=10, horizontalalignment='center')
-
-    # Add mean and SD spine-generic values
-    for site in site_to_vendor.keys():
-        add_spine_generic_values_per_vendor(ax, site, spinegeneric_pd,  shift_i=0.17, shift_j=0.34)
-
     # LEGEND
     _, labels = ax.get_legend_handles_labels()
-    n_plots = 3     # violinplot + boxplot + pointplot = 3
     # create colorful lines
     lines = [Line2D([0], [0], color=value, linestyle='-', linewidth=10)
              for value in color_pallete]
-    # crete a line for spine-generic
-    line_spine_generic = Line2D([0], [0], color='gray', linestyle='--', linewidth=3)
-    lines.append(line_spine_generic)
-    # legend labels
-    legend_labels = labels[0:len(labels) // n_plots]
-    legend_labels.append(u'spine-generic\nmean \u00B1 SD')
+    legend_labels = ['CanProCo - RRMS', 'CanProCo - PPMS', 'CanProCo - RIS', 'CanProCo - HC', 'Spine-Generic - HC']
     # Move legend closer to the plot (bbox_to_anchor) and set the length of the '-' (handlelength)
     legend = plt.legend(lines, legend_labels, bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.,
-                        handlelength=2, title='Phenotype', fontsize=FONTSIZE-3, title_fontsize=FONTSIZE)
+                        handlelength=2, title='', fontsize=FONTSIZE-3, title_fontsize=FONTSIZE)
     # Change box's frame color to black
     frame = legend.get_frame()
     frame.set_edgecolor('black')
@@ -274,7 +289,7 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     plt.tight_layout()
 
     # save figure
-    plt.savefig(fname_fig, dpi=200)
+    plt.savefig(fname_fig, dpi=300)
     plt.close()
     print(f'Created: {fname_fig}.\n')
 
