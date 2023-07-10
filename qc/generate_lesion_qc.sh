@@ -89,7 +89,7 @@ generate_lesion_qc(){
     rsync -avzh $FILELESIONMANUAL ${FILELESION}.nii.gz
 
     # Make sure the lesion is binary
-    sct_math -i ${FILELESION}.nii.gz -bin 0 -o ${FILELESION}_bin.nii.gz
+    sct_maths -i ${FILELESION}.nii.gz -bin 0 -o ${FILELESION}_bin.nii.gz
     # Generate lesion QC
     sct_qc -i ${image}.nii.gz -s ${file_sc}.nii.gz -d ${FILELESION}_bin.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
   else
