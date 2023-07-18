@@ -1,7 +1,30 @@
-# This scripts was adapted from a script by the following authors : Julian McGinnis, Naga Karthik 
-#
-# This script is specifically designed to CanProCo dataset. It converts the dataset from a BIDS format to a nnU-Net format. 
-# 
+
+"""Convert data from BIDS to nnU-Net format
+
+This scripts was adapted from a script by the following authors : Julian McGinnis, Naga Karthik 
+This python script converts data from the BIDS format to the nnU-Net format in order to be able to perform pre-processing, training and inference.
+This script is specifically designed to the canproco dataset. It converts the dataset from a BIDS format to a nnU-Net format. 
+This script is specific in that it takes all labeled data for training and validation. Because, very little labelled data is available, no labelled data is used for testing.
+
+Example of run:
+
+    $ python convert_bids_to_nnunet.py --path-data /path/to/data_extracted --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID
+
+Arguments:
+
+    --path-data : Path to BIDS structured dataset. Accepts both cross-sectional and longitudinal datasets
+    --path-out : Path to output directory.
+    --taskname: Specify the task name - usually the anatomy to be segmented, e.g. Hippocampus
+    --tasknumber : Specify the task number, has to be greater than 100 but less than 999
+    --label-folder : Path to the label folders in derivatives (default='manual_masks')
+    --crop-training : Crop images to spinal cord mask (default=False)
+    --crop-testing : Crop images to spinal cord mask (default=False)
+    
+Todo:
+    * 
+
+Pierre-Louis Benveniste
+"""
 import argparse
 import pathlib
 from pathlib import Path
@@ -10,6 +33,9 @@ import os
 import shutil
 from collections import OrderedDict
 from tqdm import tqdm
+from seg_sc import segment_sc
+from crop_sc import crop_to_mask
+
 
 import nibabel as nib
 import numpy as np
@@ -24,6 +50,8 @@ parser.add_argument('--taskname', default='MSSpineLesion', type=str,
 parser.add_argument('--tasknumber', default=501,type=int, 
                     help='Specify the task number, has to be greater than 500 but less than 999. e.g 502')
 parser.add_argument('--label-folder', help='Path to the label folders in derivatives', default='labels', type=str)
+parser.add_argument('--crop-training', help='Crop images to spinal cord mask', action='store_true', default=False)
+parser.add_argument('--crop-testing', help='Crop images to spinal cord mask', action='store_true', default=False)
 
 args = parser.parse_args()
 
@@ -88,10 +116,26 @@ if __name__ == '__main__':
             
             train_images.append(str(image_file_nnunet))
             train_labels.append(str(label_file_nnunet))
+
+            if args.crop_training:
+                # segment the spinal cord
+                temp_seg = os.path.join(path_out, f'temp_seg.nii.gz')
+                if 'STIR' in str(image_file):
+                    contrast = 't2'
+                else:
+                    contrast = 't1'
+                segment_sc(image_file, temp_seg, contrast=contrast)
+                # crop the image to the spinal cord
+                crop_to_mask(image_file, temp_seg, image_file_nnunet)
+                # crop the label to the spinal cord
+                crop_to_mask(label_file, temp_seg, label_file_nnunet)
+                # remove the temporary segmentation file
+                os.remove(temp_seg)
             
-            # copy the files to new structure
-            shutil.copyfile(image_file, image_file_nnunet)
-            shutil.copyfile(label_file, label_file_nnunet)
+            else:
+                # copy the files to new structure
+                shutil.copyfile(image_file, image_file_nnunet)
+                shutil.copyfile(label_file, label_file_nnunet)
            
             conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet
             conversion_dict[str(os.path.abspath(label_file))] = label_file_nnunet
@@ -106,8 +150,22 @@ if __name__ == '__main__':
             test_images.append(str(image_file_nnunet))
             test_labels.append(str(label_file_nnunet))
 
-            # copy the files to new structure
-            shutil.copyfile(image_file, image_file_nnunet)
+            if args.crop_testing:
+                # segment the spinal cord
+                temp_seg = os.path.join(path_out, f'temp_seg.nii.gz')
+                if 'STIR' in str(image_file):
+                    contrast = 't2'
+                else:
+                    contrast = 't1'
+                segment_sc(image_file, temp_seg)
+                # crop the image to the spinal cord
+                crop_to_mask(image_file, temp_seg, image_file_nnunet)
+                # remove the temporary segmentation file
+                os.remove(temp_seg) 
+            
+            else:
+                # copy the files to new structure
+                shutil.copyfile(image_file, image_file_nnunet)
 
             conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet
 
