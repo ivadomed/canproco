@@ -35,11 +35,12 @@ def seg_sc(image, contrast, output_path, qc_folder):
     contrast_dict = {'STIR': 't2', 'PSIR': 't1', 'T2star':'t2s', 'T2w': 't2', 'T1w': 't1', 'MT-T1': 't1', 'MTon': 't2s' }
 
     if contrast=='PSIR':
-        os.system(f'sct_propseg_sc -i {image} -o {output_path} -c {contrast_dict[contrast]} -qc {qc_folder}')
+        os.system(f'sct_propseg -i {image} -o {output_path} -c {contrast_dict[contrast]} -qc {qc_folder}')
     else:
         os.system(f'sct_deepseg_sc -i {image} -o {output_path} -c {contrast_dict[contrast]} -qc {qc_folder}')
 
     return None
+
 
 def get_parser():
     """
@@ -58,6 +59,7 @@ def get_parser():
     parser.add_argument('-q', '--qc_folder', type=str, help='path to the quality control folder', required=True)
     
     return parser
+
 
 def main():
     """
@@ -85,16 +87,13 @@ def main():
     seg_files = sorted(list(set(seg_files)))
 
     for seg_file in seg_files:
-        #get the mouse number
-        mouse_nb = seg_file.parts[-4]
-        #get session number
-        session_nb = seg_file.parts[-3]
         #get the contrast
         contrast = seg_file.parts[-1].split('.')[0].split('_')[-1]
         #get the output path
         seg_out_path = str(seg_file).split('.')[0] + '_seg.nii.gz'
         #segment the spinal cord
         seg_sc(seg_file, contrast, seg_out_path, args.qc_folder)
+
 
 if __name__ == '__main__':
     main()
