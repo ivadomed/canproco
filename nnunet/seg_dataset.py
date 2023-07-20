@@ -9,6 +9,9 @@ Args:
 Returns:
     None
 
+Example:
+    python seg_dataset.py -i /path/to/dataset -c PSIR,STIR -q /path/to/qc/folder
+
 Todo:
     *
 
@@ -21,7 +24,8 @@ from pathlib import Path
 
 def seg_sc(image, contrast, output_path, qc_folder):
     """
-    This function is used to segment the spinal cord using the spinal cord toolbox. Is
+    This function is used to segment the spinal cord using the spinal cord toolbox.
+    It also generates the quality control on the sagittal plane.
 
     Args:
         image: image to segment
@@ -35,9 +39,12 @@ def seg_sc(image, contrast, output_path, qc_folder):
     contrast_dict = {'STIR': 't2', 'PSIR': 't1', 'T2star':'t2s', 'T2w': 't2', 'T1w': 't1', 'MT-T1': 't1', 'MTon': 't2s' }
 
     if contrast=='PSIR':
-        os.system(f'sct_propseg -i {image} -o {output_path} -c {contrast_dict[contrast]} -qc {qc_folder}')
+        os.system(f'sct_propseg -i {image} -o {output_path} -c {contrast_dict[contrast]}')
     else:
-        os.system(f'sct_deepseg_sc -i {image} -o {output_path} -c {contrast_dict[contrast]} -qc {qc_folder}')
+        os.system(f'sct_deepseg_sc -i {image} -o {output_path} -c {contrast_dict[contrast]}')
+    
+    #To generate the quality control
+    os.system(f'sct_qc -i {image} -s {output_path} -d {output_path} -p sct_deepseg_lesion -plane sagittal -qc {qc_folder}')
 
     return None
 

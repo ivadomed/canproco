@@ -5,9 +5,14 @@ The mask given is the segmentation of the spinal cord.
 Args:
     input_folder: path to the folder containing the images
     contrast: contrast used for the segmentation
+    qc_folder: path to the quality control folder
+    replacing: if True, the images will be replaced by the cropped images and the segmentations will be removed. If False, the cropped images will be saved with the suffix '_crop'.
 
 Returns:
     None
+
+Example:
+    python crop_dataset.py -i /path/to/dataset -c PSIR,STIR -q /path/to/qc/folder
 
 Todo:
     *
@@ -19,10 +24,11 @@ import os
 import argparse
 from pathlib import Path
 
-def crop_to_mask(image, mask, output_path, dilate_size=2):
+def crop_to_mask(image, mask, output_path, qc_folder, dilate_size='2x1000x2',label=False):
     """
     This function is used to crop the images at the same size as the mask given. 
     It dilates the mask to avoid cutting the edges of the mask.
+    It also creates the quality control on the sagittal plane.
 
     Args:
         image: image to crop
@@ -34,8 +40,40 @@ def crop_to_mask(image, mask, output_path, dilate_size=2):
         None
     """
     
-    os.system(f'sct_crop_image -i {image} -m {mask} -o {output_path} -dilate {dilate_size} ')
+    os.system(f'sct_crop_image -i {image} -m {mask} -o {output_path} -dilate {dilate_size} -b 0')
+
+    if not label:
+        os.system(f'sct_qc -i {image} -d {output_path} -p sct_image_stitch -plane sagittal -qc {qc_folder}')
+
+    return None
+
+
+def replacing_fc(image, mask, cropped,label=False):
+    """
+    This function replaces the image by the cropped image and removes the segmentation.
+    It also deleted the _centerline.nii.gz file if it exists. 
+
+
+    Args:
+        image: image to replace
+        mask: mask to replace
+        cropped: cropped image
     
+    Returns:
+        None
+    """
+    if label:
+        os.system(f'rm {image}')
+        os.system(f'mv {cropped} {image}')
+
+    else:
+        os.system(f'rm {image}')
+        os.system(f'rm {mask}')
+        os.system(f'mv {cropped} {image}')
+
+        if os.path.exists(str(image).split('.')[0] + '_centerline.nii.gz'):
+            os.system(f'rm {str(image).split(".")[0] + "_centerline.nii.gz"}')
+
     return None
 
 
@@ -53,6 +91,8 @@ def get_parser():
     parser = argparse.ArgumentParser(description='This script crops the images and their label to the same size as the mask given. The mask given is the segmentation of the spinal cord.')
     parser.add_argument('-i', '--input_folder', type=str, help='path to the folder containing the images', required=True)
     parser.add_argument('-c', '--contrast', type=str, help='contrast used for the segmentation (if multiple: do the following: PSIR,STIR (no space))', required=True)
+    parser.add_argument('-q', '--qc_folder', type=str, help='path to the quality control folder', required=True)
+    parser.add_argument('-r', '--replacing', type=bool, help='if True, the images will be replaced by the cropped images and the segmentations will be removed. If False, the cropped images will be saved with the suffix _crop', required=False, default=False)
     
     return parser
 
@@ -90,8 +130,8 @@ def main():
         #output image
         output_image = str(image).split('.')[0] + '_crop.nii.gz'
         #Crop the image
-        crop_to_mask(image, mask, output_image)
-        
+        crop_to_mask(image, mask, output_image, args.qc_folder)
+
         #get the label
         label = str(input_folder) + '/derivatives/labels/' + mouse_nb  + '/' + session_nb + '/anat/' + str(image).split('/')[-1].split('.')[0] + '_lesion-manual.nii.gz'
         #if the label exists
@@ -99,8 +139,16 @@ def main():
             #output label
             output_label = label.split('.')[0] + '_crop.nii.gz'
             #Crop the label
-            crop_to_mask(label, mask, output_label)
-
+            crop_to_mask(label, mask, output_label, args.qc_folder,label=True)
+            #if replacing is True
+            if args.replacing:
+                #replace the label by the cropped label
+                replacing_fc(label, mask, output_label,label=True)
+        
+        #if replacing is True
+        if args.replacing:
+            #replace the image by the cropped image
+            replacing_fc(image, mask, output_image)
 
     return None
 
