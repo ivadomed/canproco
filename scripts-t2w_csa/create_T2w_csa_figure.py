@@ -685,7 +685,7 @@ def main():
     compare_healthy_controls(canproco_pd, spinegeneric_pd)
 
     # Define pairs of variables for which correlation will be computed
-    variable_pairs = [('MEAN(area)', 'edss_M0'),]
+    variable_pairs = [('MEAN(area)', 'edss_M0')]
     if args.lesion_folder:
         variable_pairs.append(('MEAN(area)', 'lesion_volume'))
         variable_pairs.append(('edss_M0', 'lesion_volume'))
