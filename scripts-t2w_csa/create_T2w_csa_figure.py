@@ -651,10 +651,12 @@ def main():
     # Compute median, mean, std, cov persite and phenotype
     statistic = canproco_pd.groupby(['site', 'phenotype_M0']).agg([np.median, np.mean, np.std, stats.variation])
     print(f'\nDescriptive statistics:\n{statistic}')
+    print(f"\nCoefficient of variation:\n{statistic['MEAN(area)']['variation']*100}")
 
     # Compute median, mean, std, cov per phenotype on the whole cohort
     statistic = canproco_pd.groupby(['phenotype_M0']).agg([np.median, np.mean, np.std, stats.variation])
     print(f'\nDescriptive statistics:\n{statistic}')
+    print(f"\nCoefficient of variation:\n{statistic['MEAN(area)']['variation']*100}")
 
     # duplicate whole canproco dataframe, but change site to 'all' --> this will allow to add 'All sites' to rainplot
     temp_pd = canproco_pd.copy()
