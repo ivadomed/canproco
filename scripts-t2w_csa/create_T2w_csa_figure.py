@@ -205,7 +205,7 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     # Drop manufacturer column
     temp_pd.drop(columns=['manufacturer'], inplace=True)
     # Add new phenotype column
-    temp_pd['phenotype'] = 'spine-generic'
+    temp_pd['phenotype_M0'] = 'spine-generic'
 
     # Combine temp_pd and metric_pd
     final_pd = pd.concat([metric_pd, temp_pd], ignore_index=True)
@@ -217,7 +217,7 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
         # Drop manufacturer column
         temp_pd.drop(columns=['manufacturer'], inplace=True)
         # Add new phenotype column
-        temp_pd['phenotype'] = 'spine-generic'
+        temp_pd['phenotype_M0'] = 'spine-generic'
         # Combine temp_pd and metric_pd
         final_pd = pd.concat([final_pd, temp_pd], ignore_index=True)
 
@@ -228,7 +228,7 @@ def create_rainplot(metric_pd, spinegeneric_pd, fname_fig):
     ax = pt.RainCloud(data=final_pd,
                       x='site',
                       y='MEAN(area)',
-                      hue='phenotype',
+                      hue='phenotype_M0',
                       order=site_to_vendor.keys(),
                       palette=colormap,
                       linewidth=0,       # violionplot border line (0 - no line)
@@ -331,10 +331,10 @@ def compute_partial_correlation(canproco_pd, site):
     :return:
     """
     # Work only with MS patients
-    ms_pd = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]
+    ms_pd = canproco_pd[(canproco_pd['pathology_M0'] == 'MS') & (canproco_pd['site'] == site)]
     # Convert str to int (to be compatible with partial correlation)
-    ms_pd = ms_pd.replace({'phenotype': {'RRMS': 0, 'PPMS': 1, 'RIS': 2}})
-    stats = pg.partial_corr(data=ms_pd, x='MEAN(area)', y='edss_M0', covar='phenotype', method='spearman')
+    ms_pd = ms_pd.replace({'phenotype_M0': {'RRMS': 0, 'PPMS': 1, 'RIS': 2}})
+    stats = pg.partial_corr(data=ms_pd, x='MEAN(area)', y='edss_M0', covar='phenotype_M0', method='spearman')
     r = float(stats['r'])
     p_val = float(stats['p-val'])
 
@@ -400,8 +400,8 @@ def create_correlation_figures_persite(canproco_pd, pair, fname_fig):
         r, p_val = compute_partial_correlation(canproco_pd, site)
         print(f'{site}: Partial correlation {pair[0]} vs {pair[1]}: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
         # Compute linear regression for all MS patients together (i.e., across all phenotypes) --> ['pathology'] == 'MS'
-        var1 = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)][pair[0]]
-        var2 = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)][pair[1]]
+        var1 = canproco_pd[(canproco_pd['pathology_M0'] == 'MS') & (canproco_pd['site'] == site)][pair[0]]
+        var2 = canproco_pd[(canproco_pd['pathology_M0'] == 'MS') & (canproco_pd['site'] == site)][pair[1]]
         #phen = canproco_pd[(canproco_pd['pathology'] == 'MS') & (canproco_pd['site'] == site)]['phenotype']
         x_vals, y_vals = compute_regression(var1, var2)
         # TODO - Consider replacing by sns.regplot
@@ -414,8 +414,8 @@ def create_correlation_figures_persite(canproco_pd, pair, fname_fig):
 
         for color, phenotype in enumerate(['RRMS', 'PPMS', 'RIS']):
             # Prepare variables for plotting
-            var1 = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)][pair[0]]
-            var2 = canproco_pd[(canproco_pd['phenotype'] == phenotype) & (canproco_pd['site'] == site)][pair[1]]
+            var1 = canproco_pd[(canproco_pd['phenotype_M0'] == phenotype) & (canproco_pd['site'] == site)][pair[0]]
+            var2 = canproco_pd[(canproco_pd['phenotype_M0'] == phenotype) & (canproco_pd['site'] == site)][pair[1]]
             r, p_val = compute_correlation(var1, var2)
             print(f'{site}, {phenotype}: Correlation {pair[0]} vs {pair[1]}: r={r}, p-value{format_pvalue(p_val, alpha=0.05)}')
             # Plot individual scatter plots
@@ -488,15 +488,15 @@ def compute_kruskal_per_site(metric_pd):
         metric_pd_site = metric_pd[metric_pd['site'] == site]
         # Compute Kruskal-Wallis H-test
         print(f'\nSite: {site}. \nNumber of subjects per phenotype:')
-        print(metric_pd_site.groupby(['phenotype']).size())
-        fvalue, pvalue = stats.kruskal(metric_pd_site[metric_pd_site['phenotype'] == 'RRMS']['MEAN(area)'],
-                                       metric_pd_site[metric_pd_site['phenotype'] == 'PPMS']['MEAN(area)'],
-                                       metric_pd_site[metric_pd_site['phenotype'] == 'RIS']['MEAN(area)'],
-                                       metric_pd_site[metric_pd_site['phenotype'] == 'HC']['MEAN(area)'])
+        print(metric_pd_site.groupby(['phenotype_M0']).size())
+        fvalue, pvalue = stats.kruskal(metric_pd_site[metric_pd_site['phenotype_M0'] == 'RRMS']['MEAN(area)'],
+                                       metric_pd_site[metric_pd_site['phenotype_M0'] == 'PPMS']['MEAN(area)'],
+                                       metric_pd_site[metric_pd_site['phenotype_M0'] == 'RIS']['MEAN(area)'],
+                                       metric_pd_site[metric_pd_site['phenotype_M0'] == 'HC']['MEAN(area)'])
         print(f'Kruskal-Wallis H-test p-value: {pvalue}\nPostohoc tests:\n')
         # Post hoc Conover’s test
         # https://scikit-posthocs.readthedocs.io/en/latest/tutorial/#non-parametric-anova-with-post-hoc-tests
-        posthoc = sp.posthoc_conover(metric_pd_site, val_col='MEAN(area)', group_col='phenotype', p_adjust='holm')
+        posthoc = sp.posthoc_conover(metric_pd_site, val_col='MEAN(area)', group_col='phenotype_M0', p_adjust='holm')
         print(f'{posthoc}\n')
 
 
@@ -627,14 +627,14 @@ def main():
     # Merge and prepare DataFrames for further analysis
     # ------------------------------------------------------
     # Merge pathology and phenotype columns to the canproco dataframe with CSA values
-    canproco_pd = pd.merge(canproco_pd, canproco_participants_pd[['participant_id', 'pathology', 'phenotype', 'edss_M0']],
+    canproco_pd = pd.merge(canproco_pd, canproco_participants_pd[['participant_id', 'pathology_M0', 'phenotype_M0', 'edss_M0']],
                            how='left', left_on='subject_id', right_on='participant_id')
 
     # get MS patients with 'n/a' for EDSS
     # canproco_pd[(canproco_pd['edss_M0'].isna()) & (canproco_pd['pathology'] == 'MS')]['subject_id']
 
     # Replace n/a in phenotype by HC to allow sorting in violinplot
-    canproco_pd['phenotype'].fillna(canproco_pd['pathology'], inplace=True)
+    canproco_pd['phenotype_M0'].fillna(canproco_pd['pathology_M0'], inplace=True)
 
     # Merge lesion_df to the canproco dataframe with CSA values
     if args.lesion_folder:
@@ -649,11 +649,11 @@ def main():
     # Compute descriptive statistics
     # ------------------------------------------------------
     # Compute median, mean, std, cov persite and phenotype
-    statistic = canproco_pd.groupby(['site', 'phenotype']).agg([np.median, np.mean, np.std, stats.variation])
+    statistic = canproco_pd.groupby(['site', 'phenotype_M0']).agg([np.median, np.mean, np.std, stats.variation])
     print(f'\nDescriptive statistics:\n{statistic}')
 
     # Compute median, mean, std, cov per phenotype on the whole cohort
-    statistic = canproco_pd.groupby(['phenotype']).agg([np.median, np.mean, np.std, stats.variation])
+    statistic = canproco_pd.groupby(['phenotype_M0']).agg([np.median, np.mean, np.std, stats.variation])
     print(f'\nDescriptive statistics:\n{statistic}')
 
     # duplicate whole canproco dataframe, but change site to 'all' --> this will allow to add 'All sites' to rainplot
