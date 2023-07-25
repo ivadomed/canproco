@@ -5,7 +5,7 @@ Also, we want to output the segmentation file of the lesions in different color
 
 Usage:
     python3 lesion_seg_analysis.py -i <input_image> -seg <segmentation> -o <output_folder>
-    python3 lesion_seg_analysis.py -i ./data/rosenberg/nnUNet_raw/Dataset301_canproco/imagesTs/canproco_003_0000.nii.gz -seg ./data/rosenberg/seg_test/canproco_003.nii.gz -o ./data/rosenberg/analysis 
+    python3 canproco/lesion_analysis/lesion_seg_analysis.py -i ./data/lesion_comparison/sub-cal072_ses-M12_STIR.nii.gz -seg ./data/lesion_comparison/canproco_003.nii.gz -o ./data/lesion_comparison/output
 
 Args:
     -i/--input_image: path to the image
