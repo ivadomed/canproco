@@ -164,7 +164,8 @@ if [[ -f ${file_stir}.nii.gz ]];then
     # Rename _raw_RPI file (to be BIDS compliant)
     mv ${file_stir}_raw_RPI.nii.gz ${file_stir}.nii.gz
 
-    # Bring T2w segmentation into STIR space
+    # Register/bring T2w image to the STIR image; the obtained warping field will be used to bring the T2w segmentation
+    # into the STIR space
     sct_register_multimodal -i ${file_t2w}.nii.gz -d ${file_stir}.nii.gz -identity 1 -x nn
     # Bring T2w segmentation into STIR space to be able to run sct_analyze_lesion on the STIR image
     sct_apply_transfo -i ${file_t2w}_seg.nii.gz -d ${file_stir}.nii.gz -w warp_${file_t2w}2${file_stir}.nii.gz -x linear -o ${file_t2w}_seg_reg.nii.gz
@@ -191,7 +192,8 @@ if [[ -f ${file_psir}.nii.gz ]];then
     # Rename _raw_RPI file (to be BIDS compliant)
     mv ${file_psir}_raw_RPI.nii.gz ${file_psir}.nii.gz
 
-    # Bring T2w segmentation into PSIR space
+    # Register/bring T2w image to the PSIR image; the obtained warping field will be used to bring the T2w segmentation
+    # into the PSIR space
     sct_register_multimodal -i ${file_t2w}.nii.gz -d ${file_psir}.nii.gz -identity 1 -x nn
     # Bring T2w segmentation into PSIR space to be able to run sct_analyze_lesion on the STIR image
     sct_apply_transfo -i ${file_t2w}_seg.nii.gz -d ${file_psir}.nii.gz -w warp_${file_t2w}2${file_psir}.nii.gz -x linear -o ${file_t2w}_seg_reg.nii.gz
