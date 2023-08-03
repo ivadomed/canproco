@@ -80,14 +80,28 @@ def main():
     second_lesion_segmentation = nib.load(args.segmentation_second_image)
 
     #first we segment the spinal cord on the two images using sct_deepseg_sc
-    os.system('sct_deepseg_sc -i ' + args.input_first_image + ' -c t2 -o ' + args.output_folder + '/first_image_sc_segmentation.nii.gz')
-    os.system('sct_deepseg_sc -i ' + args.input_second_image + ' -c t2 -o' + args.output_folder + '/second_image_sc_segmentation.nii.gz')
+    #os.system('sct_deepseg_sc -i ' + args.input_first_image + ' -c t2 -o ' + args.output_folder + '/first_image_sc_segmentation.nii.gz')
+    #os.system('sct_deepseg_sc -i ' + args.input_second_image + ' -c t2 -o' + args.output_folder + '/second_image_sc_segmentation.nii.gz')
 
-    #then we register the images and the segmentations with the first image as reference using sct_register_multimodal
-    os.system('sct_register_multimodal -i ' + args.input_second_image + ' -d ' + args.input_first_image + ' -iseg ' + args.output_folder + '/second_image_sc_segmentation.nii.gz' + ' -dseg ' + args.output_folder + '/first_image_sc_segmentation.nii.gz' + ' -o ' + args.output_folder + '/second_image_registered.nii.gz' + ' -owarp ' + args.output_folder +'/warping_M0_to_M12.nii.gz')
+    #then we compute the vertebral levels of the images using sct_label_vertebrae
+    #os.system('sct_label_vertebrae -i ' + args.input_first_image + ' -s ' + args.output_folder + '/first_image_sc_segmentation.nii.gz' + ' -c t2 -qc ' + args.output_folder + '/qc' + ' -ofolder ' + args.output_folder)
+    #os.system('sct_label_vertebrae -i ' + args.input_second_image + ' -s ' + args.output_folder + '/second_image_sc_segmentation.nii.gz' + ' -c t2 -qc ' + args.output_folder + '/qc' + ' -ofolder ' + args.output_folder)
 
-    #then we apply the warping field to the segmentation of the lesions on the second images using sct_apply_transfo
-    os.system('sct_apply_transfo -i ' + args.segmentation_second_image + ' -d ' + args.segmentation_first_image + ' -w ' + args.output_folder + '/warping_M0_to_M12.nii.gz' + ' -o ' + args.output_folder + '/second_image_lesion_segmentation_registered.nii.gz' + ' -x linear')
+    
+    #then we register the images and the segmentations with the first image as reference using sct_register_multimodal using both the spinal cord segmentation and the vertebral levels
+    parameters = 'step=0,type=label,dof=Tx_Ty_Tz:step=1,type=seg,algo=slicereg,poly=5:step=2,type=im,algo=syn,metric=MI,deformation=1x1x1,smooth=3'
+    os.system('sct_register_multimodal -i ' + args.input_second_image + ' -d ' + args.input_first_image + ' -iseg ' + args.output_folder + '/second_image_sc_segmentation.nii.gz'
+                + ' -dseg ' + args.output_folder + '/first_image_sc_segmentation.nii.gz' + ' -ilabel ' + args.output_folder + '/second_image_sc_segmentation_labeled.nii.gz' 
+                + ' -dlabel ' + args.output_folder + '/first_image_sc_segmentation_labeled.nii.gz' + ' -o ' + args.output_folder + '/first_image_registered.nii.gz'
+                + ' -owarp ' + args.output_folder +'/warping_M0_to_M0.nii.gz' + ' -param ' + parameters + ' -x linear -qc ' + args.output_folder + '/qc')
+                
+
+    # parameters = 'step=1,type=seg,algo=slicereg,poly=5:step=2,type=im,algo=syn,metric=MI,deformation=1x1x1,smooth=3'
+    # os.system('sct_register_multimodal -i ' + args.input_second_image + ' -d ' + args.input_first_image + ' -iseg ' + args.output_folder + '/second_image_sc_segmentation.nii.gz' 
+    #            + ' -dseg ' + args.output_folder + '/first_image_sc_segmentation.nii.gz' + ' -o ' + args.output_folder + '/second_image_registered.nii.gz' 
+    #            + ' -owarp ' + args.output_folder +'/warping_M0_to_M12.nii.gz' + ' -param ' + parameters + ' -x linear -qc ' + args.output_folder + '/qc')
+    # #then we apply the warping field to the segmentation of the lesions on the second images using sct_apply_transfo
+    # os.system('sct_apply_transfo -i ' + args.segmentation_second_image + ' -d ' + args.segmentation_first_image + ' -w ' + args.output_folder + '/warping_M0_to_M12.nii.gz' + ' -o ' + args.output_folder + '/second_image_lesion_segmentation_registered.nii.gz' + ' -x linear')
 
     return None
 
