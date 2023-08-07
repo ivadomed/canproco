@@ -20,7 +20,7 @@ Example:
     python3 lesion_analysis/time_point_lesion_evolution.py -i-1 /Users/plbenveniste/Desktop/lesion_comparison_copy/sub-cal072_ses-M0_STIR.nii.gz -i-2 /Users/plbenveniste/Desktop/lesion_comparison_copy/sub-cal072_ses-M12_STIR.nii.gz -seg-1 /Users/plbenveniste/Desktop/lesion_comparison_copy/sub-cal072_ses-M0_STIR_lesion-manual.nii.gz -seg-2 /Users/plbenveniste/Desktop/lesion_comparison_copy/M12_inference_results.nii.gz -o /Users/plbenveniste/Desktop/lesion_comparison_copy/output
 
 To do:
-    *
+    * Remove some of the outputed files
 
 Pierre-Louis Benveniste
 """
@@ -118,18 +118,19 @@ def perform_registration(path_first_image, path_second_image, path_first_lesion_
 
     #we apply the warping to the segmentation of the second image
     os.system('sct_apply_transfo -i ' + path_second_lesion_seg + ' -d ' + path_first_lesion_seg + ' -w ' + path_output_folder + '/warp_2nd_to_1st.nii.gz' 
-              + ' -o ' + path_output_folder + '/second_lesion_seg_registered.nii.gz' + ' -x linear')
+              + ' -o ' + path_output_folder + '/second_lesion_seg_registered.nii.gz' + ' -x nn')
 
     return path_output_folder + '/warp_2nd_to_1st.nii.gz', path_output_folder + '/warp_1st_to_2nd.nii.gz', path_output_folder + '/second_image_sc_seg_registered.nii.gz',path_output_folder + '/second_lesion_seg_registered.nii.gz'
 
 
-def temporal_lesion_matching_on_reg_image(path_first_lesion_seg, path_second_lesion_seg_reg):
+def temporal_lesion_matching_on_reg_image(path_first_lesion_seg, path_second_lesion_seg_reg, path_output_folder):
     """
     This function performs temporal lesion matching using the 1st time point lesion segmentation and the 2nd time point lesion segmentation registered to the 1st time point.
 
     Args:
         path_first_lesion_seg: path to the lesion segmentation of the first image
         path_second_lesion_seg_reg: path to the lesion segmentation of the second image registered to the first image
+        path_output_folder: path to the output folder
 
     Returns:
         matching_table: table containing the matching between lesions of the first time point and lesions of the second time point
@@ -167,10 +168,25 @@ def temporal_lesion_matching_on_reg_image(path_first_lesion_seg, path_second_les
         second_lesion_seg_reg_data2[voxel[0], voxel[1], voxel[2]] = second_lesion_seg_reg_labels[i]+1
 
     #for each lesion of the second time point we consider that it corresponds to the lesion of the first time point with which it overlaps more than 50%
-    matching_table = {}
+    list_lesion_2nd = []
+    corresponding_lesion_1st = []
+    overlapping_ratio = []
+    center_2nd = []
+    center_1st = []
+    first_pass = True
     for lesion_2nd in np.unique(second_lesion_seg_reg_data2):
         if lesion_2nd != 0:
+            list_lesion_2nd.append(lesion_2nd)
+            #we compute the centers
+            second_lesion_iter_center = np.argwhere(second_lesion_seg_reg_data2 == lesion_2nd)
+            center_2nd.append(np.mean(second_lesion_iter_center, axis=0))
             for lesion_1st in np.unique(first_lesion_seg_data2):
+                #we compute the centers
+                if first_pass:
+                    first_lesion_iter_center = np.argwhere(first_lesion_seg_data2 == lesion_1st)
+                    center_1st.append(np.mean(first_lesion_iter_center, axis=0))
+                    first_pass = False
+                #we compute the overlap
                 if lesion_1st !=0:
                     #we get the coordinates of the lesion
                     second_lesion_seg_coordinates2 = np.argwhere(second_lesion_seg_reg_data2 == lesion_2nd)
@@ -181,125 +197,153 @@ def temporal_lesion_matching_on_reg_image(path_first_lesion_seg, path_second_les
                     first_set = set(tuple(points) for points in  first_lesion_seg_coordinates)
                     intersection = len(second_set.intersection(first_set))
                     ratio = intersection/len(first_set)
-                    matching_table[int(lesion_2nd)] = {}
                     if ratio > 0.5:
-                        matching_table[int(lesion_2nd)]["Lesion_1st_timepoint"] = int(lesion_1st)
-                        matching_table[int(lesion_2nd)]["Overlapping_ratio"] = round(ratio,2)
+                        corresponding_lesion_1st.append(lesion_1st)
+                        overlapping_ratio.append(ratio)
                     else:
-                        matching_table[int(lesion_2nd)]["Lesion_1st_timepoint"] = None
-                        matching_table[int(lesion_2nd)]["Overlapping_ratio"] = None
+                        corresponding_lesion_1st.append(None)
+                        overlapping_ratio.append(None)
 
-    #we then compute the center of each lesion
-    center_2nd = {}
-    for lesion_2nd in np.unique(second_lesion_seg_reg_data2):
-        if lesion_2nd != 0:
-            second_lesion_seg_reg_coordinates2 = np.argwhere(second_lesion_seg_reg_data2 == lesion_2nd)
-            center_2nd[int(lesion_2nd)] = np.mean(second_lesion_seg_reg_coordinates2, axis=0)
-    center_1st = {}
-    for lesion_1st in np.unique(first_lesion_seg_data2):
-        if lesion_1st != 0:
-            first_lesion_seg_coordinates = np.argwhere(first_lesion_seg_data2 == lesion_1st)
-            center_1st[int(lesion_1st)] = np.mean(first_lesion_seg_coordinates, axis=0)
+    lesion_dict = {"list_lesion_2nd": list_lesion_2nd, "corresponding_lesion_1st": corresponding_lesion_1st, "overlapping_ratio": overlapping_ratio,
+                    "center_2nd": center_2nd, "center_1st": center_1st}
 
-    #we first overwrite the segmentation files with the lesions in different colors
+    #finally we overwrite the segmentation files with the lesions in colors matching from t1 to t2
     final_first_lesion_seg = np.zeros(first_lesion_seg_data2.shape)
-    final_second_lesion_seg_reg = np.zeros(second_lesion_seg_reg_data2.shape)
-    for i,voxel in enumerate(first_lesion_seg_coordinates):
-        final_first_lesion_seg[voxel[0], voxel[1], voxel[2]] = matching_table[first_lesion_seg_data2[voxel[0], voxel[1], voxel[2]]]["Lesion_1st_timepoint"]
+    for lesion in np.unique(first_lesion_seg_data2):
+        if lesion!=0:
+            arg_where_lesion = np.argwhere(first_lesion_seg_data2 == lesion)
+            index_lesion = np.argwhere(lesion_dict['corresponding_lesion_1st'] == lesion)[0]
+            for coord in arg_where_lesion:
+                final_first_lesion_seg[coord[0], coord[1], coord[2]] = lesion_dict['list_lesion_2nd'][index_lesion[0]]
+    final_second_lesion_seg_reg = np.copy(second_lesion_seg_reg_data2)
 
-    for i,lesion in enumerate(matching_table):
-        print(i)
-        print(lesion)
-        print(matching_table[lesion])
-        first_lesion_seg_data2.replace(matching_table[lesion]["Lesion_1st_timepoint"], lesion)
-    #print(first_lesion_seg_data2)
-
-
-    #first_lesion_seg2 = nib.Nifti1Image(first_lesion_seg_data2, first_lesion_seg.affine, first_lesion_seg.header)
-    #second_lesion_seg2 = nib.Nifti1Image(second_lesion_seg_data2, second_lesion_seg.affine, second_lesion_seg.header)
-    #nib.save(first_lesion_seg2, args.output_folder + '/first_lesion_seg_clustered.nii.gz')
-    #nib.save(second_lesion_seg2, args.output_folder + '/second_lesion_seg_clustered.nii.gz')
-
-    return matching_table, center_1st, center_2nd, first_lesion_seg_data2, second_lesion_seg_reg_data2
+    #we save the results in nifti files
+    first_lesion_seg2 = nib.Nifti1Image(first_lesion_seg_data2, first_lesion_seg.affine, first_lesion_seg.header)
+    second_lesion_seg2 = nib.Nifti1Image(final_second_lesion_seg_reg, second_lesion_seg_reg.affine, second_lesion_seg_reg.header)
+    nib.save(first_lesion_seg2, path_output_folder + '/first_lesion_seg_clustered.nii.gz')
+    nib.save(second_lesion_seg2, path_output_folder + '/second_lesion_seg_clustered.nii.gz')
+    
+    return lesion_dict, final_first_lesion_seg, final_second_lesion_seg_reg
 
 
-def lesion_distance(lesion1, lesion2, volume1, volume2):
+def lesion_matching(path_t2_seg, path_t2_inv_wrapped, path_output_folder):
     """
-    This function computes the distance betweeen two lesions for the graph matching.
+    This function performs lesion matching between the 2nd time point lesion segmentation and the 2nd time point lesion segmentation inversely wrapped.
 
     Args:
-        lesion1: coordinates of the first lesion
-        lesion2: coordinates of the second lesion
-    
+        path_t2_seg: path to the lesion segmentation of the second time point
+        path_t2_inv_wrapped: path to the lesion segmentation of the second time point inversely wrapped
+        path_output_folder: path to the output folder
+
     Returns:
-        distance: distance between the two lesions
+        path_t2_seg: path to the lesion segmentation of the second time point with the lesions in same color as the lesions of the second time point inversely wrapped
     """
-    pos_distance = np.sqrt((lesion1[0] - lesion2[0])**2 + (lesion1[1] - lesion2[1])**2 + (lesion1[2] - lesion2[2])**2)
-    vol_distance = np.abs(volume1 - volume2)
+    #we first load data
+    t2_seg = nib.load(path_t2_seg)
+    t2_seg_data = t2_seg.get_fdata()
+    t2_inv_wrapped = nib.load(path_t2_inv_wrapped)
+    t2_inv_wrapped_data = t2_inv_wrapped.get_fdata()
 
-    return  pos_distance + vol_distance
+    #we then perform clustering on t2_seg
+    t2_seg_coordinates = np.argwhere(t2_seg_data == 1)
+    clustering_t2 = DBSCAN(eps=10, min_samples=5).fit(t2_seg_coordinates)
+    t2_seg_labels = clustering_t2.labels_
+    #from this we build a dataset with the lesions in different colors
+    t2_seg_data_labeled = np.zeros(t2_seg_data.shape)
+    for i,voxel in enumerate(t2_seg_coordinates):
+        t2_seg_data_labeled[voxel[0], voxel[1], voxel[2]] = t2_seg_labels[i]+1
+    
+    #we now compute the centers of the lesions
+    center_t2 = []
+    color_t2 = []
+    for lesion_t2 in np.unique(t2_seg_data_labeled):
+        if lesion_t2 != 0:
+            t2_seg_coordinates2 = np.argwhere(t2_seg_data_labeled == lesion_t2)
+            center_t2.append(np.mean(t2_seg_coordinates2, axis=0))
+            color_t2.append(lesion_t2)
+    center_t2_inv_wrapped = []
+    color_t2_inv_wrapped = []
+    for lesion_t2 in np.unique(t2_inv_wrapped_data):
+        if lesion_t2 != 0:
+            t2_inv_wrapped_coordinates = np.argwhere(t2_inv_wrapped_data == lesion_t2)
+            center_t2_inv_wrapped.append(np.mean(t2_inv_wrapped_coordinates, axis=0))
+            color_t2_inv_wrapped.append(lesion_t2)
 
+    if len(center_t2) != len(center_t2_inv_wrapped):
+        print('Error: the number of lesions is different between the two segmentations.')
+        return None
 
-def volume_lesions(labeled_data, voxel_volume):
+    #we then perform matching by closest distance of the two center lists
+    matching_table = np.zeros((len(center_t2), 2))
+    for i, center in enumerate(center_t2):
+        min_distance = np.inf
+        for j, center_inv_wrapped in enumerate(center_t2_inv_wrapped):
+            distance = np.sqrt((center[0] - center_inv_wrapped[0])**2 + (center[1] - center_inv_wrapped[1])**2 + (center[2] - center_inv_wrapped[2])**2)
+            if distance < min_distance:
+                min_distance = distance
+                matching_table[i][0] = i
+                matching_table[i][1] = j
+    
+    #we then overwrite the segmentation file with the lesions in colors matching from t1 to t2
+    final_t2_seg = np.zeros(t2_seg_data_labeled.shape)
+    for i,lesion_value in enumerate(color_t2):
+        final_t2_seg[t2_seg_data_labeled == lesion_value] = color_t2_inv_wrapped[int(matching_table[i][1])]
+    final_t2_seg = nib.Nifti1Image(final_t2_seg, t2_seg.affine, t2_seg.header)
+    out_path = path_output_folder + path_t2_seg.split('/')[-1].split('.')[0] + '_matched.nii.gz'
+    nib.save(final_t2_seg, out_path)
+
+    return out_path
+    
+
+def comparison_lesions_t1_t2(path_first_lesion_seg, path_second_lesion_seg):
     """
-    This function computes the volume of the lesions.
+    This function performs comparison of lesions from t1 and t2. 
 
     Args:
-        labeled_data: data with each lesion in a different color
-        voxel_volume: volume of a voxel
-    
+        path_first_lesion_seg: path to the lesion segmentation of the first image
+        path_second_lesion_seg: path to the lesion segmentation of the second image
+
     Returns:
-        volumes: volume of the lesions
+        t1_dict: dictionary containing the list of lesions, the volume of the lesions and the center of the lesions for the first time point
+        t2_dict: dictionary containing the list of lesions, the volume of the lesions and the center of the lesions for the second time point
     """
 
-    volumes = []
-    for lesion in np.unique(labeled_data):
-        if lesion != 0:
-            volume = len(np.argwhere(labeled_data == lesion))*voxel_volume
-            volumes.append((lesion,volume))
-    return np.array(volumes)  
+    #we first load data
+    first_lesion_seg = nib.load(path_first_lesion_seg)
+    first_lesion_seg_data = first_lesion_seg.get_fdata()
+    second_lesion_seg = nib.load(path_second_lesion_seg)
+    second_lesion_seg_data = second_lesion_seg.get_fdata()
 
+    #we get voxel volume
+    voxel_volume_t1 = np.prod(first_lesion_seg.header.get_zooms())
+    voxel_volume_t2 = np.prod(second_lesion_seg.header.get_zooms())
 
-def graph_matching(center_2nd_orig, center_2nd_reg, second_orig_volumes, second_reg_volumes):
-    """
-    This function performs graph matching between the lesions of the second time point registered and the lesions of the second time point.
-    The node distances take into account the distance between the lesions and the volume of the lesions.
-
-    Args:
-        center_2nd: coordinates of the center of the lesions of the second time point
-        center_2nd_reg: coordinates of the center of the lesions of the second time point registered
-        second_orig_volumes: volume of the lesions of the second time point
-        second_reg_volumes: volume of the lesions of the second time point registered
+    #we iterate over the lesions of the first time point
+    list_lesions_t1 = np.unique(first_lesion_seg_data)
+    list_lesions_t1 = list_lesions_t1[1:] #removed 0
+    volume_lesions_t1 = []
+    center_t1 = []
+    for lesion in list_lesions_t1:
+        volume_lesions_t1.append(len(np.argwhere(first_lesion_seg_data == lesion))*voxel_volume_t1)
+        center_t1.append(np.mean(np.argwhere(first_lesion_seg_data == lesion), axis=0))
     
-    Returns:
-        matching_table: table containing the matching between lesions of the second time point and lesions of the second time point registered
-    """
-
-    # Create a graph for each time point
-    graph_t2_orig = nx.Graph()
-    graph_t2_reg = nx.Graph()
-
-    # Add nodes (lesions) to each graph
-    graph_t2_orig.add_nodes_from(range(len(center_2nd_orig)))
-    graph_t2_reg.add_nodes_from(range(len(center_2nd_reg)))
-
-    # Add edges between nodes with similarity based on lesion distance
-    for i, lesion_reg in enumerate(center_2nd_reg):
-        for j, lesion_orig in enumerate(center_2nd_orig):
-            distance = lesion_distance(center_2nd_reg[lesion_reg], center_2nd_orig[lesion_orig], second_reg_volumes[i][1], second_orig_volumes[j][1])
-            graph_t2_reg.add_edge(i, j, weight=distance)
-            graph_t2_orig.add_edge(j, i, weight=distance)  # Adding bidirectional edges
-
-    # Use Hungarian algorithm for graph matching
-    cost_matrix = np.array(nx.to_numpy_array(graph_t2_reg))
-    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-
-    # Create temporal links based on matching results
-    matching_reg_to_orig = [(i, j) for i, j in zip(range(len(center_2nd_reg)), col_ind) if cost_matrix[i, j] < np.inf]
+    rounded_list_t1 = [round(elem) for elem in list_lesions_t1]
+    t1_dict = {"list_lesions": rounded_list_t1, "volume_lesions": volume_lesions_t1, "center": center_t1}
     
-    return matching_reg_to_orig
+    #we iterate over the lesions of the second time point
+    list_lesions_t2 = np.unique(second_lesion_seg_data)
+    list_lesions_t2 = list_lesions_t2[1:] #removed 0
+    volume_lesions_t2 = []
+    center_t2 = []
+    for lesion in list_lesions_t2:
+        volume_lesions_t2.append(len(np.argwhere(second_lesion_seg_data == lesion))*voxel_volume_t2)
+        center_t2.append(np.mean(np.argwhere(second_lesion_seg_data == lesion), axis=0))
+    
+    rounded_list_t2 = [round(elem) for elem in list_lesions_t2]
+    t2_dict = {"list_lesions": rounded_list_t2, "volume_lesions": volume_lesions_t2, "center": center_t2}
 
-  
+    return t1_dict, t2_dict
+    
 
 def main():
     """
@@ -311,6 +355,7 @@ def main():
     Returns:
         None
     """
+    
     #get the parser
     parser = get_parser()
     args = parser.parse_args()
@@ -321,74 +366,51 @@ def main():
     path_second_lesion_seg_reg = args.output_folder + '/second_lesion_seg_registered.nii.gz'
     
     #we then perform temporal lesion matching using the 1st time point lesion segmentation and the 2nd time point lesion segmentation registered to the 1st time point
-    matching_table_1st_to_2nd_reg, center_1st, center_2nd_reg, first_data_labeled, second_data_reg_labeled = temporal_lesion_matching_on_reg_image(args.segmentation_first_image, path_second_lesion_seg_reg)
+    lesion_dict, final_first_lesion_seg, final_second_lesion_seg_reg = temporal_lesion_matching_on_reg_image(args.segmentation_first_image, path_second_lesion_seg_reg, args.output_folder)
     
-    #we then perfrom lesion clustering on the original lesion segmentation file from the second time point
-    orig_second_lesion_seg = nib.load(args.segmentation_second_image)
-    orig_second_lesion_seg_data = orig_second_lesion_seg.get_fdata()
-    orig_second_lesion_seg_coordinates = np.argwhere(orig_second_lesion_seg_data == 1)
-    clustering_2nd_orig = DBSCAN(eps=10, min_samples=5).fit(orig_second_lesion_seg_coordinates)
-    orig_second_lesion_seg_labels = clustering_2nd_orig.labels_
-    #we label the data by cluster
-    orig_second_lesion_seg_data_labeled = np.zeros(orig_second_lesion_seg_data.shape)
-    for i,voxel in enumerate(orig_second_lesion_seg_coordinates):
-        orig_second_lesion_seg_data_labeled[voxel[0], voxel[1], voxel[2]] = orig_second_lesion_seg_labels[i]+1
-    center_2nd_orig = {}
-    #we compute the centers
-    for lesion_2nd in np.unique(orig_second_lesion_seg_data_labeled):
-        if lesion_2nd != 0:
-            orig_second_lesion_seg_coordinates2 = np.argwhere(orig_second_lesion_seg_data_labeled == lesion_2nd)
-            center_2nd_orig[int(lesion_2nd)] = np.mean(orig_second_lesion_seg_coordinates2, axis=0)
-
-
-    """
-    #we then perform lesion matching between the second time point lesion segmentation and the second time point lesion segmentation registered to the first time point
-    second_reg_voxel_volume = np.prod(nib.load(args.input_first_image).header.get_zooms())
-    second_voxel_volume = np.prod(nib.load(args.input_second_image).header.get_zooms())
-    second_reg_volumes = volume_lesions(second_data_reg_labeled, second_reg_voxel_volume)
-    second_orig_volumes = volume_lesions(orig_second_lesion_seg_data_labeled, second_voxel_volume)
-    matching_reg_to_orig = graph_matching(center_2nd_orig, center_2nd_reg, second_orig_volumes, second_reg_volumes)
-
-
+    #we then perform inverse warpping on the image 
+    # os.system('sct_apply_transfo -i ' + args.output_folder +'/second_lesion_seg_clustered.nii.gz' + ' -d ' + args.segmentation_second_image + ' -w ' + args.output_folder + '/warp_1st_to_2nd.nii.gz' 
+    #           + ' -o ' + args.output_folder + '/second_lesion_seg_inv_wrapped.nii.gz' + ' -x nn')
     
-    #we build a matching table between the lesions of the first time point and the lesions of the second time point
-    matching_table = np.empty(matching_table_1st_to_2nd_reg.shape)
-    for i in range(len(matching_table_1st_to_2nd_reg)):
-        matching_table[i][0] = matching_table_1st_to_2nd_reg[matching_reg_to_orig[i][1]][0]
-        matching_table[i][1] = matching_table_1st_to_2nd_reg[matching_reg_to_orig[i][1]][1]
+    #now we perform lesion matching between the 2nd time point lesion segmentation and the 2nd time point lesion segmentation inversely wrapped
+    t2_final_seg = lesion_matching(args.segmentation_second_image, args.output_folder + '/second_lesion_seg_inv_wrapped.nii.gz', args.output_folder)
+
+    #now we perform comparison of lesions from t1 and t2
+    t1_dict, t2_dict = comparison_lesions_t1_t2(args.segmentation_first_image,t2_final_seg)
+
+    #we then print the output file
+    list_new_lesions = set(t2_dict['list_lesions']).difference(set(t1_dict['list_lesions']))
+    common_lesions = list(set(t2_dict['list_lesions']).intersection(set(t1_dict['list_lesions'])))
     
-    #compute the volume of the lesions
-    first_voxel_volume = np.prod(nib.load(args.input_first_image).header.get_zooms())
-    second_voxel_volume = np.prod(nib.load(args.input_second_image).header.get_zooms())
-    first_volumes = volume_lesions(first_data_labeled, first_voxel_volume)
-    second_volumes = volume_lesions(orig_second_lesion_seg_data_labeled, second_voxel_volume)
-
-    #we save the results in nifti files
-    second_data_reg_labeled = nib.Nifti1Image(second_data_reg_labeled, orig_second_lesion_seg.affine, orig_second_lesion_seg.header)
-    nib.save(second_data_reg_labeled, args.output_folder + '/second_lesion_seg_registered_clustered222.nii.gz')
-    orig_second_lesion_seg_data_labeled = nib.Nifti1Image(orig_second_lesion_seg_data_labeled, orig_second_lesion_seg.affine, orig_second_lesion_seg.header)
-    nib.save(orig_second_lesion_seg_data_labeled, args.output_folder + '/second_lesion_seg_clustered333.nii.gz')
-    """
-
-    #print output file
-    """
     with open(args.output_folder + '/temporal_analysis_results.txt', 'w') as f:
         f.write('TEMPORAL ANALYSIS OF MULTIPLE SCLEROSIS LESIONS:\n')
         f.write('------------------------------------------------\n')
         f.write('Subject Name: at t0 ' + args.input_first_image.split('/')[-1] + ' and at t1 ' + args.input_second_image.split('/')[-1] + ' \n')
         f.write('------------------------------------------------\n')
-        f.write('Lesions at t0: \n')
+        f.write('Lesions at t0: ' + str(len(t1_dict['list_lesions'])) + '\n')
+        f.write('Lesions at t1: ' + str(len(t2_dict['list_lesions'])) + '\n')
         f.write('------------------------------------------------\n')
-        f.write('Number of lesions: ' + str(len(np.unique(first_data_labeled))-1) + '\n')
-        for lesion in first_volumes:
-            f.write('Lesion ' + str(int(lesion[0])) + ' volume: ' + str(lesion[1]) + ' mm3\n')
-    """
-
-
-
-
-
-
+        f.write('Lesions at t0: \n')
+        for lesion in t1_dict['list_lesions']:
+            f.write('Lesion ' + str(int(lesion)) + ' \n')
+            f.write('Volume: ' + str(t1_dict['volume_lesions'][t1_dict['list_lesions'].index(lesion)]) + ' mm3\n')
+            f.write('Center: ' + str(t1_dict['center'][t1_dict['list_lesions'].index(lesion)]) + '\n')
+            f.write('\n')
+        f.write('------------------------------------------------\n')
+        f.write('Lesions at t1: \n')
+        for lesion in t2_dict['list_lesions']:
+            f.write('Lesion ' + str(int(lesion)) + ' \n')
+            f.write('Volume: ' + str(t2_dict['volume_lesions'][t2_dict['list_lesions'].index(lesion)]) + ' mm3\n')
+            f.write('Center: ' + str(t2_dict['center'][t2_dict['list_lesions'].index(lesion)]) + '\n')
+            f.write('\n')
+        f.write('------------------------------------------------\n')
+        f.write('EVOLUTION:')
+        for lesion in common_lesions:
+            f.write('Lesion ' + str(int(lesion)) + ' \n')
+            f.write('Volume at t0: ' + str(t1_dict['volume_lesions'][t1_dict['list_lesions'].index(lesion)]) + ' mm3\n')
+            f.write('Volume at t1: ' + str(t2_dict['volume_lesions'][t2_dict['list_lesions'].index(lesion)]) + ' mm3\n')
+            f.write('Volume increase in %: ' + str((t2_dict['volume_lesions'][t2_dict['list_lesions'].index(lesion)] - t1_dict['volume_lesions'][t1_dict['list_lesions'].index(lesion)])/t1_dict['volume_lesions'][t1_dict['list_lesions'].index(lesion)]*100) + ' %\n')
+        f.write('------------------------------------------------\n')
 
 
 if __name__ == '__main__':
