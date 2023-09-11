@@ -4,8 +4,7 @@ The objective is to output the number of lesions segmented on the spinal cord fo
 Also, we want to output the segmentation file of the lesions in different color
 
 Usage:
-    python3 lesion_seg_analysis.py -i <input_image> -seg <segmentation> -o <output_folder>
-    python3 canproco/lesion_analysis/lesion_seg_analysis.py -i ./data/lesion_comparison/sub-cal072_ses-M12_STIR.nii.gz -seg ./data/lesion_comparison/canproco_003.nii.gz -o ./data/lesion_comparison/output
+    python lesion_seg_analysis.py -i <input_image> -seg <segmentation> -o <output_folder>
 
 Args:
     -i/--input_image: path to the image
@@ -30,6 +29,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 
+
 def get_parser():
     """
     This function parses the arguments given to the script.
@@ -51,6 +51,7 @@ def get_parser():
     parser.add_argument('--plot', action='store_true',
                         help='Whether to plot the results or not')
     return parser
+
 
 def main():
     """
@@ -144,6 +145,7 @@ def main():
         for i in range(n_clusters_):
             f.write(f'Lesion {i+1} : volume: {round(lesion_volumes[i],2)} mm3, center: {lesion_centers[i]}\n')
     return None
+
 
 if __name__ == '__main__':
     main()
