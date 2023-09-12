@@ -13,6 +13,7 @@ Arguments:
     --taskname: Specify the task name - usually the anatomy to be segmented, e.g. Hippocampus
     --tasknumber : Specify the task number, has to be greater than 100 but less than 999
     --label-folder : Path to the label folders in derivatives (default='labels')
+    --contrasts : Contrasts used for the images (default='PSIR') (separated by a comma)
 
 Returns:
     None
@@ -34,35 +35,59 @@ from tqdm import tqdm
 import nibabel as nib
 import numpy as np
 
-# parse command line arguments
-parser = argparse.ArgumentParser(description='Convert BIDS-structured database to nnUNet format.')
-parser.add_argument('--path-data', required=True,
-                    help='Path to BIDS structured dataset. Accepts both cross-sectional and longitudinal datasets')
-parser.add_argument('--path-out', help='Path to output directory.', required=True)
-parser.add_argument('--taskname', default='MSSpineLesion', type=str,
-                    help='Specify the task name - usually the anatomy to be segmented, e.g. Hippocampus',)
-parser.add_argument('--tasknumber', default=501,type=int, 
-                    help='Specify the task number, has to be greater than 500 but less than 999. e.g 502')
-parser.add_argument('--label-folder', help='Path to the label folders in derivatives', default='labels', type=str)
 
-args = parser.parse_args()
+def get_parser():
+    """
+    This function parses the command line arguments and returns an argparse object.
 
-path_in_images = Path(args.path_data)
-label_folder = args.label_folder
-path_in_labels = Path(os.path.join(args.path_data, 'derivatives', label_folder))
-path_out = Path(os.path.join(os.path.abspath(args.path_out), f'Dataset{args.tasknumber}_{args.taskname}'))
+    Input:
+        None
 
-# define paths for train and test folders 
-path_out_imagesTr = Path(os.path.join(path_out, 'imagesTr'))
-path_out_imagesTs = Path(os.path.join(path_out, 'imagesTs'))
-path_out_labelsTr = Path(os.path.join(path_out, 'labelsTr'))
-path_out_labelsTs = Path(os.path.join(path_out, 'labelsTs'))
+    Returns:
+        parser : argparse object
+    """
+    parser = argparse.ArgumentParser(description='Convert BIDS-structured database to nnUNet format.')
+    parser.add_argument('--path-data', required=True,
+                        help='Path to BIDS structured dataset. Accepts both cross-sectional and longitudinal datasets')
+    parser.add_argument('--path-out', help='Path to output directory.', required=True)
+    parser.add_argument('--taskname', default='MSSpineLesion', type=str,
+                        help='Specify the task name - usually the anatomy to be segmented, e.g. Hippocampus',)
+    parser.add_argument('--tasknumber', default=501,type=int, 
+                        help='Specify the task number, has to be greater than 500 but less than 999. e.g 502')
+    parser.add_argument('--label-folder', help='Path to the label folders in derivatives', default='labels', type=str)
+    parser.add_argument('--contrasts', help='Contrast used for the images', default='PSIR', type=str)
+    return parser
 
-# we load both train and validation set into the train images as nnunet uses cross-fold-validation
-train_images, train_labels = [], []
-test_images, test_labels = [], []
 
-if __name__ == '__main__':
+def main():
+    """
+    This function is the main function of the script. It converts the data from BIDS to nnU-Net format.
+
+    Input:
+        None
+
+    Returns:
+        None
+    """
+    #------------- PARSE COMMAND LINE ARGUMENTS --------------------------
+    parser = get_parser()
+    args = parser.parse_args()
+
+    path_in_images = Path(args.path_data)
+    label_folder = args.label_folder
+    path_in_labels = Path(os.path.join(args.path_data, 'derivatives', label_folder))
+    path_out = Path(os.path.join(os.path.abspath(args.path_out), f'Dataset{args.tasknumber}_{args.taskname}'))
+    contrasts = args.contrasts.split(',')
+
+    # define paths for train and test folders 
+    path_out_imagesTr = Path(os.path.join(path_out, 'imagesTr'))
+    path_out_imagesTs = Path(os.path.join(path_out, 'imagesTs'))
+    path_out_labelsTr = Path(os.path.join(path_out, 'labelsTr'))
+    path_out_labelsTs = Path(os.path.join(path_out, 'labelsTs'))
+
+    # we load both train and validation set into the train images as nnunet uses cross-fold-validation
+    train_images, train_labels = [], []
+    test_images, test_labels = [], []
 
     # make the directories
     pathlib.Path(path_out).mkdir(parents=True, exist_ok=True)
@@ -76,8 +101,11 @@ if __name__ == '__main__':
     #------------- EXTRACTION OF THE LABELED IMAGES NAMES--------------------------
     labelled_imgs = []
     
-    # We first extract all the label files' names    
-    label_files = sorted(list(path_in_labels.rglob('*_STIR_lesion-manual.nii.gz')) + list(path_in_labels.rglob('*PSIR_lesion-manual.nii.gz') ))
+    # We first extract all the label files' names for every wanted contrast
+    label_files = []
+    for contrast in contrasts:
+        label_files += list(path_in_labels.rglob(f'*_{contrast}_lesion-manual.nii.gz'))
+    label_files = sorted(label_files)   
     labelled_imgs += [str(k) for k in label_files]
     
     #--------------- DISPACTH OF LABELLED IMAGES AND UNLABELED IMAGES ------------------- 
@@ -89,7 +117,10 @@ if __name__ == '__main__':
     valid_test_imgs = []
 
     #The image folders
-    image_files = sorted(list(path_in_images.rglob('*_STIR.nii.gz')) + list(path_in_images.rglob('*_PSIR.nii.gz')))
+    image_files = []
+    for contrast in contrasts:
+        image_files += list(path_in_images.rglob(f'*_{contrast}.nii.gz'))
+    imahe_files = sorted(image_files)
     
     for image_file in image_files:
 
@@ -155,7 +186,6 @@ if __name__ == '__main__':
     json_dict['reference'] = "TBD"
     json_dict['licence'] = "TBD"
     json_dict['release'] = "0.0"
-
     
     # Because only using one modality  
     ## was changed from 'modality' to 'channel_names'
@@ -188,3 +218,9 @@ if __name__ == '__main__':
     dataset_dict_name = f"dataset.json"
     with open(os.path.join(path_out, dataset_dict_name), "w") as outfile:
         outfile.write(json_object)
+
+    return None
+
+
+if __name__ == '__main__':
+    main()
