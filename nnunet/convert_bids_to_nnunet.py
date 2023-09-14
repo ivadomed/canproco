@@ -120,7 +120,7 @@ def main():
     image_files = []
     for contrast in contrasts:
         image_files += list(path_in_images.rglob(f'*_{contrast}.nii.gz'))
-    imahe_files = sorted(image_files)
+    image_files = sorted(image_files)
     
     for image_file in image_files:
 
