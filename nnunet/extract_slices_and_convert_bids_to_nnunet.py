@@ -3,9 +3,9 @@ This script is used to extract slices from the 3D images and labels and save the
 The 2D images are stored in the nnU-Net format, i.e. in the folders imagesTr and imagesTs.
 
 Input:
-    -data_path: path to the data folder
+    -path-data: path to the data folder
     -label_folder: name of the folder containing the labels
-    -out_path: path to the output folder
+    -path-out: path to the output folder
     -taskname: name of the task
     -tasknumber: number of the task
     -contrasts: contrasts used for the images
@@ -15,6 +15,9 @@ Output:
 
 To do:
     -
+
+Example:
+    python extract_slices_and_convert_bids_to_nnunet.py --path-data /path/to/data_extracted --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID --label-folder labels --contrasts PSIR
 
 Pierre-Louis Benveniste
 """
