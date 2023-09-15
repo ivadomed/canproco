@@ -139,54 +139,51 @@ def main():
             label_data = label.get_fdata()
             nb_slices = image_data.shape[2]
 
+            if (np.sum(label_data)!=0 ):
 
-            ###VERIFIER SI LE FICHIER LABEL EST VIDE OU PAS
-            #SI PAS VIDE: FAIRE SEGMENTATION
-            #et ensuite faire sur chaque slice
-
-            for slice in range(nb_slices):
-                #we check if the label slice is empty or not
-                label_slice = np.asarray(label.dataobj)[:,:,slice]
-                if np.sum(label_slice)!=0 :
-                    #we add the slice to the train folder
-                    scan_cnt_train+= 1
-
-                    image_file_nnunet = os.path.join(path_out_imagesTr,f'{args.taskname}_{scan_cnt_train:03d}_0000.nii.gz')
-                    label_file_nnunet = os.path.join(path_out_labelsTr,f'{args.taskname}_{scan_cnt_train:03d}.nii.gz')
-            
-                    train_images.append(str(image_file_nnunet))
-                    train_labels.append(str(label_file_nnunet))
-
-                    #create the image_slice_file and the label_slice_file
-                    image_slice = np.asarray(image.dataobj)[:,:,slice]
-                    image_slice = np.expand_dims(image_slice, axis=2)
-                    image_slice_file = nib.Nifti1Image(image_slice, affine=image.affine)
-                    nib.save(image_slice_file, str(image_file_nnunet))
-
-                    #we segment the spinal cord
-                    sc_seg_file_path = os.path.join(qc_folder,f'{args.taskname}_{scan_cnt_train:03d}_sc_seg.nii.gz')
-                    os.system(f'sct_propseg -i {image_file} -o {sc_seg_file_path} -c t1 ')
-                    #generate the quality control
-                    os.system(f'sct_qc -i {image_file} -s {sc_seg_file_path} -d {sc_seg_file_path} -p sct_deepseg_lesion -plane sagittal -qc {qc_folder}')
-
+                #we segment the spinal cord
+                sc_seg_file_path = os.path.join(qc_folder,f'{args.taskname}_{scan_cnt_train:03d}_sc_seg.nii.gz')
+                os.system(f'sct_propseg -i {image_file} -o {sc_seg_file_path} -c t1 -v 0')
+                #generate the quality control
+                os.system(f'sct_qc -i {image_file} -s {sc_seg_file_path} -d {sc_seg_file_path} -p sct_deepseg_lesion -plane sagittal -qc {qc_folder}')
+                
+                for slice in range(nb_slices):
+                    #we check if the label slice is empty or not
                     label_slice = np.asarray(label.dataobj)[:,:,slice]
-                    label_slice = np.expand_dims(label_slice, axis=2)
-                    label_slice = np.where(label_slice > label_threshold, 1, 0)
+                    if np.sum(label_slice)!=0 :
+                        #we add the slice to the train folder
+                        scan_cnt_train+= 1
+                        print("Number of images for training: ", scan_cnt_train)
 
-                    #we create the multi-label
-                    sc_seg = nib.load(sc_seg_file_path)
-                    sc_seg = np.asarray(sc_seg.dataobj)[:,:,slice]
-                    sc_seg = np.where(sc_seg > label_threshold, 1, 0)
-                    
-                    multi_label_slice = np.zeros(image_slice.shape)
-                    multi_label_slice[sc_seg==1] = 1
-                    multi_label_slice[label_slice==1] = 2
+                        image_file_nnunet = os.path.join(path_out_imagesTr,f'{args.taskname}_{scan_cnt_train:03d}_0000.nii.gz')
+                        label_file_nnunet = os.path.join(path_out_labelsTr,f'{args.taskname}_{scan_cnt_train:03d}.nii.gz')
+                
+                        train_images.append(str(image_file_nnunet))
+                        train_labels.append(str(label_file_nnunet))
 
-                    label_slice_file = nib.Nifti1Image(multi_label_slice, affine=label.affine)
-                    nib.save(label_slice_file, str(label_file_nnunet))
+                        #create the image_slice_file and the label_slice_file
+                        image_slice = np.asarray(image.dataobj)[:,:,slice]
+                        image_slice = np.expand_dims(image_slice, axis=2)
+                        image_slice_file = nib.Nifti1Image(image_slice, affine=image.affine)
+                        nib.save(image_slice_file, str(image_file_nnunet))
+                        label_slice = np.asarray(label.dataobj)[:,:,slice]
+                        label_slice = np.expand_dims(label_slice, axis=2)
+                        label_slice = np.where(label_slice > label_threshold, 1, 0)
 
-                    conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet
-                    conversion_dict[str(os.path.abspath(label_file))] = label_file_nnunet
+                        #we create the multi-label
+                        sc_seg = nib.load(sc_seg_file_path)
+                        sc_seg = np.asarray(sc_seg.dataobj)[:,:,slice]
+                        sc_seg = np.where(sc_seg > label_threshold, 1, 0)
+                        
+                        multi_label_slice = np.zeros(image_slice.shape)
+                        multi_label_slice[sc_seg==1] = 1
+                        multi_label_slice[label_slice==1] = 2
+
+                        multi_label_slice_file = nib.Nifti1Image(multi_label_slice, affine=label.affine)
+                        nib.save(multi_label_slice_file, str(label_file_nnunet))
+
+                        conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet
+                        conversion_dict[str(os.path.abspath(label_file))] = label_file_nnunet
         else:
 
             #open the image and the label
@@ -245,9 +242,12 @@ def main():
     
     # 0 is always the background. Any class labels should start from 1.
     json_dict['labels'] = {
-        "background" : "0",
-        "MS Lesion" : "1" ,
+        "background" : 0,
+        "Spinal cord" : [1, 2] ,
+        "Lesion" : [2]
     }
+
+    json_dict['regions_class_order'] = [1,2]
    
     json_dict['numTraining'] = scan_cnt_train
     json_dict['numTest'] = scan_cnt_test
