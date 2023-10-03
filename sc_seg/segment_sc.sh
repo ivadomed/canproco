@@ -11,7 +11,7 @@
 #  "path_output" : "<PATH_TO_DATASET>_2023-08-18",
 #  "script"      : "<PATH_TO_REPO>/canproco/sc_seg/segment_sc.sh",
 #  "jobs"        : 16,
-#  "script_args" : "<PATH_TO_REPO>/model_seg_sci/packaging/run_inference_single_subject.py <PATH_TO_MODEL>/sci-multisite-model"
+#  "script_args" : "<PATH_TO_SCRIPT>/run_inference_single_subject.py <PATH_TO_CONTRAST_AGNOSTIC_MODEL>"
 # }
 #
 # The following global variables are retrieved from the caller sct_run_batch
@@ -42,12 +42,12 @@ echo "PATH_LOG: ${PATH_LOG}"
 echo "PATH_QC: ${PATH_QC}"
 
 SUBJECT=$1
-PATH_NNUNET_SCRIPT=$2
-PATH_NNUNET_MODEL=$3
+PATH_SCRIPT=$2
+PATH_MODEL=$3
 
 echo "SUBJECT: ${SUBJECT}"
-echo "PATH_NNUNET_SCRIPT: ${PATH_NNUNET_SCRIPT}"
-echo "PATH_NNUNET_MODEL: ${PATH_NNUNET_MODEL}"
+echo "PATH_SCRIPT: ${PATH_SCRIPT}"
+echo "PATH_MODEL: ${PATH_MODEL}"
 
 # ------------------------------------------------------------------------------
 # CONVENIENCE FUNCTIONS
@@ -62,7 +62,7 @@ segment_sc_monai(){
   # Get the start time
   start_time=$(date +%s)
   # Run SC segmentation
-  python ${PATH_NNUNET_SCRIPT} -i ${file}.nii.gz -o ${FILESEG}.nii.gz -path-model ${PATH_NNUNET_MODEL}/nnUNet_${kernel}
+  python ${PATH_SCRIPT} -i ${file}.nii.gz -o ${FILESEG}.nii.gz -path-model ${PATH_MODEL}
   # Get the end time
   end_time=$(date +%s)
   # Calculate the time difference
@@ -105,7 +105,7 @@ if [[ ! -e ${file_psir}.nii.gz ]]; then
     echo "ERROR: File ${file_psir}.nii.gz does not exist. Exiting."
     exit 1
 else
-    # Segment SC using contrast agnostic MONAI model
+    # Segment SC using the contrast agnostic MONAI model
     segment_sc_monai "${file_psir}"
 fi
 
