@@ -11,6 +11,7 @@
 #  "path_output" : "<PATH_TO_DATASET>_2023-08-18",
 #  "script"      : "<PATH_TO_REPO>/canproco/sc_seg/segment_sc.sh",
 #  "jobs"        : 16,
+#  "exclude"     : "sub-mon118_ses-M0",
 #  "script_args" : "<PATH_TO_SCRIPT>/run_inference_single_subject.py <PATH_TO_CONTRAST_AGNOSTIC_MODEL>"
 # }
 #
