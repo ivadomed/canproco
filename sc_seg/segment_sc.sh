@@ -97,7 +97,8 @@ cd ${SUBJECT}/anat
 # PSIR
 # ------------------------------------------------------------------------------
 
-file_psir="${SUBJECT}"_PSIR
+# We do a substitution '/' --> '_' in case there is a subfolder 'ses-M0/'
+file_psir="${SUBJECT//[\/]/_}"_PSIR
 
 # Check if file_psir exists
 if [[ ! -e ${file_psir}.nii.gz ]]; then
