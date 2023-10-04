@@ -86,8 +86,9 @@ sct_check_dependencies -short
 cd $PATH_DATA_PROCESSED
 
 # Copy source PSIR images
-# Note: we use '/./' in order to include the sub-folder 'ses-0X'
-# We do a substitution '/' --> '_' in case there is a subfolder 'ses-0X/'
+# Note: we use '/./' in order to include the sub-folder 'ses-M0'
+# We do a substitution '/' --> '_' in case there is a subfolder 'ses-M0/'
+# TODO: copy only M0 images to save space
 rsync -Ravzh ${PATH_DATA}/./${SUBJECT}/anat/${SUBJECT//[\/]/_}_*PSIR.* .
 
 # Go to subject folder for source images
