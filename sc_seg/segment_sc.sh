@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Segment SC using contrast-agnostic MONAI model
+# Segment SC using contrast-agnostic MONAI model from PSIR contrast and perform vertebral labeling
 #
 # Usage:
 #     sct_run_batch -config config.json
@@ -73,6 +73,25 @@ segment_sc_monai(){
   sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
 }
 
+# Check if manual label already exists. If it does, copy it locally. If it does
+# not, perform labeling.
+label_if_does_not_exist(){
+  local file="$1"
+  local file_seg="$2"
+  # Update global variable with segmentation file name
+  FILELABEL="${file}_labels"
+  FILELABELMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELABEL}-manual.nii.gz"
+  echo "Looking for manual label: $FILELABELMANUAL"
+  if [[ -e $FILELABELMANUAL ]]; then
+    echo "Found! Using manual labels."
+    rsync -avzh $FILELABELMANUAL ${FILELABEL}.nii.gz
+  else
+    echo "Not found. Proceeding with automatic labeling."
+    # Generate labeled segmentation
+    sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  fi
+}
+
 # ------------------------------------------------------------------------------
 # SCRIPT STARTS HERE
 # ------------------------------------------------------------------------------
@@ -109,6 +128,8 @@ if [[ ! -e ${file_psir}.nii.gz ]]; then
 else
     # Segment SC using the contrast agnostic MONAI model
     segment_sc_monai "${file_psir}"
+    # Perform vertebral labeling
+    label_if_does_not_exist "${file_psir}" "${file_psir}_seg_monai"
 fi
 
 # ------------------------------------------------------------------------------
