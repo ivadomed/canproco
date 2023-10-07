@@ -80,6 +80,8 @@ segment_sc_monai(){
 
   # Generate axial QC report
   sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  # Generate sagittal QC report (https://github.com/ivadomed/canproco/issues/37#issuecomment-1644497220)
+  sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -d ${FILESEG}.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
 }
 
 # Check if manual label already exists. If it does, copy it locally. If it does
