@@ -8,16 +8,16 @@
 # Note: conda environment with MONAI is required to run this script:
 #     conda create -n monai python=3.8
 #     conda activate monai
-#     pip install -r sc_seg/requirements.txt
+#     pip install -r segment_sc_contrast-agnostic/requirements.txt
 #
 # Example of config.json:
 # {
 #  "path_data"   : "<PATH_TO_DATASET>/canproco",
 #  "path_output" : "<PATH_TO_DATASET>/canproco_contrast-agnostic_2023-10-06",
-#  "script"      : "<PATH_TO_REPO>/canproco/sc_seg/segment_sc.sh",
+#  "script"      : "<PATH_TO_REPO>/canproco/segment_sc_contrast-agnostic/segment_sc_contrast-agnostic.sh",
 #  "jobs"        : 16,
 #  "exclude"     : "sub-mon118_ses-M0",
-#  "script_args" : "<PATH_TO_SCRIPT>/run_inference_single_image.py <PATH_TO_CONTRAST_AGNOSTIC_MODEL>"
+#  "script_args" : "<PATH_TO_REPO>/segment_sc_contrast-agnostic/run_inference_single_image.py <PATH_TO_CONTRAST_AGNOSTIC_MODEL>"
 # }
 #
 # The following global variables are retrieved from the caller sct_run_batch
