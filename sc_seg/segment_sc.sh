@@ -1,18 +1,23 @@
 #!/bin/bash
 #
-# Segment SC using contrast-agnostic MONAI model from PSIR contrast and perform vertebral labeling
+# Segment SC using the contrast-agnostic MONAI model from PSIR contrast and perform vertebral labeling
 #
 # Usage:
 #     sct_run_batch -config config.json
 #
+# Note: conda environment with MONAI is required to run this script:
+#     conda create -n monai python=3.8
+#     conda activate monai
+#     pip install -r sc_seg/requirements.txt
+#
 # Example of config.json:
 # {
-#  "path_data"   : "<PATH_TO_DATASET>",
-#  "path_output" : "<PATH_TO_DATASET>_2023-08-18",
+#  "path_data"   : "<PATH_TO_DATASET>/canproco",
+#  "path_output" : "<PATH_TO_DATASET>/canproco_contrast-agnostic_2023-10-06",
 #  "script"      : "<PATH_TO_REPO>/canproco/sc_seg/segment_sc.sh",
 #  "jobs"        : 16,
 #  "exclude"     : "sub-mon118_ses-M0",
-#  "script_args" : "<PATH_TO_SCRIPT>/run_inference_single_subject.py <PATH_TO_CONTRAST_AGNOSTIC_MODEL>"
+#  "script_args" : "<PATH_TO_SCRIPT>/run_inference_single_image.py <PATH_TO_CONTRAST_AGNOSTIC_MODEL>"
 # }
 #
 # The following global variables are retrieved from the caller sct_run_batch
