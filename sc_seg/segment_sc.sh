@@ -75,7 +75,10 @@ segment_sc_monai(){
   execution_time=$(python3 -c "print($end_time - $start_time)")
   echo "${FILESEG},${execution_time}" >> ${PATH_RESULTS}/execution_time.csv
 
-  # Generate QC report
+  # Binarize MONAI segmentation (QC and sct_label_vertebrae are not compatible with soft segmentations)
+  sct_maths -i ${file}_pred.nii.gz -bin 0.5 -o ${FILESEG}.nii.gz
+
+  # Generate axial QC report
   sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
 }
 
