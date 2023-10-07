@@ -68,7 +68,7 @@ segment_sc_monai(){
   # Get the start time
   start_time=$(date +%s)
   # Run SC segmentation
-  python ${PATH_SCRIPT} -i ${file}.nii.gz -o ${FILESEG}.nii.gz -path-model ${PATH_MODEL}
+  python ${PATH_SCRIPT} --path-img ${file}.nii.gz --path-out ./ --chkp-path ${PATH_MODEL}
   # Get the end time
   end_time=$(date +%s)
   # Calculate the time difference
