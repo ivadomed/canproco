@@ -79,6 +79,7 @@ segment_sc_monai(){
 label_if_does_not_exist(){
   local file="$1"
   local file_seg="$2"
+  local contrast="$3"
   # Update global variable with segmentation file name
   FILELABEL="${file}_labels"
   FILELABELMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELABEL}-manual.nii.gz"
@@ -89,7 +90,7 @@ label_if_does_not_exist(){
   else
     echo "Not found. Proceeding with automatic labeling."
     # Generate labeled segmentation
-    sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
   fi
 }
 
@@ -105,32 +106,42 @@ sct_check_dependencies -short
 # Go to folder where data will be copied and processed
 cd $PATH_DATA_PROCESSED
 
-# Copy source PSIR images
+# Copy source PSIR/STIR images
 # Note: we use '/./' in order to include the sub-folder 'ses-M0'
 # We do a substitution '/' --> '_' in case there is a subfolder 'ses-M0/'
-# TODO: copy only M0 images to save space
-rsync -Ravzh ${PATH_DATA}/./${SUBJECT}/anat/${SUBJECT//[\/]/_}_*PSIR.* .
+rsync -Ravzh ${PATH_DATA}/./${SUBJECT}/anat/${SUBJECT//[\/]/_}_*IR.* .
 
 # Go to subject folder for source images
 cd ${SUBJECT}/anat
 
 # ------------------------------------------------------------------------------
-# PSIR
+# PSIR/STIR
 # ------------------------------------------------------------------------------
 
 # We do a substitution '/' --> '_' in case there is a subfolder 'ses-M0/'
-file_psir="${SUBJECT//[\/]/_}"_PSIR
+# Calgary has STIR
+if [[ ${SUBJECT} =~ "cal" ]]; then
+  file="${SUBJECT//[\/]/_}"_STIR
+# Other sites have PSIR
+else
+  file="${SUBJECT//[\/]/_}"_PSIR
+fi
 
-# Check if file_psir exists
-if [[ ! -e ${file_psir}.nii.gz ]]; then
-    echo "File ${file_psir}.nii.gz does not exist" >> ${PATH_LOG}/missing_files.log
-    echo "ERROR: File ${file_psir}.nii.gz does not exist. Exiting."
+# Check if file exists
+if [[ ! -e ${file}.nii.gz ]]; then
+    echo "File ${file}.nii.gz does not exist" >> ${PATH_LOG}/missing_files.log
+    echo "ERROR: File ${file}.nii.gz does not exist. Exiting."
     exit 1
 else
     # Segment SC using the contrast agnostic MONAI model
-    segment_sc_monai "${file_psir}"
+    segment_sc_monai "${file}"
+
     # Perform vertebral labeling
-    label_if_does_not_exist "${file_psir}" "${file_psir}_seg_monai"
+    if [[ ${file} =~ *"PSIR"* ]]; then
+      label_if_does_not_exist "${file}" "${file}_seg_monai" "t1"
+    else
+      label_if_does_not_exist "${file}" "${file}_seg_monai" "t2"
+    fi
 fi
 
 # ------------------------------------------------------------------------------
