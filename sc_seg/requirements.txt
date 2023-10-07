@@ -1,0 +1,8 @@
+dynamic_network_architectures
+joblib
+loguru
+monai[nibabel]
+scipy
+numpy
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
