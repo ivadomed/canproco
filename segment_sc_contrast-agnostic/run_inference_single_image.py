@@ -24,10 +24,6 @@ from dynamic_network_architectures.architectures.unet import PlainConvUNet, Resi
 from dynamic_network_architectures.building_blocks.helper import get_matching_instancenorm, convert_dim_to_conv_op
 from dynamic_network_architectures.initialization.weight_init import init_last_bn_before_add_to_0
 
-# TODO:
-# 1. Add options for hard/soft labels, post-processing, etc.?
-# sct_deepseg already has these https://spinalcordtoolbox.com/user_section/command-line.html#sct-deepseg
-
 # NNUNET global params
 INIT_FILTERS = 32
 ENABLE_DS = True
