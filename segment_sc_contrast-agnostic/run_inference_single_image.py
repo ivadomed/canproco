@@ -299,8 +299,8 @@ def main(args):
 
             # clip the prediction between 0.5 and 1
             pred = torch.clamp(pred, 0.5, 1)
-            # # threshold the prediction
-            # pred = (pred > 0.1).float()
+            # set background values to 0
+            pred[pred <= 0.5] = 0
 
             # get subject name
             subject_name = (batch["image_meta_dict"]["filename_or_obj"][0]).split("/")[-1].replace(".nii.gz", "")
