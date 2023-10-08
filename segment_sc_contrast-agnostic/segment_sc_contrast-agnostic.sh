@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Segment SC using the contrast-agnostic MONAI model from PSIR contrast and perform vertebral labeling
+# Segment SC using the contrast-agnostic MONAI model from PSIR/STIR contrast and perform vertebral labeling
 #
 # Usage:
 #     sct_run_batch -config config.json
@@ -148,8 +148,10 @@ else
 
     # Perform vertebral labeling
     if [[ ${file} =~ *"PSIR"* ]]; then
+      # PSIR (cord bright/gray; CSF dark) --> T1w
       label_if_does_not_exist "${file}" "${file}_seg_monai" "t1"
     else
+      # STIR (cord dark; CSF bright) --> T2w
       label_if_does_not_exist "${file}" "${file}_seg_monai" "t2"
     fi
 fi
