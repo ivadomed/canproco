@@ -145,17 +145,21 @@ if [[ ! -e ${file}.nii.gz ]]; then
     echo "ERROR: File ${file}.nii.gz does not exist. Exiting."
     exit 1
 else
+
+    if [[ ${file} =~ *"PSIR"* ]]; then
+      # For PSIR, swap contrast from light cord and dark CSF to dark cord and light CSF
+      # Context: https://github.com/ivadomed/canproco/issues/46#issuecomment-1752142304
+      sct_maths -i ${file}.nii.gz -mul -1 -o ${file}_mul.nii.gz
+      file=${file}_mul
+    fi
+
     # Segment SC using the contrast agnostic MONAI model
     segment_sc_monai "${file}"
 
     # Perform vertebral labeling
-    if [[ ${file} =~ *"PSIR"* ]]; then
-      # PSIR (cord bright/gray; CSF dark) --> T1w
-      label_if_does_not_exist "${file}" "${file}_seg_monai" "t1"
-    else
-      # STIR (cord dark; CSF bright) --> T2w
-      label_if_does_not_exist "${file}" "${file}_seg_monai" "t2"
-    fi
+    # STIR and inv PSIR (cord dark; CSF bright) --> T2w
+    label_if_does_not_exist "${file}" "${file}_seg_monai" "t2"
+
 fi
 
 # ------------------------------------------------------------------------------
