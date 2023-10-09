@@ -146,7 +146,7 @@ if [[ ! -e ${file}.nii.gz ]]; then
     exit 1
 else
 
-    if [[ ${file} =~ *"PSIR"* ]]; then
+    if [[ ${file} =~ "PSIR" ]]; then
       # For PSIR, swap contrast from light cord and dark CSF to dark cord and light CSF
       # Context: https://github.com/ivadomed/canproco/issues/46#issuecomment-1752142304
       sct_maths -i ${file}.nii.gz -mul -1 -o ${file}_mul.nii.gz
