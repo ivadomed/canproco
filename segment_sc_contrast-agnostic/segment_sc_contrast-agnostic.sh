@@ -77,6 +77,9 @@ segment_sc_monai(){
   execution_time=$(python3 -c "print($end_time - $start_time)")
   echo "${FILESEG},${execution_time}" >> ${PATH_RESULTS}/execution_time.csv
 
+  # Rename the prediction
+  mv ${file}_pred.nii.gz ${FILESEG}.nii.gz
+
   # Generate axial QC report
   sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
   # Generate sagittal QC report (https://github.com/ivadomed/canproco/issues/37#issuecomment-1644497220)
