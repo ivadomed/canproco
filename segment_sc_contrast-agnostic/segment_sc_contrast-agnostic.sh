@@ -157,7 +157,7 @@ else
     segment_sc_monai "${file}"
 
     # Perform vertebral labeling
-    # STIR and inv PSIR (cord dark; CSF bright) --> T2w
+    # STIR and PSIR_mul (cord dark; CSF bright) --> T2w
     label_if_does_not_exist "${file}" "${file}_seg_monai" "t2"
 
 fi
