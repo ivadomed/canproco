@@ -14,7 +14,7 @@ Returns:
     None
 
 Example:
-    python --input_data /path/to/dataset --contrast PSIR,STIR --qc_folder /path/to/qcFoldert --seg_script /path/to/script --path_to_model /path/to/model --output_folder /path/to/output/folder
+    python sc_seg_canproco.py --input_data /path/to/dataset --contrast PSIR,STIR --qc_folder /path/to/qcFoldert --seg_script /path/to/script --path_to_model /path/to/model --output_folder /path/to/output/folder
 
 Todo:
     *
@@ -69,6 +69,7 @@ def binarize_mask(mask_path):
 def sc_seg_subject(img_path, qc_folder, path_to_seg_script, path_to_model, output_folder):
     """
     This function performs the segmentation of the spinal cord of a subject using the contrast agnostic model.
+    If the contrast is PSIR, the image is multiplied by -1 before segmentation.
 
     Args:
         img_path: path to the subject
@@ -80,8 +81,24 @@ def sc_seg_subject(img_path, qc_folder, path_to_seg_script, path_to_model, outpu
     Returns:
         output_file : path to the segmentation of the spinal cord
     """
+    #create temporary folder
+    tmp_folder = os.path.join(output_folder, 'tmp')
+    if not os.path.exists(tmp_folder):
+        os.mkdir(tmp_folder)
 
-    os.system(f'python {path_to_seg_script} --path-img {img_path}  --chkp-path {path_to_model} --path-out {output_folder} --crop-size 100x320x320 --device gpu ')
+    
+
+    #multiply the image by -1 if contrast is PSIR
+    if 'PSIR' in str(img_path):
+        #create temp file
+        tmp_file = os.path.join(tmp_folder, str(img_path).split('/')[-1])
+        os.system(f'sct_maths -i {img_path} -o {tmp_file} -mul -1 ')
+        #segment the spinal cord
+        os.system(f'python {path_to_seg_script} --path-img {tmp_file}  --chkp-path {path_to_model} --path-out {output_folder} --crop-size 100x320x320 --device gpu ')
+
+    else:
+        #segment the spinal cord
+        os.system(f'python {path_to_seg_script} --path-img {img_path}  --chkp-path {path_to_model} --path-out {output_folder} --crop-size 100x320x320 --device gpu ')
 
     output_file = os.path.join(output_folder,str(img_path).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
     
