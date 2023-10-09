@@ -1,5 +1,6 @@
 """
 This scripts segments the spinal cord of every subject in the CANPROCO dataset using the contrast agnostic model. 
+For PSIR images, the image is multiplied by -1 before segmentation as it improves the quality of the segmentation.
 
 Args:
     input_data : path to the BIDS dataset
