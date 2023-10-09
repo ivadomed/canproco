@@ -3,9 +3,9 @@ Segment SC using contrast-agnostic MONAI model from PSIR contrast and perform ve
 1. Create a conda virtual environment and install dependencies
 
 ```console
-conda create -n monai python=3.8
+yes | conda create -n monai python=3.9
 conda activate monai
-pip install -r segment_sc_contrast-agnostic/requirements.txt
+yes | pip install -r segment_sc_contrast-agnostic/requirements.txt
 ```
 
 2. Segment SC using the contrast-agnostic MONAI model from PSIR contrast and perform vertebral labeling

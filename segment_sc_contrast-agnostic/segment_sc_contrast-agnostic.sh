@@ -6,7 +6,7 @@
 #     sct_run_batch -config config.json
 #
 # Note: conda environment with MONAI is required to run this script:
-#     conda create -n monai python=3.8
+#     conda create -n monai python=3.9
 #     conda activate monai
 #     pip install -r segment_sc_contrast-agnostic/requirements.txt
 #
