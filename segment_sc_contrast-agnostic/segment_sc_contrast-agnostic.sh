@@ -106,6 +106,24 @@ label_if_does_not_exist(){
   fi
 }
 
+# Copy GT lesion segmentation
+copy_gt(){
+  local file="$1"
+  local type="$2"     # seg or lesion
+  # Construct file name to GT lesion segmentation located under derivatives/labels
+  FILESEGMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${file}_${type}-manual.nii.gz"
+  echo ""
+  echo "Looking for manual segmentation: $FILESEGMANUAL"
+  if [[ -e $FILESEGMANUAL ]]; then
+      echo "Found! Copying ..."
+      rsync -avzh $FILESEGMANUAL ${file}_${type}-manual.nii.gz
+  else
+      echo "File ${FILESEGMANUAL}.nii.gz does not exist" >> ${PATH_LOG}/missing_files.log
+      echo "ERROR: Manual GT segmentation ${FILESEGMANUAL}.nii.gz does not exist. Exiting."
+      exit 1
+  fi
+}
+
 # ------------------------------------------------------------------------------
 # SCRIPT STARTS HERE
 # ------------------------------------------------------------------------------
@@ -145,6 +163,10 @@ if [[ ! -e ${file}.nii.gz ]]; then
     echo "ERROR: File ${file}.nii.gz does not exist. Exiting."
     exit 1
 else
+
+    # Copy GT lesion seg
+    # Note: we do copy here before we modify the file variable for PSIR
+    copy_gt "${file}" "lesion"
 
     if [[ ${file} =~ "PSIR" ]]; then
       # For PSIR, swap contrast from light cord and dark CSF to dark cord and light CSF
