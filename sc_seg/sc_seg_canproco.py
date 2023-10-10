@@ -94,6 +94,10 @@ def sc_seg_subject(img_path, qc_folder, path_to_seg_script, path_to_model, outpu
     tmp_folder_seg = os.path.join(output_folder, 'tmp_seg')
     if not os.path.exists(tmp_folder_seg):
         os.mkdir(tmp_folder_seg)
+    #create temporary folder for the sum of the 4 segmentations
+    tmp_folder_sum_seg = os.path.join(output_folder, 'tmp_sum_seg')
+    if not os.path.exists(tmp_folder_sum_seg):
+        os.mkdir(tmp_folder_sum_seg)
 
     #multiply the image by -1 if contrast is PSIR
     if 'PSIR' in str(img_path):
@@ -126,7 +130,7 @@ def sc_seg_subject(img_path, qc_folder, path_to_seg_script, path_to_model, outpu
     os.system(f'python {path_to_seg_script} --path-img {tmp_file_flipped_z}  --chkp-path {path_to_model} --path-out {tmp_folder_seg} --crop-size 100x320x320 --device gpu ')
 
     
-    ## for original image or image multiplied by -1
+    ## for original image or image multiplied by -1 (no need to flip back)
     tmp_file_seg = os.path.join(tmp_folder_seg, str(tmp_file).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
 
     #we flip the segmentation back
@@ -144,14 +148,15 @@ def sc_seg_subject(img_path, qc_folder, path_to_seg_script, path_to_model, outpu
     os.system(f'sct_image -i {tmp_file_flipped_z_seg} -o {tmp_file_flipped_z_back_seg} -flip z ')
 
     #we sum the 4 segmentations
-    output_file = os.path.join(output_folder,str(img_path).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
-    os.system(f'sct_maths -i {tmp_file_seg} -add {tmp_file_flipped_x_back_seg} -add {tmp_file_flipped_y_back_seg} -add {tmp_file_flipped_z_back_seg} -o {output_file} ')
+    tmp_file_sum_seg = os.path.join(tmp_folder_sum_seg, str(tmp_file).split('/')[-1].replace('.nii.gz', '_sum_seg.nii.gz'))
+    os.system(f'sct_maths -i {tmp_file_seg} -add {tmp_file_flipped_x_back_seg} -add {tmp_file_flipped_y_back_seg} -add {tmp_file_flipped_z_back_seg} -o {tmp_file_sum_seg} ')
     
     #binarize the mask
-    binarize_mask(output_file)
+    output_file = os.path.join(output_folder,str(img_path).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
+    os.system(f'sct_maths -i {tmp_file_sum_seg} -o {output_file} -bin 0.5 ')
 
     #create qc
-    os.system(f'sct_qc -i {tmp_file} -s {output_file} -d {output_file} -p sct_deepseg_lesion -plane sagittal -qc {qc_folder}')
+    os.system(f'sct_qc -i {img_path} -s {output_file} -d {output_file} -p sct_deepseg_lesion -plane sagittal -qc {qc_folder}')
 
     return output_file
 
