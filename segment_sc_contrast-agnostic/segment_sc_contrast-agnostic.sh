@@ -178,6 +178,11 @@ else
     # Segment SC using the contrast agnostic MONAI model
     segment_sc_monai "${file}"
 
+    # Binarize GT lesion segmentation (sct_analyze_lesion requires binary mask)
+    sct_maths -i ${file}_lesion-manual.nii.gz -bin 0 -o ${file}_lesion-manual_bin.nii.gz
+    # Analyze GT MS lesion
+    sct_analyze_lesion -m ${file}_lesion-manual_bin.nii.gz -s ${file}_seg_monai.nii.gz -ofolder ${PATH_RESULTS}
+
     # Perform vertebral labeling
     # STIR and PSIR_mul (cord dark; CSF bright) --> T2w
     label_if_does_not_exist "${file}" "${file}_seg_monai" "t2"
