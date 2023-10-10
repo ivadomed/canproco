@@ -1,7 +1,0 @@
-# t2w
-- sub-cal088_ses-M0   # Poor data quality
-- sub-cal209_ses-M0   # Missing T2w file
-# MT
-- sub-cal161          # Missing MT data
-# PSIR
-- sub-mon118_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/43
