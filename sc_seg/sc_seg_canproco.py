@@ -82,32 +82,76 @@ def sc_seg_subject(img_path, qc_folder, path_to_seg_script, path_to_model, outpu
     Returns:
         output_file : path to the segmentation of the spinal cord
     """
-    #create temporary folder
-    tmp_folder = os.path.join(output_folder, 'tmp')
-    if not os.path.exists(tmp_folder):
-        os.mkdir(tmp_folder)
-
-    
+    #create temporary folder for multiplication
+    tmp_folder_multiplied = os.path.join(output_folder, 'tmp_multiplied')
+    if not os.path.exists(tmp_folder_multiplied):
+        os.mkdir(tmp_folder_multiplied)
+    #create temporary folder for x, y and z flip
+    tmp_folder_flip = os.path.join(output_folder, 'tmp_flip')
+    if not os.path.exists(tmp_folder_flip):
+        os.mkdir(tmp_folder_flip)
+    #create temporary folder for the individual segmentation
+    tmp_folder_seg = os.path.join(output_folder, 'tmp_seg')
+    if not os.path.exists(tmp_folder_seg):
+        os.mkdir(tmp_folder_seg)
 
     #multiply the image by -1 if contrast is PSIR
     if 'PSIR' in str(img_path):
         #create temp file
-        tmp_file = os.path.join(tmp_folder, str(img_path).split('/')[-1])
+        tmp_file = os.path.join(tmp_folder_multiplied, str(img_path).split('/')[-1])
         os.system(f'sct_maths -i {img_path} -o {tmp_file} -mul -1 ')
-        #segment the spinal cord
-        os.system(f'python {path_to_seg_script} --path-img {tmp_file}  --chkp-path {path_to_model} --path-out {output_folder} --crop-size 100x320x320 --device gpu ')
-
+    
+    #if contrast is STIR: no need to multiply by -1
     else:
-        #segment the spinal cord
-        os.system(f'python {path_to_seg_script} --path-img {img_path}  --chkp-path {path_to_model} --path-out {output_folder} --crop-size 100x320x320 --device gpu ')
+        tmp_file = img_path
+    
+    #we flip the image on x (anterior-posterior)
+    tmp_file_flipped_x = os.path.join(tmp_folder_flip, str(tmp_file).split('/')[-1].replace('.nii.gz', '_flipped_x.nii.gz'))
+    os.system(f'sct_image -i {tmp_file} -o {tmp_file_flipped_x} -flip x ')
+    #we flip the image on y (inferior-superior)
+    tmp_file_flipped_y = os.path.join(tmp_folder_flip, str(tmp_file).split('/')[-1].replace('.nii.gz', '_flipped_y.nii.gz'))
+    os.system(f'sct_image -i {tmp_file} -o {tmp_file_flipped_y} -flip y ')
+    #we flip the image on z (left-right)
+    tmp_file_flipped_z = os.path.join(tmp_folder_flip, str(tmp_file).split('/')[-1].replace('.nii.gz', '_flipped_z.nii.gz'))
+    os.system(f'sct_image -i {tmp_file} -o {tmp_file_flipped_z} -flip z ')
 
+    #segment the spinal cord on all 4 images
+    ## on original image or image multiplied by -1
+    os.system(f'python {path_to_seg_script} --path-img {tmp_file}  --chkp-path {path_to_model} --path-out {tmp_folder_seg} --crop-size 100x320x320 --device gpu ')
+    ## on flipped x
+    os.system(f'python {path_to_seg_script} --path-img {tmp_file_flipped_x}  --chkp-path {path_to_model} --path-out {tmp_folder_seg} --crop-size 100x320x320 --device gpu ')
+    ## on flipped y
+    os.system(f'python {path_to_seg_script} --path-img {tmp_file_flipped_y}  --chkp-path {path_to_model} --path-out {tmp_folder_seg} --crop-size 100x320x320 --device gpu ')
+    ## on flipped z
+    os.system(f'python {path_to_seg_script} --path-img {tmp_file_flipped_z}  --chkp-path {path_to_model} --path-out {tmp_folder_seg} --crop-size 100x320x320 --device gpu ')
+
+    
+    ## for original image or image multiplied by -1
+    tmp_file_seg = os.path.join(tmp_folder_seg, str(tmp_file).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
+
+    #we flip the segmentation back
+    ## for x
+    tmp_file_flipped_x_seg = os.path.join(tmp_folder_seg, str(tmp_file_flipped_x).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
+    tmp_file_flipped_x_back_seg = os.path.join(tmp_folder_seg, str(tmp_file_flipped_x).split('/')[-1].replace('.nii.gz', '_back_pred.nii.gz'))
+    os.system(f'sct_image -i {tmp_file_flipped_x_seg} -o {tmp_file_flipped_x_back_seg} -flip x ')
+    ## for y
+    tmp_file_flipped_y_seg = os.path.join(tmp_folder_seg, str(tmp_file_flipped_y).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
+    tmp_file_flipped_y_back_seg = os.path.join(tmp_folder_seg, str(tmp_file_flipped_y).split('/')[-1].replace('.nii.gz', '_back_pred.nii.gz'))
+    os.system(f'sct_image -i {tmp_file_flipped_y_seg} -o {tmp_file_flipped_y_back_seg} -flip y ')
+    ## for z
+    tmp_file_flipped_z_seg = os.path.join(tmp_folder_seg, str(tmp_file_flipped_z).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
+    tmp_file_flipped_z_back_seg = os.path.join(tmp_folder_seg, str(tmp_file_flipped_z).split('/')[-1].replace('.nii.gz', '_back_pred.nii.gz'))
+    os.system(f'sct_image -i {tmp_file_flipped_z_seg} -o {tmp_file_flipped_z_back_seg} -flip z ')
+
+    #we sum the 4 segmentations
     output_file = os.path.join(output_folder,str(img_path).split('/')[-1].replace('.nii.gz', '_pred.nii.gz'))
+    os.system(f'sct_maths -i {tmp_file_seg} -add {tmp_file_flipped_x_back_seg} -add {tmp_file_flipped_y_back_seg} -add {tmp_file_flipped_z_back_seg} -o {output_file} ')
     
     #binarize the mask
     binarize_mask(output_file)
 
     #create qc
-    os.system(f'sct_qc -i {img_path} -s {output_file} -d {output_file} -p sct_deepseg_lesion -plane sagittal -qc {qc_folder}')
+    os.system(f'sct_qc -i {tmp_file} -s {output_file} -d {output_file} -p sct_deepseg_lesion -plane sagittal -qc {qc_folder}')
 
     return output_file
 
