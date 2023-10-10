@@ -1,5 +1,5 @@
 """
-This file generates the dataset used for the analysis of the CanProCo dataset.
+This file generates the dataframe used for the analysis of the CanProCo dataset.
 For each patients in the CanProCo dataset, it gathers information about the patient, the pathology and the lesion(s).
 For now, this only focuses on the M0 timepoint.
 
@@ -11,7 +11,7 @@ Returns:
     None
 
 Example:
-    python generate_dataset.py --data /path/to/CanProCo --output /path/to/output
+    python generate_dataframe.py --data /path/to/CanProCo --output /path/to/output
 
 Todo:
     *
@@ -155,7 +155,7 @@ def main():
 
 
     # Create an empty DataFrame
-    dataset = pd.DataFrame(columns=[
+    dataframe = pd.DataFrame(columns=[
         'participant_id', 'sex', 'age', 'pathology', 'phenotype',
         'edss', 'number_of_lesions', 'total_lesion_volume',
         'biggest_lesion_vol', 'biggest_lesion_length', 'biggest_lesion_eq_diam'
@@ -168,11 +168,11 @@ def main():
         patient_data = analyze_patient(participant, data_path, participants_tsv, output_folder)
 
         #add the patient to the dataset
-        dataset = pd.concat([dataset, pd.DataFrame([patient_data])], ignore_index=True)
+        dataframe = pd.concat([dataframe, pd.DataFrame([patient_data])], ignore_index=True)
 
-    print(dataset)
+    print(dataframe)
     #save the dataset in the output folder
-    dataset.to_csv(os.path.join(output_folder, 'dataset.csv'), index=False)
+    dataframe.to_csv(os.path.join(output_folder, 'dataframe.csv'), index=False)
 
 
 
