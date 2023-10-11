@@ -63,20 +63,12 @@ echo "PATH_MODEL: ${PATH_MODEL}"
 segment_sc_monai(){
   local file="$1"
 
-  FILESEG="${file}_seg_monai"
-
   # Run SC segmentation
   # TODO: the following call will be replaced by the SCT script
   python ${PATH_SCRIPT} --path-img ${file}.nii.gz --path-out ./ --chkp-path ${PATH_MODEL}
 
-  # Binarize MONAI segmentation (sct_label_vertebrae is not compatible with soft segmentations; also QC is easy to access)
-  # TODO: this line will be deleted once the SCT script will include the flag for binarization
-  sct_maths -i ${file}_pred.nii.gz -bin 0.5 -o ${FILESEG}.nii.gz
-
-  # Generate axial QC report
-  sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
   # Generate sagittal QC report (https://github.com/ivadomed/canproco/issues/37#issuecomment-1644497220)
-  sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -d ${FILESEG}.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  sct_qc -i ${file}.nii.gz -s ${file}_pred.nii.gz -d ${file}_pred.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
 }
 
 # Check if manual label already exists. If it does, copy it locally. If it does
