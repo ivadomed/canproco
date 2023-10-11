@@ -14,8 +14,16 @@ conda activate venv_monai
 
 - Install the requirements
 
+For CPU:
+
 ```bash
 pip install -r requirements_sc_seg.txt
+```
+
+FOR GPU: 
+
+```bash
+pip install -r requirements_sc_seg_gpu.txt
 ```
 
 ## Running the spinal cord segmentation 
