@@ -65,18 +65,9 @@ segment_sc_monai(){
 
   FILESEG="${file}_seg_monai"
 
-  # Get the start time
-  start_time=$(date +%s)
-
   # Run SC segmentation
   # TODO: the following call will be replaced by the SCT script
   python ${PATH_SCRIPT} --path-img ${file}.nii.gz --path-out ./ --chkp-path ${PATH_MODEL}
-
-  # Get the end time
-  end_time=$(date +%s)
-  # Calculate the time difference
-  execution_time=$(python3 -c "print($end_time - $start_time)")
-  echo "${FILESEG},${execution_time}" >> ${PATH_RESULTS}/execution_time.csv
 
   # Binarize MONAI segmentation (sct_label_vertebrae is not compatible with soft segmentations; also QC is easy to access)
   # TODO: this line will be deleted once the SCT script will include the flag for binarization
