@@ -5,3 +5,6 @@
 - sub-cal161          # Missing MT data
 # PSIR
 - sub-mon118_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/43
+# STIR
+- sub-cal149_ses-M0   # FOV does not cover the whole SC in sagittal plane; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
+- sub-mon006_ses-M0   # FOV covers the whole brain. The SC has only C1-C6; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
