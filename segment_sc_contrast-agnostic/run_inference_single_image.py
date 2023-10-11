@@ -320,6 +320,7 @@ def main(args):
             pred = post_test_out[0]['pred'].cpu()
 
             # clip the prediction between 0.5 and 1
+            # TODO: play with the threshold to see if it improves the results
             pred = torch.clamp(pred, 0.5, 1)
             # set background values to 0
             pred[pred <= 0.5] = 0
