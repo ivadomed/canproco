@@ -192,7 +192,7 @@ else
 
     # Perform vertebral labeling
     # STIR and PSIR_mul (cord dark; CSF bright) --> T2w
-    label_if_does_not_exist "${file}" "${file}_seg_monai" "t2"
+    #label_if_does_not_exist "${file}" " ${file}_pred_sum_bin.nii.gz" "t2"
 
 fi
 
