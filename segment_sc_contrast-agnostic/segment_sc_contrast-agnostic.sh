@@ -69,6 +69,7 @@ segment_sc_monai(){
   start_time=$(date +%s)
 
   # Run SC segmentation
+  # TODO: the following call will be replaced by the SCT script
   python ${PATH_SCRIPT} --path-img ${file}.nii.gz --path-out ./ --chkp-path ${PATH_MODEL}
 
   # Get the end time
@@ -78,6 +79,7 @@ segment_sc_monai(){
   echo "${FILESEG},${execution_time}" >> ${PATH_RESULTS}/execution_time.csv
 
   # Binarize MONAI segmentation (sct_label_vertebrae is not compatible with soft segmentations; also QC is easy to access)
+  # TODO: this line will be deleted once the SCT script will include the flag for binarization
   sct_maths -i ${file}_pred.nii.gz -bin 0.5 -o ${FILESEG}.nii.gz
 
   # Generate axial QC report
@@ -171,6 +173,7 @@ else
     if [[ ${file} =~ "PSIR" ]]; then
       # For PSIR, swap contrast from light cord and dark CSF to dark cord and light CSF
       # Context: https://github.com/ivadomed/canproco/issues/46#issuecomment-1752142304
+      # TODO: this line will be deleted once the SCT script will include the flag for contrast swapping
       sct_maths -i ${file}.nii.gz -mul -1 -o ${file}_mul.nii.gz
       file=${file}_mul
     fi
