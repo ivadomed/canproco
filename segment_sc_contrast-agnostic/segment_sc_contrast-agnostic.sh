@@ -161,13 +161,34 @@ else
       file=${file}_mul
     fi
 
-    # Segment SC using the contrast agnostic MONAI model
+    # Loop across axes
+    # Context: https://github.com/ivadomed/canproco/issues/46#issuecomment-1755971028
+    for axis in x y z; do
+      # Flip the image along a given axis
+      sct_image -i ${file}.nii.gz -flip ${axis} -o ${file}_flip_${axis}.nii.gz
+      # Segment SC using the contrast agnostic MONAI model
+      segment_sc_monai "${file}_flip_${axis}"
+      # Flip the prediction back to the original orientation
+      sct_image -i ${file}_flip_${axis}_pred.nii.gz -flip ${axis} -o ${file}_flip_${axis}_back_pred.nii.gz
+    done
+
+    # Segment SC on the NON-FLIPPED IMAGE using the contrast agnostic MONAI model
     segment_sc_monai "${file}"
 
-    # Binarize GT lesion segmentation (sct_analyze_lesion requires binary mask)
+    # Sum all 4 predictions
+    sct_maths -i ${file}_flip_x_back_pred.nii.gz -add ${file}_flip_y_back_pred.nii.gz -add ${file}_flip_z_back_pred.nii.gz -add ${file}_pred.nii.gz -o ${file}_pred_sum.nii.gz
+
+    # Binarize the summed segmentation (sct_label_vertebrae is not compatible with soft segmentations; also QC is easy to access)
+    # TODO: this line will be deleted once the SCT script will include the flag for binarization
+    sct_maths -i  ${file}_pred_sum.nii.gz -bin 0.5 -o ${file}_pred_sum_bin.nii.gz
+    # Generate sagittal QC report (https://github.com/ivadomed/canproco/issues/37#issuecomment-1644497220)
+    sct_qc -i ${file}.nii.gz -s  ${file}_pred_sum_bin.nii.gz -d  ${file}_pred_sum_bin.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+    # Binarize GT lesion segmentation (sct_analyze_lesion requires binary mask) until the following issue is fixed
+    # https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/4120
     sct_maths -i ${file}_lesion-manual.nii.gz -bin 0 -o ${file}_lesion-manual_bin.nii.gz
     # Analyze GT MS lesion
-    sct_analyze_lesion -m ${file}_lesion-manual_bin.nii.gz -s ${file}_seg_monai.nii.gz -ofolder ${PATH_RESULTS}
+    sct_analyze_lesion -m ${file}_lesion-manual_bin.nii.gz -s  ${file}_pred_sum_bin.nii.gz -ofolder ${PATH_RESULTS}
 
     # Perform vertebral labeling
     # STIR and PSIR_mul (cord dark; CSF bright) --> T2w
