@@ -152,6 +152,7 @@ else
     # Copy GT lesion seg
     # Note: we do copy here before we modify the file variable for PSIR
     copy_gt "${file}" "lesion"
+    file_lesion="${file}_lesion-manual"
 
     if [[ ${file} =~ "PSIR" ]]; then
       # For PSIR, swap contrast from light cord and dark CSF to dark cord and light CSF
@@ -186,9 +187,9 @@ else
 
     # Binarize GT lesion segmentation (sct_analyze_lesion requires binary mask) until the following issue is fixed
     # https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/4120
-    sct_maths -i ${file}_lesion-manual.nii.gz -bin 0 -o ${file}_lesion-manual_bin.nii.gz
+    sct_maths -i ${file_lesion}.nii.gz -bin 0 -o ${file_lesion}_bin.nii.gz
     # Analyze GT MS lesion
-    sct_analyze_lesion -m ${file}_lesion-manual_bin.nii.gz -s  ${file}_pred_sum_bin.nii.gz -ofolder ${PATH_RESULTS}
+    sct_analyze_lesion -m ${file_lesion}_bin.nii.gz -s  ${file}_pred_sum_bin.nii.gz -ofolder ${PATH_RESULTS}
 
     # Perform vertebral labeling
     # STIR and PSIR_mul (cord dark; CSF bright) --> T2w
