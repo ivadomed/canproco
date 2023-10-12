@@ -125,11 +125,13 @@ def analyse_lesion_per_levels(patient_data, dataset_path, output_folder):
         #compute the average vertical length
         if nb_lesions_in_level != 0:
             avg_lesion_length_in_level = avg_lesion_length_in_level/nb_lesions_in_level
+            avg_lesion_volume_in_level = total_lesion_volume_in_level/nb_lesions_in_level
 
         #we add this information to the patient_data dictionary
-        patient_data[f"nb_lesions_between_{levels[i]}_and_{levels[i+1]}"] = nb_lesions_in_level
-        patient_data[f"total_lesion_volume_between_{levels[i]}_and_{levels[i+1]}"] = total_lesion_volume_in_level
-        patient_data[f"avg_lesion_length_between_{levels[i]}_and_{levels[i+1]}"] = avg_lesion_length_in_level
+        patient_data[f"nb_lesions_between_{int(levels[i]):02d}_and_{int(levels[i+1]):02d}"] = nb_lesions_in_level
+        patient_data[f"total_lesion_volume_between_{int(levels[i]):02d}_and_{int(levels[i+1]):02d}"] = total_lesion_volume_in_level
+        patient_data[f"avg_lesion_volume_between_{int(levels[i]):02d}_and_{int(levels[i+1]):02d}"] = avg_lesion_volume_in_level
+        patient_data[f"avg_lesion_length_between_{int(levels[i]):02d}_and_{int(levels[i+1]):02d}"] = avg_lesion_length_in_level
 
     return patient_data
 
