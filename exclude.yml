@@ -9,11 +9,14 @@
 - sub-mon009_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758684880
 - sub-mon032_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686509
 - sub-mon097_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686772
+- sub-mon113_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760175861
 - sub-mon148_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686965
+- sub-mon152_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760248384
 - sub-mon168_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687112
 - sub-mon191_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687352
 - sub-van176_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687602
 - sub-van206_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758688851
+- sub-tor014_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760420705
 - sub-tor133_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758689928
 # STIR
 - sub-cal149_ses-M0   # FOV does not cover the whole SC in sagittal plane; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
