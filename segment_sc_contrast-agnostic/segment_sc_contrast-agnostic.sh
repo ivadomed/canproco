@@ -170,14 +170,14 @@ else
       # Segment SC using the contrast agnostic MONAI model
       segment_sc_monai "${file}_flip_${axis}"
       # Flip the prediction back to the original orientation
-      sct_image -i ${file}_flip_${axis}_pred.nii.gz -flip ${axis} -o ${file}_flip_${axis}_back_pred.nii.gz
+      sct_image -i ${file}_flip_${axis}_pred.nii.gz -flip ${axis} -o ${file}_flip_${axis}_pred_back.nii.gz
     done
 
     # Segment SC on the NON-FLIPPED IMAGE using the contrast agnostic MONAI model
     segment_sc_monai "${file}"
 
     # Sum all 4 predictions
-    sct_maths -i ${file}_flip_x_back_pred.nii.gz -add ${file}_flip_y_back_pred.nii.gz -add ${file}_flip_z_back_pred.nii.gz -add ${file}_pred.nii.gz -o ${file}_pred_sum.nii.gz
+    sct_maths -i ${file}_flip_x_pred_back.nii.gz -add ${file}_flip_y_pred_back.nii.gz -add ${file}_flip_z_pred_back.nii.gz -add ${file}_pred.nii.gz -o ${file}_pred_sum.nii.gz
 
     # Binarize the summed segmentation (sct_label_vertebrae is not compatible with soft segmentations; also QC is easy to access)
     # TODO: this line will be deleted once the SCT script will include the flag for binarization
