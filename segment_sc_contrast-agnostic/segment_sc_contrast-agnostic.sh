@@ -164,6 +164,7 @@ else
 
     # Loop across axes
     # Context: https://github.com/ivadomed/canproco/issues/46#issuecomment-1755971028
+    # TODO: the following loop will be deleted once the SCT script will include the flag for TTA
     for axis in x y z; do
       # Flip the image along a given axis
       sct_image -i ${file}.nii.gz -flip ${axis} -o ${file}_flip_${axis}.nii.gz
