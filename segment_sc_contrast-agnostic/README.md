@@ -25,10 +25,12 @@ Example `config.json` file:
   "script"      : "${HOME}/code/canproco/segment_sc_contrast-agnostic/segment_sc_contrast-agnostic.sh",
   "jobs"        : 1,
   "include"     : "ses-M0",
-  "exclude"     : "sub-mon118",
+  "exclude_list": "sub-mon118 sub-mon006 sub-mon009 sub-mon032 sub-mon097 sub-mon148 sub-mon168 sub-mon191 sub-van176 sub-van206 sub-tor133 sub-cal149",
   "script_args" : "${HOME}/code/canproco/segment_sc_contrast-agnostic/run_inference_single_image.py ${HOME}/data/models/contrast-agnostic_final_monai_model/nnunet_nf=32_DS=1_opt=adam_lr=0.001_AdapW_CCrop_bs=2_64x192x320_20230918-2253"
 }
 ```
+
+ℹ️ The `exclude_list` is a list of subjects to exclude from the batch processing. It is based on the https://github.com/ivadomed/canproco/blob/main/exclude.yml file.
 
 ℹ️ The conda environment with MONAI is required to run the `segment_sc_contrast-agnostic/segment_sc_contrast-agnostic.sh` script.
 
