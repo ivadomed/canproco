@@ -6,7 +6,7 @@ This script was adapted to build a test set with a given ratio of each site.
 It can also build the test set with only unlabelled images.
 
 Example of run:
-    $ python convert_bids_to_nnunet.py --path-data /path/to/data_extracted --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID  --contrasts PSIR,STIR --test-ratio 0.2 --time-point ses-M0 --type training
+    $ python convert_bids_to_nnunet.py --path-data /path/to/data_extracted --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID  --contrasts PSIR,STIR --test-ratio 0.2 --time-point ses-M0 --type training --exclude-file /path/to/exclude_file.yml
 
 Arguments:
     --path-data : Path to BIDS structured dataset. Accepts both cross-sectional and longitudinal datasets
@@ -17,6 +17,7 @@ Arguments:
     --test-ratio : Ratio of the data to be used for testing (default=0.2)
     --time-point : Time point of the data to be used (default=ses-M0)
     --type : Type of use of the data (default=training)
+    --exclude-file : Path to the file containing the list of subjects to exclude from the dataset (default=None)
 
 
 Returns:
@@ -38,6 +39,7 @@ from tqdm import tqdm
 
 import nibabel as nib
 import numpy as np
+import yaml
 
 
 def get_parser():
@@ -62,7 +64,8 @@ def get_parser():
     parser.add_argument('--test-ratio', help='Ratio of the data to be used for testing', default=0.2, type=float)
     parser.add_argument('--time-point', help='Time point of the data to be used', default='M0', type=str)
     parser.add_argument('--type', help='Type of use of the data (possible answers: "training" or "inference")', default='training', type=str)
-    parser.add_argument('--include-unlabelled', help='Include unlabelled images in the test set', default=False, type=bool)
+    parser.add_argument('--exclude-file', help='Path to the file containing the list of subjects to exclude from the dataset', default=None, type=str)    
+
     return parser
 
 
@@ -99,7 +102,7 @@ def  create_multi_label_mask(lesion_mask_file, sc_seg_file, label_file_nnunet):
     #we save it in the destination folder
     multi_label_file = nib.Nifti1Image(multi_label, affine=lesion_affine)
     nib.save(multi_label_file, str(label_file_nnunet))
-    
+
 
 def build_dataset_for_training(args):
     """
@@ -162,6 +165,12 @@ def build_dataset_for_training(args):
     #we build a dictionnary with the number of subjects per site
     nb_subj_per_site_dict = dict(zip(sites, nb_subj_per_site))
 
+    #get the list of subjects to exclude
+    exclude_list = []
+    if args.exclude_file is not None:
+       with open(args.exclude_file, 'r') as file:
+            exclude_list = yaml.load(file, Loader=yaml.FullLoader)
+
     #--------------- DISPACTH OF LABELLED IMAGES IN TRAIN OR TEST SET ------------------- 
     
     #Initialise the number of scans in train and in test folder
@@ -192,7 +201,13 @@ def build_dataset_for_training(args):
         #we check if the file is labelled 
         if file_id not in str(labelled_imgs):
             #then we skip this image
-            print("skipping")
+            print("skipping because unlabelled:, ", file_id)
+            continue
+        
+        #we check if the file is in the exclude list
+        if file_id.rsplit("_", 1)[0] in exclude_list:
+            #then we skip this image
+            print("skipping because in exclude list:, ", file_id)
             continue
         
         # find the corresponding label file
@@ -335,6 +350,12 @@ def build_dataset_for_inference(args):
     contrasts = args.contrasts.split(',')
     time_point = args.time_point
 
+    #get the list of subjects to exclude
+    exclude_list = []
+    if args.exclude_file is not None:
+       with open(args.exclude_file, 'r') as file:
+            exclude_list = yaml.load(file, Loader=yaml.FullLoader)
+
     #create the output folder
     pathlib.Path(path_out).mkdir(parents=True, exist_ok=True)
 
@@ -352,6 +373,14 @@ def build_dataset_for_inference(args):
 
     #we iterate over all images
     for image_file in image_files:
+            
+            file_id = str(image_file).split('/')[-1].split('.')[0]
+            
+            #we check if the file is in the exclude list
+            if file_id.rsplit("_", 1)[0] in exclude_list:
+                #then we skip this image
+                print("skipping because in exclude list:, ", file_id)
+                continue
             
             #we update the count of images of the training set
             scan_cnt+= 1
