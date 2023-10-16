@@ -15,7 +15,7 @@ import torch.nn as nn
 import json
 
 from time import time
-from scipy.ndimage import label
+from scipy.ndimage import label, generate_binary_structure
 
 from monai.inferers import sliding_window_inference
 from monai.data import (DataLoader, CacheDataset, load_decathlon_datalist, decollate_batch)
@@ -240,6 +240,36 @@ def keep_largest_object(predictions):
     return predictions
 
 
+# Adapted from ivadomed:
+# https://github.com/ivadomed/ivadomed/blob/e101ebea632683d67deab3c50dd6b372207de2a9/ivadomed/postprocessing.py#L224-L245
+def remove_small_objects(data, size_min):
+    """Removes all unconnected objects smaller than the minimum specified size.
+
+    Args:
+        data (ndarray): Input data.
+        size_min (int): Minimal object size to keep in input data.
+
+    Returns:
+        ndarray: Array with small objects.
+    """
+
+    bin_structure = generate_binary_structure(3, 2)
+
+    # squeeze the first dimension (to be compatible with generate_binary_structure rank 3)
+    data = data.squeeze(axis=0)
+
+    data_label, n = label(data, structure=bin_structure)
+
+    for idx in range(1, n + 1):
+        data_idx = (data_label == idx).astype(int)
+        n_nonzero = np.count_nonzero(data_idx)
+
+        if n_nonzero < size_min:
+            data[data_label == idx] = 0
+
+    return data
+
+
 # ===========================================================================
 #                           Inference method
 # ===========================================================================
@@ -325,7 +355,8 @@ def main(args):
             # set background values to 0
             pred[pred <= 0.5] = 0
 
-            pred = keep_largest_object(pred)
+#            pred = keep_largest_object(pred)
+            pred = remove_small_objects(pred, size_min=5)
 
             # get subject name
             subject_name = (batch["image_meta_dict"]["filename_or_obj"][0]).split("/")[-1].replace(".nii.gz", "")
