@@ -86,12 +86,6 @@ label_if_does_not_exist(){
     rsync -avzh $FILELABELMANUAL ${FILELABEL}.nii.gz
     # sct_label_vertebrae does not work on PSIR/STIR contrast --> we use manual disc labels
     sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -discfile ${FILELABEL}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
-
-    # Try also labeling using sct_label_utils instead of sct_label_vertebrae to avoid SC straightening
-    # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/pull/4072
-    sct_label_utils -i ${file_seg}.nii.gz -disc ${FILELABEL}.nii.gz -o ${file_seg}_labeled_without_straightening.nii.gz
-    # Generate QC to assess labeled segmentation
-    sct_qc -i ${file}.nii.gz -s ${file_seg}_labeled_without_straightening.nii.gz -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
   else
     echo "Manual disc labels not found."
     echo "File ${FILELABEL}.nii.gz does not exist" >> ${PATH_LOG}/missing_files.log
