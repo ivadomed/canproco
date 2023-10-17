@@ -182,9 +182,7 @@ else
 
     # Binarize the summed segmentation (sct_label_vertebrae is not compatible with soft segmentations; also QC is easy to access)
     # TODO: this line will be deleted once the SCT script will include the flag for binarization
-    sct_maths -i  ${file}_pred_sum.nii.gz -bin 0.5 -o ${file}_pred_sum_bin.nii.gz
-    # Generate sagittal QC report (https://github.com/ivadomed/canproco/issues/37#issuecomment-1644497220)
-    sct_qc -i ${file}.nii.gz -s  ${file}_pred_sum_bin.nii.gz -d  ${file}_pred_sum_bin.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    sct_maths -i ${file}_pred_sum.nii.gz -bin 0.5 -o ${file}_pred_sum_bin.nii.gz
 
     # Copy GT lesion seg
     copy_gt "${file_gt}" "lesion"
@@ -196,9 +194,15 @@ else
     # Analyze GT MS lesion
     sct_analyze_lesion -m ${file_lesion}_bin.nii.gz -s  ${file}_pred_sum_bin.nii.gz -ofolder ${PATH_RESULTS}
 
+    # Sum SC and lesion seg to make sure that the lesion is included in the SC segmentation (necessary for nnUNet region-based training)
+    sct_maths -i ${file}_pred_sum_bin.nii.gz -add ${file_lesion}_bin.nii.gz -o ${file}_pred_sum_bin_with_lesion.nii.gz
+    sct_maths -i ${file}_pred_sum_bin_with_lesion.nii.gz -bin 0 -o ${file}_pred_sum_bin_with_lesion_bin.nii.gz
+    # Generate sagittal QC report (https://github.com/ivadomed/canproco/issues/37#issuecomment-1644497220)
+    sct_qc -i ${file}.nii.gz -s ${file}_pred_sum_bin_with_lesion_bin.nii.gz -d ${file}_pred_sum_bin_with_lesion_bin.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
     # Perform vertebral labeling using manually created disc labels
     # STIR and PSIR_mul (cord dark; CSF bright) --> T2w contrast
-    label_if_does_not_exist "${file}" "${file_gt}" "${file}_pred_sum_bin" "t2"
+    label_if_does_not_exist "${file}" "${file_gt}" "${file}_pred_sum_bin_with_lesion_bin" "t2"
 
 fi
 
