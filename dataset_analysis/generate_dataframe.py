@@ -46,6 +46,41 @@ def get_parser():
     return parser
 
 
+def get_spinal_cord_info(patient_data, dataset_path):
+    """This functions computes the volume of the spinal cord for each patient.
+    The volume is added to the patient_data dictionary.
+    
+    Input:
+        patient_data : dictionary containing information about the patient
+        dataset_path : path to the CanProCo dataset
+    
+    Returns:
+        patient_data : dictionary containing information about the patient
+    """
+
+    #get the participant_id
+    participant_id = patient_data["participant_id"]
+
+    #now we find the spinal cord segmentation file
+    sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_sc_seg.nii.gz")
+    if not os.path.exists(sc_seg_file):
+        # If PSIR doesn't exist, use STIR
+        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_sc_seg.nii.gz")
+    
+    #now we read the spinal cord segmentation file
+    sc_seg = nib.load(sc_seg_file)
+
+    #now we get the total volume of the spinal cord
+    sc_seg_data = sc_seg.get_fdata()
+    voxel_size = sc_seg.header.get_zooms()
+    sc_volume = np.sum(sc_seg_data)*voxel_size[0]*voxel_size[1]*voxel_size[2]
+
+    #we add this information to the patient_data dictionary
+    patient_data["sc_volume"] = sc_volume
+
+    return patient_data
+
+
 def analyse_lesion_per_levels(patient_data, dataset_path, output_folder):
     """
     This function focuses on lesions per spinal cord levels.
@@ -274,6 +309,9 @@ def main():
 
         #analyze the patient lesion distributions per levels
         patient_data = analyse_lesion_per_levels(patient_data, data_path, output_folder)
+
+        #analyze the patient spinal cord volume
+        patient_data = get_spinal_cord_info(patient_data, data_path)
 
         #add the patient to the dataset
         dataframe = pd.concat([dataframe, pd.DataFrame([patient_data])], ignore_index=True)
