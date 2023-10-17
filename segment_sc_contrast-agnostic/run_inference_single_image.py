@@ -242,18 +242,21 @@ def keep_largest_object(predictions):
 
 # Adapted from ivadomed:
 # https://github.com/ivadomed/ivadomed/blob/e101ebea632683d67deab3c50dd6b372207de2a9/ivadomed/postprocessing.py#L224-L245
-def remove_small_objects(data, size_min):
+def remove_small_objects(data, size_min_percentage):
     """Removes all unconnected objects smaller than the minimum specified size.
 
     Args:
         data (ndarray): Input data.
-        size_min (int): Minimal object size to keep in input data.
+        size_min_percentage (int): Minimal object size to keep in input data in percentage of the total number of voxels.
 
     Returns:
         ndarray: Array with small objects.
     """
 
     bin_structure = generate_binary_structure(3, 2)
+
+    # get the total number of voxels annotated
+    n_voxels_total = np.count_nonzero(data)
 
     # squeeze the first dimension (to be compatible with generate_binary_structure rank 3)
     data = data.squeeze(axis=0)
@@ -264,7 +267,8 @@ def remove_small_objects(data, size_min):
         data_idx = (data_label == idx).astype(int)
         n_nonzero = np.count_nonzero(data_idx)
 
-        if n_nonzero < size_min:
+        #we only keep continuous objects that are larger than 10% of the total number of voxels
+        if n_nonzero < size_min_percentage * n_voxels_total / 100:
             data[data_label == idx] = 0
 
     return data
@@ -355,8 +359,8 @@ def main(args):
             # set background values to 0
             pred[pred <= 0.5] = 0
 
-#            pred = keep_largest_object(pred)
-            pred = remove_small_objects(pred, size_min=5)
+            # pred = keep_largest_object(pred)
+            pred = remove_small_objects(pred, size_min_percentage=10)
 
             # get subject name
             subject_name = (batch["image_meta_dict"]["filename_or_obj"][0]).split("/")[-1].replace(".nii.gz", "")
