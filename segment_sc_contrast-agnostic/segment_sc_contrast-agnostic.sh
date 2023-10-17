@@ -149,10 +149,9 @@ if [[ ! -e ${file}.nii.gz ]]; then
     exit 1
 else
 
-    # Copy GT lesion seg
-    # Note: we do copy here before we modify the file variable for PSIR
-    copy_gt "${file}" "lesion"
-    file_lesion="${file}_lesion-manual"
+    # Create a variable with fname corresponding to the files under derivatives/labels (because we modify the variable
+    # for PSIR images)
+    file_gt=${file}
 
     if [[ ${file} =~ "PSIR" ]]; then
       # For PSIR, swap contrast from light cord and dark CSF to dark cord and light CSF
@@ -185,6 +184,10 @@ else
     sct_maths -i  ${file}_pred_sum.nii.gz -bin 0.5 -o ${file}_pred_sum_bin.nii.gz
     # Generate sagittal QC report (https://github.com/ivadomed/canproco/issues/37#issuecomment-1644497220)
     sct_qc -i ${file}.nii.gz -s  ${file}_pred_sum_bin.nii.gz -d  ${file}_pred_sum_bin.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+    # Copy GT lesion seg
+    copy_gt "${file_gt}" "lesion"
+    file_lesion="${file_gt}_lesion-manual"
 
     # Binarize GT lesion segmentation (sct_analyze_lesion requires binary mask) until the following issue is fixed
     # https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/4120
