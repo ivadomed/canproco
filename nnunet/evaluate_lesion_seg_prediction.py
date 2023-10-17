@@ -1,18 +1,35 @@
 """
 This script is used to evaluate the lesion segmentation prediction.
 It looks at different metrics (dice score, precision and recall) and saves the results in a csv file.
-List of metrics outputted:
-- Dice score
-- Precision
-- Recall
-- Lesion wide precision 
-- Lesion wide recall
-- TP, FP, TN, FN
+We use anima for the computation of the metrics. Here is the return message from animaSegPerfAnalyzer:
+------------------------------------------------------------------------------------------------------------------------
+3 categories are available:
+    - SEGMENTATION EVALUATION:
+        Dice, the mean overlap
+        Jaccard, the union overlap
+        Sensitivity
+        Specificity
+        NPV (Negative Predictive Value)
+        PPV (Positive Predictive Value)
+        RVE (Relative Volume Error) in percentage
+    - SURFACE DISTANCE EVALUATION:
+        Hausdorff distance
+        Contour mean distance
+        Average surface distance
+    - DETECTION LESIONS EVALUATION:
+        PPVL (Positive Predictive Value for Lesions)
+        SensL, Lesion detection sensitivity
+        F1 Score, a F1 Score between PPVL and SensL
+
+Results are provided as follows: 
+Jaccard;        Dice;   Sensitivity;    Specificity;    PPV;    NPV;    RelativeVolumeError;    HausdorffDistance;      ContourMeanDistance;    SurfaceDistance;        PPVL;   SensL;  F1_score;       NbTestedLesions;        VolTestedLesions;
+------------------------------------------------------------------------------------------------------------------------
 
 Args:
     --i, --input_img : path to the input image
     --l, --lesion_mask : path to the lesion mask
     --p, --prediction : path to the prediction
+    --animaPath : path to the animaSegPerfAnalyzer script
     --o, --output_folder : path to the output folder
 
 Returns:
@@ -32,6 +49,7 @@ import sys
 import argparse
 import numpy as np
 import pandas as pd
+import xml.etree.ElementTree as ET
 
 
 def get_parser():
@@ -45,10 +63,11 @@ def get_parser():
         parser : argparse object
     """
     parser = argparse.ArgumentParser(description='Evaluate lesion segmentation prediction')
-    parser.add_argument('--i', '--input_img', required=True, type=str, help='path to the input image')
-    parser.add_argument('--l', '--lesion_mask',required=True, type=str, help='path to the lesion mask')
-    parser.add_argument('--p', '--prediction', required=True, type=str, help='path to the prediction')
-    parser.add_argument('--o', '--output_folder', required=True,  type=str, help='path to the output folder')
+    parser.add_argument('--i', required=True, type=str, help='path to the input image')
+    parser.add_argument('--l',required=True, type=str, help='path to the lesion mask')
+    parser.add_argument('--p', required=True, type=str, help='path to the prediction')
+    parser.add_argument('--animaPath', required=True, type=str, help='path to the animaSegPerfAnalyzer script')
+    parser.add_argument('--o', required=True,  type=str, help='path to the output folder')
     args = parser.parse_args()
     return args
 
@@ -65,17 +84,41 @@ def main():
     """
     #we parse the command line arguments
     args = get_parser()
-
-    #we load the image, the lesion mask and the prediction
-    img = np.load(args.input_img)
-    lesion_mask = np.load(args.lesion_mask)
-    prediction = np.load(args.prediction)
+    input_img = args.i
+    lesion_mask = args.l
+    prediction = args.p
+    animaPath = args.animaPath
+    output_folder = args.o
 
     #we build the output folder if it does not exist
-    if not os.path.isdir(args.output_folder):
-        os.makedirs(args.output_folder)
+    if not os.path.isdir(output_folder):
+        os.makedirs(output_folder)
+    if not os.path.isdir(output_folder + '/tmp'):
+        os.makedirs(output_folder + '/tmp')
     
-    #we first compute the dice score
-    #using anima ? anima is only runnable on Linux, not on Mac...
+    #we binarize the prediction and the lesion mask using sct_maths
+    prediction_bin_path = output_folder + '/tmp/' + prediction.split('/')[-1].split('.')[0] + '_bin.nii.gz'
+    lesion_mask_bin_path = output_folder + '/tmp/' + lesion_mask.split('/')[-1].split('.')[0] + '_bin.nii.gz'
+    os.system('sct_maths -i ' + prediction + ' -bin 0.5 -o ' + prediction_bin_path)
+    os.system('sct_maths -i ' + lesion_mask + ' -bin 0.5 -o ' + lesion_mask_bin_path)
+
+    #we use the script from Anima : animaSegPerfAnalyzer
+    print('Computing metrics with Anima...')
+    os.system( animaPath + '/animaSegPerfAnalyzer -r ' + lesion_mask_bin_path + ' -i ' + prediction_bin_path + ' -o ' + output_folder+ '/anima_analysis' + '-d -s -l -X -S')
+    print('Done!')
+
+    #we initalise the dtaframe of the subject results
+    subject_results = {'subject': prediction.split('/')[-1].split('.')[0]}
     
-     
+    #we read the xml file
+    xml_file = output_folder + '/anima_analysis-d_global.xml'
+    root_node = ET.parse(source=xml_file).getroot()
+    for metric in root_node:
+        name, value = metric.get('name'), float(metric.text)
+        subject_results[name] = value
+    
+    print(subject_results)
+
+
+if __name__ == "__main__":
+    main()
