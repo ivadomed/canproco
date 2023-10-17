@@ -71,23 +71,30 @@ segment_sc_monai(){
   sct_qc -i ${file}.nii.gz -s ${file}_pred.nii.gz -d ${file}_pred.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
 }
 
-# Check if manual label already exists. If it does, copy it locally. If it does
-# not, perform labeling.
+# Copy manually created disc labels from derivatives.
 label_if_does_not_exist(){
   local file="$1"
-  local file_seg="$2"
-  local contrast="$3"
+  local file_gt="$2"
+  local file_seg="$3"
+  local contrast="$4"
   # Update global variable with segmentation file name
-  FILELABEL="${file}_labels"
-  FILELABELMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELABEL}-manual.nii.gz"
-  echo "Looking for manual label: $FILELABELMANUAL"
+  FILELABEL="${file_gt}_labels-disc"
+  FILELABELMANUAL="${PATH_DATA}/derivatives/labels/${SUBJECT}/anat/${FILELABEL}.nii.gz"
+  echo "Looking for manual disc labels: $FILELABELMANUAL"
   if [[ -e $FILELABELMANUAL ]]; then
     echo "Found! Using manual labels."
     rsync -avzh $FILELABELMANUAL ${FILELABEL}.nii.gz
+    # sct_label_vertebrae does not work on PSIR/STIR contrast --> we use manual disc labels
+    sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -discfile ${FILELABEL}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+    # Try also labeling using sct_label_utils instead of sct_label_vertebrae to avoid SC straightening
+    # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/pull/4072
+    sct_label_utils -i ${file_seg}.nii.gz -disc ${FILELABEL}.nii.gz -o ${file_seg}_labeled.nii.gz
+    # Generate QC to assess labeled segmentation
+    sct_qc -i ${file}.nii.gz -s ${file_seg}_labeled.nii.gz -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
   else
-    echo "Not found. Proceeding with automatic labeling."
-    # Generate labeled segmentation
-    sct_label_vertebrae -i ${file}.nii.gz -s ${file_seg}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
+    echo "Manual disc labels not found."
+    echo "File ${FILELABEL}.nii.gz does not exist" >> ${PATH_LOG}/missing_files.log
   fi
 }
 
@@ -195,9 +202,9 @@ else
     # Analyze GT MS lesion
     sct_analyze_lesion -m ${file_lesion}_bin.nii.gz -s  ${file}_pred_sum_bin.nii.gz -ofolder ${PATH_RESULTS}
 
-    # Perform vertebral labeling
-    # STIR and PSIR_mul (cord dark; CSF bright) --> T2w
-    #label_if_does_not_exist "${file}" " ${file}_pred_sum_bin.nii.gz" "t2"
+    # Perform vertebral labeling using manually created disc labels
+    # STIR and PSIR_mul (cord dark; CSF bright) --> T2w contrast
+    label_if_does_not_exist "${file}" "${file_gt}" "${file}_pred_sum_bin.nii.gz" "t2"
 
 fi
 
