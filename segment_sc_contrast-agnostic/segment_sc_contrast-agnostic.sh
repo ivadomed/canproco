@@ -204,7 +204,7 @@ else
 
     # Perform vertebral labeling using manually created disc labels
     # STIR and PSIR_mul (cord dark; CSF bright) --> T2w contrast
-    label_if_does_not_exist "${file}" "${file_gt}" "${file}_pred_sum_bin.nii.gz" "t2"
+    label_if_does_not_exist "${file}" "${file_gt}" "${file}_pred_sum_bin" "t2"
 
 fi
 
