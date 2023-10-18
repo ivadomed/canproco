@@ -346,7 +346,8 @@ def build_dataset_for_training(args):
     # Note: See https://github.com/MIC-DKFZ/nnUNet/issues/407 for how this should be described
 
     #Removed because useless in this case
-    json_dict['test'] = [str(test_labels[i]).replace("labelsTs", "imagesTs") for i in range(len(test_images))]
+    json_dict['test'] = [{'image': str(test_labels[i]).replace("labelsTs", "imagesTs") , "label": test_labels[i] }
+                                 for i in range(len(test_images))]
 
     # create dataset_description.json
     json_object = json.dumps(json_dict, indent=4)
@@ -414,6 +415,14 @@ def build_dataset_for_inference(args):
             shutil.copyfile(image_file, image_file_nnunet)
             
             conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet
+    
+    #----------------- CREATION OF THE DICTIONNARY-----------------------------------
+    # create dataset_description.json
+    json_object = json.dumps(conversion_dict, indent=4)
+    # write to dataset description
+    conversion_dict_name = f"conversion_dict.json"
+    with open(os.path.join(args.path_out, conversion_dict_name), "w") as outfile:
+        outfile.write(json_object)
 
     return None
 
