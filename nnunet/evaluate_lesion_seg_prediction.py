@@ -1,5 +1,5 @@
 """
-This script is used to evaluate the lesion segmentation prediction.
+This script is used to evaluate the lesion segmentation prediction of the test files.
 It looks at different metrics (dice score, precision and recall) and saves the results in a csv file.
 We use anima for the computation of the metrics. Here is the return message from animaSegPerfAnalyzer:
 ------------------------------------------------------------------------------------------------------------------------
@@ -90,34 +90,43 @@ def main():
     animaPath = args.animaPath
     output_folder = args.o
 
+    #get name
+    name = input_img.split('/')[-1].split('.')[0]
+
     #we build the output folder if it does not exist
     if not os.path.isdir(output_folder):
         os.makedirs(output_folder)
-    if not os.path.isdir(output_folder + '/tmp'):
-        os.makedirs(output_folder + '/tmp')
+    if not os.path.isdir(output_folder + '/tmp/' + name):
+        os.makedirs(output_folder + '/tmp/'+ name)
+    if not os.path.isdir(output_folder + '/' + name):
+        os.makedirs(output_folder + '/' + name)
     
     #we binarize the prediction and the lesion mask using sct_maths
-    prediction_bin_path = output_folder + '/tmp/' + prediction.split('/')[-1].split('.')[0] + '_bin.nii.gz'
-    lesion_mask_bin_path = output_folder + '/tmp/' + lesion_mask.split('/')[-1].split('.')[0] + '_bin.nii.gz'
+    prediction_bin_path = output_folder + '/tmp/' + name + '/' + prediction.split('/')[-1].split('.')[0] + '_bin.nii.gz'
+    lesion_mask_bin_path = output_folder + '/tmp/' + name + '/' + lesion_mask.split('/')[-1].split('.')[0] + '_bin.nii.gz'
     os.system('sct_maths -i ' + prediction + ' -bin 0.5 -o ' + prediction_bin_path)
     os.system('sct_maths -i ' + lesion_mask + ' -bin 0.5 -o ' + lesion_mask_bin_path)
 
     #we use the script from Anima : animaSegPerfAnalyzer
     print('Computing metrics with Anima...')
-    os.system( animaPath + '/animaSegPerfAnalyzer -r ' + lesion_mask_bin_path + ' -i ' + prediction_bin_path + ' -o ' + output_folder+ '/anima_analysis' + '-d -s -l -X -S')
+    output_path = output_folder + '/tmp/' + name + '/' + name + '_anima_analysis'
+    print(output_path)
+    os.system( animaPath + '/animaSegPerfAnalyzer -r ' + lesion_mask_bin_path + ' -i ' + prediction_bin_path + ' -o ' + output_path + '-d -s -l -X -S')
     print('Done!')
 
     #we initalise the dtaframe of the subject results
     subject_results = {'subject': prediction.split('/')[-1].split('.')[0]}
     
     #we read the xml file
-    xml_file = output_folder + '/anima_analysis-d_global.xml'
+    xml_file = output_path + '-d_global.xml'
     root_node = ET.parse(source=xml_file).getroot()
     for metric in root_node:
-        name, value = metric.get('name'), float(metric.text)
-        subject_results[name] = value
+        metric_name, value = metric.get('name'), float(metric.text)
+        subject_results[metric_name] = value
     
-    print(subject_results)
+    #save the results in a csv file
+    df = pd.DataFrame(subject_results, index=[0])
+    df.to_csv(output_folder + '/' + name + '/' + name + '_results.csv', index=False)
 
 
 if __name__ == "__main__":
