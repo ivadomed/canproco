@@ -241,7 +241,7 @@ def build_dataset_for_training(args):
             train_labels.append(str(label_file_nnunet))
 
             #we find the sc mask
-            sc_seg_file = str(lesion_mask_file).replace('lesion-manual', 'sc_seg')
+            sc_seg_file = str(lesion_mask_file).replace('lesion-manual', 'seg-manual')
             if not os.path.exists(sc_seg_file):
                 #return an error if the sc_seg file does not exist
                 raise ValueError(f'The spinal cord segmentation file {sc_seg_file} does not exist. Please run the spinal cord segmentation script first.')
@@ -276,13 +276,19 @@ def build_dataset_for_training(args):
             test_labels.append(str(label_file_nnunet))
 
             #we find the sc_mask
-            sc_seg_file = str(lesion_mask_file).replace('lesion-manual', 'sc_seg')
+            sc_seg_file = str(lesion_mask_file).replace('lesion-manual', 'seg-manual')
             if not os.path.exists(sc_seg_file):
                 #return an error if the sc_seg file does not exist
                 raise ValueError(f'The spinal cord segmentation file {sc_seg_file} does not exist. Please run the spinal cord segmentation script first.')
+            
+            #we find the disc levels mask 
+            disc_level_file = str(lesion_mask_file).replace('lesion-manual', 'labels-disc')
+            if not os.path.exists(disc_level_file):
+                #return an error if the disc_level file does not exist
+                raise ValueError(f'The disc level file {disc_level_file} does not exist. Please run the disc level script first.')
 
-            #we create the multilabelled masK
-            create_multi_label_mask(lesion_mask_file, sc_seg_file, label_file_nnunet)
+            #we create the multi-label mask
+            create_multi_label_mask(lesion_mask_file, sc_seg_file, disc_level_file, label_file_nnunet)
             
             # copy the files to new structure
             shutil.copyfile(image_file, image_file_nnunet)
@@ -290,7 +296,6 @@ def build_dataset_for_training(args):
             conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet
             conversion_dict[str(os.path.abspath(lesion_mask_file))] = label_file_nnunet
         
-        break
     #Display of number of training and number of testing images
     print("Number of images for training: " + str(scan_cnt_train))
     print("Number of images for testing: " + str(scan_cnt_test))
