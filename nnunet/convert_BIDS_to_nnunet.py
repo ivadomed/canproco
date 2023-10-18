@@ -94,6 +94,7 @@ def  create_multi_label_mask(lesion_mask_file, sc_seg_file, disc_level_file, lab
     #we load the lesion mask
     lesion_mask = nib.load(lesion_mask_file)
     lesion_affine = lesion_mask.affine
+    lesion_header = lesion_mask.header
     lesion_mask = np.asarray(lesion_mask.dataobj)
     lesion_mask = np.where(lesion_mask > label_threshold, 1, 0)
 
@@ -103,14 +104,14 @@ def  create_multi_label_mask(lesion_mask_file, sc_seg_file, disc_level_file, lab
     sc_seg = np.where(sc_seg > label_threshold, 1, 0)
     
     #we create the multi-label
-    multi_label = np.zeros(lesion_mask.shape)
+    multi_label = np.zeros(lesion_mask.shape,dtype=np.int16)
     multi_label[sc_seg==1] = 1
     multi_label[lesion_mask==1] = 2
     #remove annotations above the first disc level
     multi_label[:,int(first_disc_level) -1:,:] = 0
 
     #we save it in the destination folder
-    multi_label_file = nib.Nifti1Image(multi_label, affine=lesion_affine)
+    multi_label_file = nib.Nifti1Image(multi_label, lesion_affine, lesion_header)
     nib.save(multi_label_file, str(label_file_nnunet))
 
 
@@ -331,7 +332,7 @@ def build_dataset_for_training(args):
     json_dict['labels'] = {
         "background" : 0,
         "Spinal cord" : [1, 2] ,
-        "Lesion" : [2]
+        "Lesion" : 2,
     }
    
     json_dict['regions_class_order'] = [1,2]
