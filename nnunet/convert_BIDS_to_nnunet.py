@@ -69,9 +69,10 @@ def get_parser():
     return parser
 
 
-def  create_multi_label_mask(lesion_mask_file, sc_seg_file, label_file_nnunet):
+def  create_multi_label_mask(lesion_mask_file, sc_seg_file, disc_level_file, label_file_nnunet):
     """
     This function creates a multi-label mask for a given lesion mask and spinal cord segmentation mask.
+    It also removes the lesions and the spinal cord segmentation which are above the first vertebral level.
     It saves the multi-label mask in the destination folder.
 
     Input:
@@ -85,11 +86,18 @@ def  create_multi_label_mask(lesion_mask_file, sc_seg_file, label_file_nnunet):
     #we create the multilabelled mask 
     label_threshold = 0.5
 
+    #we load the disc levels mask
+    disc_level = nib.load(disc_level_file)
+    # we get the coordinate of the first disc (label=1)
+    first_disc_level = np.where(np.asarray(disc_level.dataobj) == 1)[1]
+
+    #we load the lesion mask
     lesion_mask = nib.load(lesion_mask_file)
     lesion_affine = lesion_mask.affine
     lesion_mask = np.asarray(lesion_mask.dataobj)
     lesion_mask = np.where(lesion_mask > label_threshold, 1, 0)
 
+    #we load the disc levels mask
     sc_seg = nib.load(sc_seg_file)
     sc_seg = np.asarray(sc_seg.dataobj)
     sc_seg = np.where(sc_seg > label_threshold, 1, 0)
@@ -98,6 +106,8 @@ def  create_multi_label_mask(lesion_mask_file, sc_seg_file, label_file_nnunet):
     multi_label = np.zeros(lesion_mask.shape)
     multi_label[sc_seg==1] = 1
     multi_label[lesion_mask==1] = 2
+    #remove annotations above the first disc level
+    multi_label[:,int(first_disc_level) -1:,:] = 0
 
     #we save it in the destination folder
     multi_label_file = nib.Nifti1Image(multi_label, affine=lesion_affine)
@@ -109,6 +119,7 @@ def build_dataset_for_training(args):
     This functions builds a dataset for training in the nnunet format.
     It builds a dataset with a given ratio of each site, for testing and for training.
     It uses only the contrast and the time point given in the arguments.
+    Because we only focus on the spinal cord lesions, we remove the lesion and the sc seg which are above the first vertebral level. 
 
     Input:
         path_in_images : Path to the images
@@ -150,18 +161,18 @@ def build_dataset_for_training(args):
 
     #------------- EXTRACTION OF THE LABELED IMAGES NAMES--------------------------
     
-    # We first extract all the label files' names for every wanted contrasask
-    labelled_imgs = []
+    # We first extract all the lesion mask files' names for every wanted contrasask
+    lesion_masks = []
     for contrast in contrasts:
-        labelled_imgs += list(path_in_labels.rglob(f'*{time_point}_{contrast}_lesion-manual.nii.gz'))
-    labelled_imgs = sorted(labelled_imgs)   
-    labelled_imgs = [str(k) for k in labelled_imgs]
+        lesion_masks += list(path_in_labels.rglob(f'*{time_point}_{contrast}_lesion-manual.nii.gz'))
+    lesion_masks = sorted(lesion_masks)   
+    lesion_masks = [str(k) for k in lesion_masks]
 
     #get the site names
-    subj = [str(k).split('/')[-1].split('_')[0][:-3] for k in labelled_imgs]
+    subj = [str(k).split('/')[-1].split('_')[0][:-3] for k in lesion_masks]
     sites = np.unique(subj)
     #we count the number of subjects per site
-    nb_subj_per_site = [len([k for k in labelled_imgs if site in k]) for site in sites]
+    nb_subj_per_site = [len([k for k in lesion_masks if site in k]) for site in sites]
     #we build a dictionnary with the number of subjects per site
     nb_subj_per_site_dict = dict(zip(sites, nb_subj_per_site))
 
@@ -199,7 +210,7 @@ def build_dataset_for_training(args):
         file_site = str(image_file).split('/')[-1].split('_')[0][:-3]
 
         #we check if the file is labelled 
-        if file_id not in str(labelled_imgs):
+        if file_id not in str(lesion_masks):
             #then we skip this image
             print("skipping because unlabelled:, ", file_id)
             continue
@@ -211,7 +222,7 @@ def build_dataset_for_training(args):
             continue
         
         # find the corresponding label file
-        lesion_mask_file = [k for k in labelled_imgs if file_id in k][0]
+        lesion_mask_file = [k for k in lesion_masks if file_id in k][0]
 
         #we check if the image is not in a site where the number of images is already above the limit ratio (ratio*nb_subj_per_site)
         count_below_limit = count_subj_per_site_dict[file_site] < (1-test_ratio) * nb_subj_per_site_dict[file_site]
@@ -229,14 +240,20 @@ def build_dataset_for_training(args):
             train_images.append(str(image_file_nnunet))
             train_labels.append(str(label_file_nnunet))
 
-            #we find the sc_mask
+            #we find the sc mask
             sc_seg_file = str(lesion_mask_file).replace('lesion-manual', 'sc_seg')
             if not os.path.exists(sc_seg_file):
                 #return an error if the sc_seg file does not exist
                 raise ValueError(f'The spinal cord segmentation file {sc_seg_file} does not exist. Please run the spinal cord segmentation script first.')
+            
+            #we find the disc levels mask 
+            disc_level_file = str(lesion_mask_file).replace('lesion-manual', 'labels-disc')
+            if not os.path.exists(disc_level_file):
+                #return an error if the disc_level file does not exist
+                raise ValueError(f'The disc level file {disc_level_file} does not exist. Please run the disc level script first.')
 
             #we create the multi-label mask
-            create_multi_label_mask(lesion_mask_file, sc_seg_file, label_file_nnunet)
+            create_multi_label_mask(lesion_mask_file, sc_seg_file, disc_level_file, label_file_nnunet)
             
             # copy the image to new structure
             shutil.copyfile(image_file, image_file_nnunet)
