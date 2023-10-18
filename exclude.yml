@@ -14,9 +14,15 @@
 - sub-mon152_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760248384
 - sub-mon168_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687112
 - sub-mon191_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687352
+- sub-van134_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761698648
+- sub-van135_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761702591
+- sub-van171_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761910863
 - sub-van176_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687602
+- sub-van181_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1767235494
+- sub-van201_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1767238882
 - sub-van206_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758688851
-- sub-tor014_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760420705
+- sub-van207_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761973064
+- sub-tor014_ses-M0   # Poor data quality and no disc labeling file; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760420705
 - sub-tor133_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758689928
 # STIR
 - sub-cal149_ses-M0   # FOV does not cover the whole SC in sagittal plane; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
