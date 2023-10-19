@@ -1,5 +1,6 @@
 """
-This script is used to evaluate the lesion segmentation prediction of the test files.
+This script is used to evaluate the lesion segmentation predictions.
+It iterates over the entire cohort.
 It looks at different metrics (dice score, precision and recall) and saves the results in a csv file.
 We use anima for the computation of the metrics. Here is the return message from animaSegPerfAnalyzer:
 ------------------------------------------------------------------------------------------------------------------------
@@ -26,17 +27,16 @@ Jaccard;        Dice;   Sensitivity;    Specificity;    PPV;    NPV;    Relative
 ------------------------------------------------------------------------------------------------------------------------
 
 Args:
-    --i, --input_img : path to the input image
-    --l, --lesion_mask : path to the lesion mask
-    --p, --prediction : path to the prediction
-    --animaPath : path to the animaSegPerfAnalyzer script
-    --o, --output_folder : path to the output folder
+    --pred-folder, -p: BIDS format folder containing the predictions
+    --dataset, -d: BIDS format containing the original dataset
+    --animaPath, -a : path to the animaSegPerfAnalyzer script
+    --output_folder, -o : path to the output folder
 
 Returns:
     None
 
 Example:
-    python evaluate_lesion_seg_prediction.py --i /path/to/image --l /path/to/lesion/mask --p /path/to/prediction --o /path/to/output/folder
+    python evaluate_lesion_seg_prediction.py --pred-folder path/to/predictions --dataset path/to/dataset --animaPath path/to/animaSegPerfAnalyzer --output-folder path/to/output_folder
 
 TODO: 
     *
@@ -45,6 +45,7 @@ Pierre-Louis Benveniste
 """
 
 import os
+import pathlib
 import sys
 import argparse
 import numpy as np
@@ -63,13 +64,60 @@ def get_parser():
         parser : argparse object
     """
     parser = argparse.ArgumentParser(description='Evaluate lesion segmentation prediction')
-    parser.add_argument('--i', required=True, type=str, help='path to the input image')
-    parser.add_argument('--l',required=True, type=str, help='path to the lesion mask')
-    parser.add_argument('--p', required=True, type=str, help='path to the prediction')
-    parser.add_argument('--animaPath', required=True, type=str, help='path to the animaSegPerfAnalyzer script')
-    parser.add_argument('--o', required=True,  type=str, help='path to the output folder')
+    parser.add_argument('--pred-folder', '-p', type=str, required=True, help='BIDS format folder containing the predictions')
+    parser.add_argument('--dataset', '-d', type=str, required=True, help='BIDS format containing the original dataset')
+    parser.add_argument('--animaPath', '-a', type=str, required=True, help='path to Anima scripts')
+    parser.add_argument('--output-folder', '-o', type=str, required=True, help='path to the output folder')
     args = parser.parse_args()
     return args
+
+
+def analyze_prediction(prediction, lesion_mask, animaPath, output_folder):
+    """
+    This script analyzes each prediction using animaSegPerfAnalyzer.
+    Its created a csv file containing the results saved in the BIDS folder containing the predictions.
+
+    Args:
+        prediction : path to the prediction
+        lesion_mask : path to the lesion mask
+        animaPath : path to the animaSegPerfAnalyzer script
+        output_folder : path to the output folder
+    
+    Returns:
+        subject_results : a dictionnary containing the results of the analysis
+    """
+
+    #we initialize the results dictionnary
+    subject_results = {}
+
+    #we get the name of the subject
+    name = str(prediction).split('/')[-1].split('_')[0]
+    subject_results['name'] = name
+    #we get the site of the subject
+    site = name.split('-')[0]
+    subject_results['site'] = site
+
+    # we extract the lesions from the prediction mask by binarizing with sct_maths
+    lesion_mask_pred_bin_path = str(prediction).split('.')[0] + '_bin.nii.gz'
+    os.system(f'sct_maths -i {prediction} -bin 1.2 -o {lesion_mask_pred_bin_path}')
+    #we also binarize the lesion mask
+    lesion_mask_bin_path = os.path.join(output_folder, 'tmp', str(lesion_mask).split('/')[-1].split('.')[0] + '_bin.nii.gz')
+    os.system(f'sct_maths -i {lesion_mask} -bin 0.1 -o {lesion_mask_bin_path}')
+
+    #we compute the metrics using animaSegPerfAnalyzer
+    print(f'Computing metrics for {name}')
+    result_output_path = os.path.join(os.path.dirname(prediction), f'{name}_metrics')
+    os.system( f'{animaPath}/animaSegPerfAnalyzer -r {lesion_mask_bin_path} -i {lesion_mask_pred_bin_path} -o {result_output_path} -d -s -l -X -S')
+    print('Done!')
+
+    #we read the xml file
+    xml_file = result_output_path + '_global.xml'
+    root_node = ET.parse(source=xml_file).getroot()
+    for metric in root_node:
+        metric_name, value = metric.get('name'), float(metric.text)
+        subject_results[metric_name] = value
+    
+    return subject_results
 
 
 def main():
@@ -84,49 +132,48 @@ def main():
     """
     #we parse the command line arguments
     args = get_parser()
-    input_img = args.i
-    lesion_mask = args.l
-    prediction = args.p
+    pred_folder = args.pred_folder
+    dataset = args.dataset
     animaPath = args.animaPath
-    output_folder = args.o
-
-    #get name
-    name = input_img.split('/')[-1].split('.')[0]
+    output_folder = args.output_folder
 
     #we build the output folder if it does not exist
     if not os.path.isdir(output_folder):
         os.makedirs(output_folder)
-    if not os.path.isdir(output_folder + '/tmp/' + name):
-        os.makedirs(output_folder + '/tmp/'+ name)
-    if not os.path.isdir(output_folder + '/' + name):
-        os.makedirs(output_folder + '/' + name)
-    
-    #we binarize the prediction and the lesion mask using sct_maths
-    prediction_bin_path = output_folder + '/tmp/' + name + '/' + prediction.split('/')[-1].split('.')[0] + '_bin.nii.gz'
-    lesion_mask_bin_path = output_folder + '/tmp/' + name + '/' + lesion_mask.split('/')[-1].split('.')[0] + '_bin.nii.gz'
-    os.system('sct_maths -i ' + prediction + ' -bin 0.5 -o ' + prediction_bin_path)
-    os.system('sct_maths -i ' + lesion_mask + ' -bin 0.5 -o ' + lesion_mask_bin_path)
+    if not os.path.isdir(os.path.join(output_folder, 'tmp')):
+        os.makedirs(os.path.join(output_folder, 'tmp'))
 
-    #we use the script from Anima : animaSegPerfAnalyzer
-    print('Computing metrics with Anima...')
-    output_path = output_folder + '/tmp/' + name + '/' + name + '_anima_analysis'
-    print(output_path)
-    os.system( animaPath + '/animaSegPerfAnalyzer -r ' + lesion_mask_bin_path + ' -i ' + prediction_bin_path + ' -o ' + output_path + '-d -s -l -X -S')
-    print('Done!')
+    #we initialize the results dataframe
+    results_dataframe = pd.DataFrame()
 
-    #we initalise the dtaframe of the subject results
-    subject_results = {'subject': prediction.split('/')[-1].split('.')[0]}
+    #we get the list of predictions 
+    predictions = list(pathlib.Path(pred_folder).rglob(f'*_pred.nii.gz'))
+
+    #we get the list of the lesion masks
+    lesion_masks = list(pathlib.Path(dataset).rglob(f'*_lesion-manual.nii.gz'))
+
+    #we iterate over the predictions
+    for prediction in predictions:
+        
+        #we get the name of the corresponding subject
+        name = str(prediction).split('/')[-1].split('_')
+        file_name = '_'.join(name[:-1])
+        print(file_name)
+        
+        #we find the corresponding lesion mask
+        lesion_mask = [mask for mask in lesion_masks if file_name in str(mask)][0]
+        print(str(lesion_mask))
+
+        #we analyze the prediction
+        subject_results = analyze_prediction(prediction, lesion_mask, animaPath, output_folder)
+
+        #we add the results to the dataframe
+        results_dataframe = pd.concat([results_dataframe, pd.DataFrame([subject_results])], ignore_index=True)
+
+    #we save the results dataframe in the output folder
+    results_dataframe.to_csv(os.path.join(output_folder, 'results.csv'), index=False)
     
-    #we read the xml file
-    xml_file = output_path + '-d_global.xml'
-    root_node = ET.parse(source=xml_file).getroot()
-    for metric in root_node:
-        metric_name, value = metric.get('name'), float(metric.text)
-        subject_results[metric_name] = value
-    
-    #save the results in a csv file
-    df = pd.DataFrame(subject_results, index=[0])
-    df.to_csv(output_folder + '/' + name + '/' + name + '_results.csv', index=False)
+    return None
 
 
 if __name__ == "__main__":
