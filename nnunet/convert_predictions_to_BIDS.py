@@ -81,8 +81,8 @@ def main():
         
         # we get the corresponding file in the conversion dictionary
         for files in conversion_dict:
-            if conversion_dict[files].split("/")[-1] in pred_name and 'imagesTs' in conversion_dict[files] :
 
+            if pred_name.split('.')[0] in conversion_dict[files].split("/")[-1] and 'imagesTs' in conversion_dict[files] :
                 
                 subject_full = files.split("/")[-1]
                 subject = subject_full.split("_")[0]
