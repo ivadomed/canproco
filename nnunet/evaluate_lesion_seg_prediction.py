@@ -94,8 +94,11 @@ def analyze_prediction(prediction, lesion_mask, animaPath, output_folder):
     name = str(prediction).split('/')[-1].split('_')[0]
     subject_results['name'] = name
     #we get the site of the subject
-    site = name.split('-')[0]
+    site = name.split('-')[1][:-3]
     subject_results['site'] = site
+    #we get the contrast of the subject
+    contrast = str(prediction).split('/')[-1].split('_pred')[0].split('_')[-1]
+    subject_results['contrast'] = contrast
 
     # we extract the lesions from the prediction mask by binarizing with sct_maths
     lesion_mask_pred_bin_path = str(prediction).split('.')[0] + '_bin.nii.gz'
