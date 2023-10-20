@@ -158,11 +158,9 @@ def main():
         #we get the name of the corresponding subject
         name = str(prediction).split('/')[-1].split('_')
         file_name = '_'.join(name[:-1])
-        print(file_name)
         
         #we find the corresponding lesion mask
         lesion_mask = [mask for mask in lesion_masks if file_name in str(mask)][0]
-        print(str(lesion_mask))
 
         #we analyze the prediction
         subject_results = analyze_prediction(prediction, lesion_mask, animaPath, output_folder)
