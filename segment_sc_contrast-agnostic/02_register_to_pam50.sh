@@ -180,6 +180,11 @@ else
     sct_apply_transfo -i ${file_lesion}_bin.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_anat2template.nii.gz -x nn -o ${file_lesion}_bin_reg.nii.gz
     # Generate QC (native image in PAM50 space overlaid with GT lesion segmentation in PAM50 space)
     sct_qc -i anat2template.nii.gz -d ${file_lesion}_bin_reg.nii.gz -s ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -p sct_deepseg_lesion -plane sagittal -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+    # Bring GT SC segmentation to template space
+    sct_apply_transfo -i ${file_seg}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_anat2template.nii.gz -x nn -o ${file_seg}_reg.nii.gz
+    # Generate QC (native image in PAM50 space overlaid with GT SC segmentation in PAM50 space)
+    sct_qc -i anat2template.nii.gz -d ${file_seg}_reg.nii.gz -s ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -p sct_deepseg_lesion -plane sagittal
 fi
 
 # ------------------------------------------------------------------------------
