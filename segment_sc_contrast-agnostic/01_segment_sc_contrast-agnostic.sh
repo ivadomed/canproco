@@ -192,7 +192,7 @@ else
     # https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/4120
     sct_maths -i ${file_lesion}.nii.gz -bin 0 -o ${file_lesion}_bin.nii.gz
     # Analyze GT MS lesion
-    sct_analyze_lesion -m ${file_lesion}_bin.nii.gz -s  ${file}_pred_sum_bin.nii.gz -ofolder ${PATH_RESULTS}
+    sct_analyze_lesion -m ${file_lesion}_bin.nii.gz -s ${file}_pred_sum_bin.nii.gz -ofolder ${PATH_RESULTS}
 
     # Sum SC and lesion seg to make sure that the lesion is included in the SC segmentation (necessary for nnUNet region-based training)
     sct_maths -i ${file}_pred_sum_bin.nii.gz -add ${file_lesion}_bin.nii.gz -o ${file}_pred_sum_bin_with_lesion.nii.gz
