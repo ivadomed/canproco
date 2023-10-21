@@ -138,7 +138,7 @@ else
     file_gt=${file}
 
     if [[ ${file} =~ "PSIR" ]]; then
-      # For PSIR, swap contrast from light cord and dark CSF to dark cord and light CSF
+      # For PSIR, swap contrast from light cord and dark CSF to dark cord and light CSF to use -c t2 during template registration
       # Context: https://github.com/ivadomed/canproco/issues/46#issuecomment-1752142304
       # TODO: this line will be deleted once the SCT script will include the flag for contrast swapping
       sct_maths -i ${file}.nii.gz -mul -1 -o ${file}_mul.nii.gz
