@@ -37,3 +37,20 @@ Example `config.json` file:
 ℹ️ Note that the `segment_sc_contrast-agnostic/run_inference_single_image.py` script is just a copy of the 
 [`contrast-agnostic-softseg-spinalcord/monai/run_inference_single_image.py`](https://github.com/sct-pipeline/contrast-agnostic-softseg-spinalcord/blob/nk/monai/monai/run_inference_single_image.py) script.
 
+3. Register STIR/PSIR contrast to the PAM50 space and bring the GT lesion to PAM50 space
+
+```console
+sct_run_batch -config config.json
+```
+
+Example `config.json` file:
+
+```json
+{
+ "path_data"   : "<PATH_TO_DATASET>/canproco",
+ "path_output" : "<PATH_TO_DATASET>/canproco_register_to_PAM50_2023-10-21",
+ "script"      : "<PATH_TO_REPO>/canproco/segment_sc_contrast-agnostic/02_register_to_pam50.sh",
+ "jobs"        : 16,
+ "exclude_list": "sub-mon118 sub-mon006 ..." 
+}
+```
