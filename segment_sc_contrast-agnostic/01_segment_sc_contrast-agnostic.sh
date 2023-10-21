@@ -14,7 +14,7 @@
 # {
 #  "path_data"   : "<PATH_TO_DATASET>/canproco",
 #  "path_output" : "<PATH_TO_DATASET>/canproco_contrast-agnostic_2023-10-06",
-#  "script"      : "<PATH_TO_REPO>/canproco/segment_sc_contrast-agnostic/segment_sc_contrast-agnostic.sh",
+#  "script"      : "<PATH_TO_REPO>/canproco/segment_sc_contrast-agnostic/01_segment_sc_contrast-agnostic.sh",
 #  "jobs"        : 16,
 #  "exclude"     : "sub-mon118_ses-M0",
 #  "script_args" : "<PATH_TO_REPO>/segment_sc_contrast-agnostic/run_inference_single_image.py <PATH_TO_CONTRAST_AGNOSTIC_MODEL>"

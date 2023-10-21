@@ -22,7 +22,7 @@ Example `config.json` file:
 {
   "path_data"   : "<PATH_TO_DATASET>/canproco",
   "path_output" : "<PATH_TO_DATASET>canproco_contrast-agnostic_2023-10-06",
-  "script"      : "${HOME}/code/canproco/segment_sc_contrast-agnostic/segment_sc_contrast-agnostic.sh",
+  "script"      : "${HOME}/code/canproco/segment_sc_contrast-agnostic/01_segment_sc_contrast-agnostic.sh",
   "jobs"        : 1,
   "include"     : "ses-M0",
   "exclude_list": "sub-mon118 sub-mon006 sub-mon009 sub-mon032 sub-mon097 sub-mon148 sub-mon168 sub-mon191 sub-van176 sub-van206 sub-tor133 sub-cal149",
