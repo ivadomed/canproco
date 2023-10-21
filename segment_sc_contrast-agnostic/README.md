@@ -1,4 +1,4 @@
-Segment SC using contrast-agnostic MONAI model from PSIR contrast and perform vertebral labeling
+Segment SC using contrast-agnostic MONAI model from STIR/PSIR contrast and perform vertebral labeling
 
 1. Create a conda virtual environment and install dependencies
 
@@ -8,7 +8,7 @@ conda activate monai
 yes | pip install -r segment_sc_contrast-agnostic/requirements.txt
 ```
 
-2. Segment SC using the contrast-agnostic MONAI model from PSIR contrast and perform vertebral labeling
+2. Segment SC using the contrast-agnostic MONAI model from STIR/PSIR contrast and perform vertebral labeling
 
 The `sct_run_batch` wrapper script is used to run the `segment_sc_contrast-agnostic/segment_sc_contrast-agnostic.sh` across multiple subjects in parallel.
 
