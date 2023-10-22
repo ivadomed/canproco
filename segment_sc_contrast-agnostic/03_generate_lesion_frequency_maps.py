@@ -51,7 +51,8 @@ def get_parser():
         metavar="<file>",
         required=True,
         type=str,
-        help='Path to the participants.tsv file containing participant_id and phenotype_M0 columns.'
+        help='Path to the participants.tsv file containing participant_id and phenotype_M0 columns. '
+             'Example: canproco/participants.tsv'
     )
     parser.add_argument(
         '-ofolder',
