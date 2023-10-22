@@ -230,8 +230,9 @@ def main():
     # Keep only participants with pathology_M0 = MS
     participants_df = participants_df[participants_df.pathology_M0 == 'MS']
 
-    # Loop across the subgroups
-    for subgroup in ['MS', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high']:
+    # Loop across the subgroups and sites
+    for subgroup in ['MS', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high'] + \
+                    ['site_' + key for key in SITE_DCT.keys()]:
         path_lfm = os.path.join(path_out, 'spinalcord_LFM_' + subgroup + '.nii.gz')
         path_lfm_cst = os.path.join(path_out, 'spinalcord_LFM_CST_' + subgroup + '.nii.gz')
         if subgroup == 'MS':
@@ -245,6 +246,8 @@ def main():
                 lfm_df = participants_df[participants_df.edss_M0 >= 6.0]
             elif subgroup.endswith('med'):
                 lfm_df = participants_df[(participants_df.edss_M0 < 6.0) & (participants_df.edss_M0 > 2.5)]
+        elif subgroup.startswith('site_'):
+            lfm_df = participants_df[participants_df.institution_id_M0 == subgroup[5:]]
 
         if not os.path.isfile(path_lfm) or not os.path.isfile(path_lfm_cst):
             logger.info(f'\nGenerating the LFM for {subgroup}.')
