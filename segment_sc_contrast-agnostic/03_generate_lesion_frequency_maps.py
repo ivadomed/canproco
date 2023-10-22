@@ -47,7 +47,7 @@ def get_parser():
         help='Path to the folder with processed MRI data. Example: /data_processed'
     )
     parser.add_argument(
-        '-participant-tsv',
+        '-participants-tsv',
         metavar="<file>",
         required=True,
         type=str,
@@ -175,7 +175,7 @@ def main():
     if not os.path.isdir(path_out):
         os.makedirs(path_out)
 
-    path_participants_tsv = args.path_participants_tsv
+    path_participants_tsv = args.participants_tsv
     # Read the participants.tsv file
     participants_df = pd.read_csv(path_participants_tsv, sep='\t',
                                   usecols=['participant_id', 'institution_id_M0', 'phenotype_M0', 'edss_M0'])
