@@ -204,11 +204,11 @@ def main():
                                            'edss_M0'])
 
     # Loop across the subgroups
-    for subgroup in ['all', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high']:
+    for subgroup in ['MS', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high']:
         path_lfm = os.path.join(path_out, 'spinalcord_LFM_' + subgroup + '.nii.gz')
         path_lfm_cst = os.path.join(path_out, 'spinalcord_LFM_CST_' + subgroup + '.nii.gz')
-        if subgroup == 'all':
-            lfm_df = participants_df[participants_df.pathology_M0 == 'MS']
+        if subgroup == 'MS':
+            lfm_df = participants_df[participants_df.pathology_M0 == subgroup]
         elif subgroup in ['RRMS', 'PPMS', 'RIS']:
             lfm_df = participants_df[participants_df.phenotype_M0 == subgroup]
         elif subgroup.startswith('edss_'):
