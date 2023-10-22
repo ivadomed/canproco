@@ -234,7 +234,7 @@ def main():
     for subgroup in ['MS', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high'] + \
                     ['site_' + key for key in SITE_DCT.keys()]:
         path_lfm = os.path.join(path_out, 'spinalcord_LFM_' + subgroup + '.nii.gz')
-        path_lfm_cst = os.path.join(path_out, 'spinalcord_LFM_CST_' + subgroup + '.nii.gz')
+        path_lfm_cst = os.path.join(path_out, 'spinalcord_LFM_' + subgroup + '_CST.nii.gz')
         if subgroup == 'MS':
             lfm_df = participants_df[participants_df.pathology_M0 == subgroup]
         elif subgroup in ['RRMS', 'PPMS', 'RIS']:
