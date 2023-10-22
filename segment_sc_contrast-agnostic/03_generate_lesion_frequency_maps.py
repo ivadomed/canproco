@@ -10,11 +10,20 @@ Inspired by https://github.com/neuropoly/lesion-mapping/blob/master/spinalcord/3
 """
 
 import os
+import sys
 import argparse
+import logging
 import pandas as pd
 import numpy as np
 
 from spinalcordtoolbox.image import Image, zeros_like
+
+FNAME_LOG = 'log_lfm.txt'
+# Initialize logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # default: logging.DEBUG, logging.INFO
+hdlr = logging.StreamHandler(sys.stdout)
+logging.root.addHandler(hdlr)
 
 # Lateral and ventral corticospinal (CST) tracts
 TRACTS_LST = ['PAM50_atlas_04.nii.gz', 'PAM50_atlas_05.nii.gz', 'PAM50_atlas_22.nii.gz', 'PAM50_atlas_23.nii.gz']
@@ -157,6 +166,9 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst, lesion_suffix, seg_suf
     initialise_sumFile(fname_out_lesion, pam50_cord)
     initialise_sumFile(fname_out_cord, pam50_cord)
 
+    subject_count = 0
+
+    # Loop across participants
     for index, row in df.iterrows():
         participant_id = row.participant_id
 
@@ -169,6 +181,7 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst, lesion_suffix, seg_suf
                                  f'{participant_id}_ses-M0_{SITE_DCT[row.institution_id_M0]}_{seg_suffix}')
 
         if os.path.isfile(lesion_path) and os.path.isfile(cord_path):
+            subject_count += 1
             print(participant_id)
             add_mask(lesion_path, fname_out_lesion)
             add_mask(cord_path, fname_out_cord)
@@ -180,6 +193,7 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst, lesion_suffix, seg_suf
 
     clean_LFM(fname_out, pam50_cord, pam50_lvl)
     mask_CST(fname_out, fname_out_cst, [os.path.join(path_pam50, 'atlas', t) for t in TRACTS_LST])
+    logger.info(f'LFM generated for {subject_count} subjects')
 
 
 def main():
@@ -193,6 +207,12 @@ def main():
     path_out = args.ofolder
     if not os.path.isdir(path_out):
         os.makedirs(path_out)
+
+    # Dump log file there
+    if os.path.exists(FNAME_LOG):
+        os.remove(FNAME_LOG)
+    fh = logging.FileHandler(os.path.join(os.path.abspath(path_out), FNAME_LOG))
+    logging.root.addHandler(fh)
 
     lesion_suffix = args.lesion_suffix
     seg_suffix = args.seg_suffix
@@ -220,7 +240,7 @@ def main():
                 lfm_df = participants_df[(participants_df.edss_M0 < 6.0) & (participants_df.edss_M0 > 2.5)]
 
         if not os.path.isfile(path_lfm) or not os.path.isfile(path_lfm_cst):
-            print(f'\nGenerating the LFM with {subgroup} subjects ({str(len(lfm_df.index))}).')
+            logger.info(f'\nGenerating the LFM for {subgroup}.')
             generate_LFM(path_folder, lfm_df, path_lfm, path_lfm_cst, lesion_suffix, seg_suffix)
 
 
