@@ -227,6 +227,9 @@ def main():
                                   usecols=['participant_id', 'institution_id_M0', 'pathology_M0', 'phenotype_M0',
                                            'edss_M0'])
 
+    # Keep only participants with pathology_M0 = MS
+    participants_df = participants_df[participants_df.pathology_M0 == 'MS']
+
     # Loop across the subgroups
     for subgroup in ['MS', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high']:
         path_lfm = os.path.join(path_out, 'spinalcord_LFM_' + subgroup + '.nii.gz')
