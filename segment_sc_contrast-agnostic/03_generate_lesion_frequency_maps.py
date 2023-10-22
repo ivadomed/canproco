@@ -61,6 +61,22 @@ def get_parser():
         type=str,
         help='Path to the output folder where LFM will be saved. Example: /results'
     )
+    parser.add_argument(
+        '-lesion-suffix',
+        metavar="<str>",
+        required=False,
+        type=str,
+        help='Lesion mask suffix. Default: lesion-manual_bin_reg.nii.gz',
+        default='lesion-manual_bin_reg.nii.gz'
+    )
+    parser.add_argument(
+        '-seg-suffix',
+        metavar="<str>",
+        required=False,
+        type=str,
+        help='Spinal cord mask suffix. Default: seg-manual_reg.nii.gz',
+        default='seg-manual_reg.nii.gz'
+    )
 
     return parser
 
@@ -122,13 +138,15 @@ def mask_CST(fname_LFM, fname_LFM_CST, mask_lst):
     img_cst.save(fname_LFM_CST)
 
 
-def generate_LFM(path_data, df, fname_out, fname_out_cst):
+def generate_LFM(path_data, df, fname_out, fname_out_cst, lesion_suffix, seg_suffix):
     """
     Generate the LFM (Lesion Frequency Map)
     :param path_data: path to the folder with processed MRI data
     :param df: dataframe with participant_id and institution_id_M0 columns
     :param fname_out: output file name
     :param fname_out_cst: output file name for CST
+    :param lesion_suffix: lesion mask suffix
+    :param seg_suffix: spinal cord mask suffix
     """
     path_pam50 = os.path.join(os.environ.get('SCT_DIR'), 'data/PAM50')
     pam50_cord = os.path.join(path_pam50, 'template', 'PAM50_cord.nii.gz')
@@ -145,10 +163,10 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst):
         path_subject = os.path.join(path_data, participant_id, 'ses-M0', 'anat')
         # Lesion in PAM50 space
         lesion_path = os.path.join(path_subject,
-                                   f'{participant_id}_ses-M0_{SITE_DCT[row.institution_id_M0]}_lesion-manual_bin_reg.nii.gz')
+                                   f'{participant_id}_ses-M0_{SITE_DCT[row.institution_id_M0]}_{lesion_suffix}')
         # Spinal cord in PAM50 space
         cord_path = os.path.join(path_subject,
-                                 f'{participant_id}_ses-M0_{SITE_DCT[row.institution_id_M0]}_seg-manual_reg.nii.gz')
+                                 f'{participant_id}_ses-M0_{SITE_DCT[row.institution_id_M0]}_{seg_suffix}')
 
         if os.path.isfile(lesion_path) and os.path.isfile(cord_path):
             print(participant_id)
@@ -176,6 +194,9 @@ def main():
     if not os.path.isdir(path_out):
         os.makedirs(path_out)
 
+    lesion_suffix = args.lesion_suffix
+    seg_suffix = args.seg_suffix
+
     path_participants_tsv = args.participants_tsv
     # Read the participants.tsv file
     participants_df = pd.read_csv(path_participants_tsv, sep='\t',
@@ -200,7 +221,7 @@ def main():
 
         if not os.path.isfile(path_lfm) or not os.path.isfile(path_lfm_cst):
             print(f'\nGenerating the LFM with {subgroup} subjects ({str(len(lfm_df.index))}).')
-            generate_LFM(path_folder, lfm_df, path_lfm, path_lfm_cst)
+            generate_LFM(path_folder, lfm_df, path_lfm, path_lfm_cst, lesion_suffix, seg_suffix)
 
 
 if __name__ == "__main__":
