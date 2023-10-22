@@ -152,8 +152,8 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst, lesion_suffix, seg_suf
     pam50_cord = os.path.join(path_pam50, 'template', 'PAM50_cord.nii.gz')
     pam50_lvl = os.path.join(path_pam50, 'template', 'PAM50_levels.nii.gz')
 
-    fname_out_lesion = fname_out.split('_LFM.nii.gz')[0] + '_sumLesion.nii.gz'
-    fname_out_cord = fname_out.split('_LFM.nii.gz')[0] + '_sumCord.nii.gz'
+    fname_out_lesion = fname_out.replace('.nii.gz', '_sumLesion.nii.gz')
+    fname_out_cord = fname_out.replace('.nii.gz', '_sumCord.nii.gz')
     initialise_sumFile(fname_out_lesion, pam50_cord)
     initialise_sumFile(fname_out_cord, pam50_cord)
 
