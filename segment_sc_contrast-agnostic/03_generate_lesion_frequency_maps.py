@@ -179,14 +179,15 @@ def main():
     path_participants_tsv = args.participants_tsv
     # Read the participants.tsv file
     participants_df = pd.read_csv(path_participants_tsv, sep='\t',
-                                  usecols=['participant_id', 'institution_id_M0', 'phenotype_M0', 'edss_M0'])
+                                  usecols=['participant_id', 'institution_id_M0', 'pathology_M0', 'phenotype_M0',
+                                           'edss_M0'])
 
     # Loop across the subgroups
     for subgroup in ['all', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high']:
         path_lfm = os.path.join(path_out, 'spinalcord_LFM_' + subgroup + '.nii.gz')
         path_lfm_cst = os.path.join(path_out, 'spinalcord_LFM_CST_' + subgroup + '.nii.gz')
         if subgroup == 'all':
-            lfm_df = participants_df
+            lfm_df = participants_df[participants_df.pathology_M0 == 'MS']
         elif subgroup in ['RRMS', 'PPMS', 'RIS']:
             lfm_df = participants_df[participants_df.phenotype_M0 == subgroup]
         elif subgroup.startswith('edss_'):
