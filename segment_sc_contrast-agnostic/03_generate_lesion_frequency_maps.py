@@ -122,13 +122,13 @@ def mask_CST(fname_LFM, fname_LFM_CST, mask_lst):
     img_cst.save(fname_LFM_CST)
 
 
-def generate_LFM(df, fname_out, fname_out_cst, path_data):
+def generate_LFM(path_data, df, fname_out, fname_out_cst):
     """
     Generate the LFM (Lesion Frequency Map)
+    :param path_data: path to the folder with processed MRI data
     :param df: dataframe with participant_id and institution_id_M0 columns
     :param fname_out: output file name
     :param fname_out_cst: output file name for CST
-    :param path_data: path to the data
     """
     path_pam50 = os.path.join(os.environ.get('SCT_DIR'), 'data/PAM50')
     pam50_cord = os.path.join(path_pam50, 'template', 'PAM50_cord.nii.gz')
@@ -200,7 +200,7 @@ def main():
 
         if not os.path.isfile(path_lfm) or not os.path.isfile(path_lfm_cst):
             print(f'\nGenerating the LFM with {subgroup} subjects ({str(len(lfm_df.index))}).')
-            generate_LFM(lfm_df, path_lfm, path_lfm_cst, path_folder)
+            generate_LFM(path_folder, lfm_df, path_lfm, path_lfm_cst)
 
 
 if __name__ == "__main__":
