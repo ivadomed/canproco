@@ -9,6 +9,7 @@ The script requires the SCT conda environment to be activated:
 
 Author: Jan Valosek
 Inspired by https://github.com/neuropoly/lesion-mapping/blob/master/spinalcord/3_generate_LFM.py from Charley Gros
+Also be aware of https://github.com/yw7/sc_lesion_frequency_map from Yehuda Warszawer
 """
 
 import os
