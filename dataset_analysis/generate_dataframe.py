@@ -62,10 +62,10 @@ def get_spinal_cord_info(patient_data, dataset_path):
     participant_id = patient_data["participant_id"]
 
     #now we find the spinal cord segmentation file
-    sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_sc_seg.nii.gz")
+    sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_seg-manual.nii.gz")
     if not os.path.exists(sc_seg_file):
         # If PSIR doesn't exist, use STIR
-        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_sc_seg.nii.gz")
+        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_seg-manual.nii.gz")
     
     #now we read the spinal cord segmentation file
     sc_seg = nib.load(sc_seg_file)
@@ -104,11 +104,11 @@ def analyse_lesion_per_levels(patient_data, dataset_path, output_folder):
     if os.path.exists(lesion_file_PSIR):
         #if PSIR exists, use PSIR
         lesion_seg_file = lesion_file_PSIR
-        vert_levels_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_sc_seg_labeled_discs.nii.gz")
+        vert_levels_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_seg-manual_labeled_discs.nii.gz")
     else:
         # If PSIR doesn't exist, use STIR
         lesion_seg_file = os.path.join(output_folder, f"{participant_id}_ses-M0_STIR_lesion-manual_label.nii.gz")
-        vert_levels_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_sc_seg_labeled_discs.nii.gz")
+        vert_levels_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_seg-manual_labeled_discs.nii.gz")
     
     #now we read the lesion segmentation file and the labelled spinal cord segmentation file
     lesion_labelled_seg = nib.load(lesion_seg_file)
@@ -191,11 +191,11 @@ def analyze_patient_lesion(patient_data, dataset_path, output_folder):
     lesion_file_PISR = os.path.join(dataset_path,"derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_lesion-manual.nii.gz")
     if os.path.exists(lesion_file_PISR):
         lesion_seg_file = lesion_file_PISR
-        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_sc_seg.nii.gz")
+        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_seg-manual.nii.gz")
     else:
         # If PSIR doesn't exist, use STIR
         lesion_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_lesion-manual.nii.gz")
-        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_sc_seg.nii.gz")
+        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_seg-manual.nii.gz")
 
     #let's use sct to analyze the lesion
     output_folder = os.path.join(output_folder, "tmp", participant_id)
