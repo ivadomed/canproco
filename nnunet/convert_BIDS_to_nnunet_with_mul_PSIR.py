@@ -428,7 +428,11 @@ def build_dataset_for_inference(args):
             image_file_nnunet = os.path.join(path_out,f'{args.taskname}_{scan_cnt:03d}_0000.nii.gz')
     
             # copy the files to new structure
-            shutil.copyfile(image_file, image_file_nnunet)
+            if 'PSIR' in str(image_file):
+                #we use sct_maths to directly saved the image multiplied by -1 in the nnunet dataset
+                os.system(f'sct_maths -i {image_file} -mul -1 -o {image_file_nnunet}')
+            else :
+                shutil.copyfile(image_file, image_file_nnunet)
             
             conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet
     
