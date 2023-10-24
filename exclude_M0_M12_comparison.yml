@@ -1,0 +1,59 @@
+# PSIR
+- sub-mon118_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/43
+- sub-mon006_ses-M0   # FOV covers the whole brain. The SC has only C1-C6; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
+- sub-mon009_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758684880
+- sub-mon032_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686509
+- sub-mon097_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686772
+- sub-mon113_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760175861
+- sub-mon148_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686965
+- sub-mon152_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760248384
+- sub-mon168_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687112
+- sub-mon191_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687352
+- sub-van134_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761698648
+- sub-van135_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761702591
+- sub-van171_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761910863
+- sub-van176_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687602
+- sub-van181_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1767235494
+- sub-van201_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1767238882
+- sub-van206_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758688851
+- sub-van207_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761973064
+- sub-tor014_ses-M0   # Poor data quality and no disc labeling file; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760420705
+- sub-tor133_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758689928
+# STIR
+- sub-cal149_ses-M0   # FOV does not cover the whole SC in sagittal plane; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
+# Similar accross timepoints
+- sub-edm005_ses-M0
+- sub-edm031_ses-M0
+- sub-edm035_ses-M0
+- sub-edm054_ses-M0
+- sub-edm065_ses-M0
+- sub-edm088_ses-M0
+- sub-mon002_ses-M0
+- sub-mon003_ses-M0
+- sub-mon005_ses-M0
+- sub-mon006_ses-M0
+- sub-mon007_ses-M0
+- sub-mon009_ses-M0
+- sub-mon010_ses-M0
+- sub-mon011_ses-M0
+- sub-mon014_ses-M0
+- sub-mon031_ses-M0
+- sub-mon032_ses-M0
+- sub-mon041_ses-M0
+- sub-mon052_ses-M0
+- sub-mon060_ses-M0
+- sub-tor010_ses-M0
+- sub-tor012_ses-M0
+- sub-tor014_ses-M0
+- sub-tor016_ses-M0
+- sub-tor021_ses-M0
+- sub-tor029_ses-M0
+- sub-tor036_ses-M0
+- sub-tor038_ses-M0
+- sub-tor039_ses-M0
+- sub-tor043_ses-M0
+- sub-tor044_ses-M0
+- sub-tor051_ses-M0
+# Subjects only present at M12
+- sub-cal064_ses-M12
+- sub-edm161_ses-M12
