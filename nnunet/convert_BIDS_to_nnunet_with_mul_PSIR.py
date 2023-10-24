@@ -390,8 +390,10 @@ def build_dataset_for_inference(args):
     #get the list of subjects to exclude
     exclude_list = []
     if args.exclude_file is not None:
-       with open(args.exclude_file, 'r') as file:
+        with open(args.exclude_file, 'r') as file:
             exclude_list = yaml.load(file, Loader=yaml.FullLoader)
+        #we remove the extension of the subjects
+        exclude_list = [k.split('_')[0] for k in exclude_list]
 
     #create the output folder
     pathlib.Path(path_out).mkdir(parents=True, exist_ok=True)
@@ -414,7 +416,7 @@ def build_dataset_for_inference(args):
             file_id = str(image_file).split('/')[-1].split('.')[0]
             
             #we check if the file is in the exclude list
-            if file_id.rsplit("_", 1)[0] in exclude_list:
+            if file_id.split("_")[0] in exclude_list:
                 #then we skip this image
                 print("skipping because in exclude list:, ", file_id)
                 continue
@@ -423,7 +425,7 @@ def build_dataset_for_inference(args):
             scan_cnt+= 1
             
             # create the new convention names
-            image_file_nnunet = os.path.join(path_out,f'{args.taskname}_{scan_cnt:03d}.nii.gz')
+            image_file_nnunet = os.path.join(path_out,f'{args.taskname}_{scan_cnt:03d}_0000.nii.gz')
     
             # copy the files to new structure
             shutil.copyfile(image_file, image_file_nnunet)
@@ -437,6 +439,9 @@ def build_dataset_for_inference(args):
     conversion_dict_name = f"conversion_dict.json"
     with open(os.path.join(args.path_out, conversion_dict_name), "w") as outfile:
         outfile.write(json_object)
+
+    #print the number of images
+    print("Number of images: " + str(scan_cnt))
 
     return None
 
