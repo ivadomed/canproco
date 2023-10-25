@@ -33,6 +33,7 @@ import shutil
 import nibabel as nib
 import numpy as np
 import yaml
+from image import Image, get_dimension, change_orientation
 
 
 def get_parser():
@@ -122,20 +123,23 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
         disc_seg_file = os.path.join(discs_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_STIR_labels-disc.nii.gz")
     
     #now we read the lesion segmentation file and the disc segmentation file
-    lesion_labelled_seg = nib.load(lesion_seg_file)
+    lesion_labelled_seg = Image(lesion_seg_file)
     
     #we check if the lesion segmentation file is empty
-    if np.sum(lesion_labelled_seg.get_fdata()) == 0:
+    if np.sum(lesion_labelled_seg.data) == 0:
         return patient_data
 
-    disc_seg_file = nib.load(disc_seg_file)
+    disc_seg_file = Image(disc_seg_file)
+    #we make sure that they have the same orientation
+    disc_seg_file = change_orientation(disc_seg_file, lesion_labelled_seg.orientation)
 
     #we get the data from the lesion segmentation file and the disc segmentation file
-    lesion_labelled_seg_data = lesion_labelled_seg.get_fdata()
-    disc_seg_data = disc_seg_file.get_fdata()
+    lesion_labelled_seg_data = lesion_labelled_seg.data
+    disc_seg_data = disc_seg_file.data
 
     #get voxel size
-    voxel_size = lesion_labelled_seg.header.get_zooms()
+    _,_,_,_,voxel_size_x,voxel_size_y,voxel_size_z,_ = get_dimension(lesion_labelled_seg)
+    _,_,_,_,disc_voxel_size_x,disc_voxel_size_y,disc_voxel_size_z,_ = get_dimension(disc_seg_file)
 
     #the levels are the integer unique values without 0
     levels = np.unique(disc_seg_data)
@@ -145,10 +149,10 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
     for i in range(len(levels)-1):
         #get upper bound of level
         upper_bound = np.where(disc_seg_data == levels[i])
-        upper_bound = int(upper_bound[1])
+        upper_bound = int(upper_bound[1])*disc_voxel_size_y
         #get lower bound of level
         lower_bound = np.where(disc_seg_data == levels[i+1])
-        lower_bound = int(lower_bound[1])
+        lower_bound = int(lower_bound[1])*disc_voxel_size_y
 
         #initialize the lesion_info_per_levels dictionary
         nb_lesions_in_level = 0
@@ -163,12 +167,12 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
         for lesion in lesions:
             lesion_voxel = np.where(lesion_labelled_seg_data == lesion)
             center_of_lesion = np.mean(lesion_voxel, axis=1)
-            volume_of_lesion = len(lesion_voxel[0])*voxel_size[0]*voxel_size[1]*voxel_size[2]
-            top_of_lesion = np.max(lesion_voxel[2])
-            bottom_of_lesion = np.min(lesion_voxel[2])
-            length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size[2]
+            volume_of_lesion = len(lesion_voxel[0])*voxel_size_x*voxel_size_y*voxel_size_z
+            top_of_lesion = np.max(lesion_voxel[1])
+            bottom_of_lesion = np.min(lesion_voxel[1])
+            length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size_y
             #if lesion center is between upper and lower bound, then it is in the level
-            if center_of_lesion[1] <= upper_bound and center_of_lesion[1] >= lower_bound:
+            if center_of_lesion[1]*voxel_size_y <= upper_bound and center_of_lesion[1]*voxel_size_y >= lower_bound:
                 nb_lesions_in_level += 1
                 total_lesion_volume_in_level += volume_of_lesion
                 lesion_length_in_level += length_of_lesion
@@ -190,7 +194,7 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
         if int(levels[i]) == 1:
             #we only have a lower bound
             lower_bound = np.where(disc_seg_data == levels[i])
-            lower_bound = int(lower_bound[1])
+            lower_bound = int(lower_bound[1])*disc_voxel_size_y
 
             #initialize the lesion_info_per_levels dictionary
             nb_lesions_above_1 = 0
@@ -205,12 +209,12 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
             for lesion in lesions:
                 lesion_voxel = np.where(lesion_labelled_seg_data == lesion)
                 center_of_lesion = np.mean(lesion_voxel, axis=1)
-                volume_of_lesion = len(lesion_voxel[0])*voxel_size[0]*voxel_size[1]*voxel_size[2]
-                top_of_lesion = np.max(lesion_voxel[2])
-                bottom_of_lesion = np.min(lesion_voxel[2])
-                length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size[2]
+                volume_of_lesion = len(lesion_voxel[0])*voxel_size_x*voxel_size_y*voxel_size_z
+                top_of_lesion = np.max(lesion_voxel[1])
+                bottom_of_lesion = np.min(lesion_voxel[1])
+                length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size_y
                 #if lesion center is between upper and lower bound, then it is in the level
-                if center_of_lesion[1] >= lower_bound:
+                if center_of_lesion[1]*voxel_size_y >= lower_bound:
                     nb_lesions_above_1 += 1
                     total_lesion_volume_above_1 += volume_of_lesion
                     lesion_length_above_1 += length_of_lesion
@@ -233,7 +237,7 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
     level = levels[i]
     # we only have an upper bound
     upper_bound = np.where(disc_seg_data == level)
-    upper_bound = int(upper_bound[1])
+    upper_bound = int(upper_bound[1])*disc_voxel_size_y
 
     #initialize the lesion_info_per_levels dictionary
     nb_lesions_after_last = 0
@@ -248,12 +252,12 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
     for lesion in lesions:
         lesion_voxel = np.where(lesion_labelled_seg_data == lesion)
         center_of_lesion = np.mean(lesion_voxel, axis=1)
-        volume_of_lesion = len(lesion_voxel[0])*voxel_size[0]*voxel_size[1]*voxel_size[2]
-        top_of_lesion = np.max(lesion_voxel[2])
-        bottom_of_lesion = np.min(lesion_voxel[2])
-        length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size[2]
+        volume_of_lesion = len(lesion_voxel[0])*voxel_size_x*voxel_size_y*voxel_size_z
+        top_of_lesion = np.max(lesion_voxel[1])
+        bottom_of_lesion = np.min(lesion_voxel[1])
+        length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size_y
         #if lesion center is between upper and lower bound, then it is in the level
-        if center_of_lesion[1] <= upper_bound:
+        if center_of_lesion[1]*voxel_size_y[1] <= upper_bound:
             nb_lesions_after_last += 1
             total_lesion_volume_after_last += volume_of_lesion
             lesion_length_after_last += length_of_lesion
@@ -441,7 +445,7 @@ def main():
 
         #add the patient to the dataset
         dataframe = pd.concat([dataframe, pd.DataFrame([patient_data])], ignore_index=True)
-    
+
     #save the dataset in the output folder
     dataframe.to_csv(os.path.join(output_folder, 'dataframe.csv'), index=False)
     print("Dataframe saved in " + os.path.join(output_folder, 'dataframe.csv'))
