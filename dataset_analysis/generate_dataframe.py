@@ -9,7 +9,7 @@ Args:
     --discs : path to the vertebral levels segmentation file
     --spinal-cord : path to the spinal cord segmentation file
     --timepoint : timepoint of the analysis (M0, M12)
-    --include-file : a .yml file containing the list of participants to include
+    --exclude-file : a .yml file containing the list of participants to exclude
     --output : path to the output folder
 
 Returns:
@@ -19,7 +19,7 @@ Example:
     python generate_dataframe.py --data /path/to/CanProCo --output /path/to/output
 
 Todo:
-    *
+    * UPDATE documentation of this file
 
 Pierre-Louis Benveniste
 """
@@ -51,7 +51,7 @@ def get_parser():
     parser.add_argument('--discs', type=str, help='path to the vertebral levels segmentation file')
     parser.add_argument('--spinal-cord', type=str, help='path to the spinal cord segmentation file')
     parser.add_argument('--timepoint', '-t', type=str, help='timepoint of the analysis (M0, M12)')
-    parser.add_argument('--include-file', '-e', type=str, help='a .yml file containing the list of participants to include')
+    parser.add_argument('--exclude-file', '-e', type=str, help='a .yml file containing the list of participants to exclude')
     parser.add_argument('--output', '-o', type=str, help='path to the output folder')
 
     return parser
@@ -153,7 +153,7 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
         #initialize the lesion_info_per_levels dictionary
         nb_lesions_in_level = 0
         total_lesion_volume_in_level = 0
-        avg_lesion_length_in_level = 0
+        lesion_length_in_level = 0
 
         #now we look for the lesions in this level
         ## get the lesions
@@ -171,13 +171,13 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
             if center_of_lesion[1] <= upper_bound and center_of_lesion[1] >= lower_bound:
                 nb_lesions_in_level += 1
                 total_lesion_volume_in_level += volume_of_lesion
-                avg_lesion_length_in_level += length_of_lesion
+                lesion_length_in_level += length_of_lesion
 
         #compute the average vertical length and volume
         avg_lesion_length_in_level = 0
         avg_lesion_volume_in_level = 0
         if nb_lesions_in_level != 0:
-            avg_lesion_length_in_level = avg_lesion_length_in_level/nb_lesions_in_level
+            avg_lesion_length_in_level = lesion_length_in_level/nb_lesions_in_level
             avg_lesion_volume_in_level = total_lesion_volume_in_level/nb_lesions_in_level
 
         #we add this information to the patient_data dictionary
@@ -185,6 +185,91 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
         patient_data[f"total_lesion_volume_between_{int(levels[i]):02d}_and_{int(levels[i+1]):02d}"] = total_lesion_volume_in_level
         patient_data[f"avg_lesion_volume_between_{int(levels[i]):02d}_and_{int(levels[i+1]):02d}"] = avg_lesion_volume_in_level
         patient_data[f"avg_lesion_length_between_{int(levels[i]):02d}_and_{int(levels[i+1]):02d}"] = avg_lesion_length_in_level
+
+        #we add the lesions which are above the 1st level
+        if int(levels[i]) == 1:
+            #we only have a lower bound
+            lower_bound = np.where(disc_seg_data == levels[i])
+            lower_bound = int(lower_bound[1])
+
+            #initialize the lesion_info_per_levels dictionary
+            nb_lesions_above_1 = 0
+            total_lesion_volume_above_1 = 0
+            lesion_length_above_1 = 0
+
+            #now we look for the lesions in this level
+            ## get the lesions
+            lesions = np.unique(lesion_labelled_seg_data)
+            lesions = lesions[lesions != 0]
+            ## iterate over the lesions
+            for lesion in lesions:
+                lesion_voxel = np.where(lesion_labelled_seg_data == lesion)
+                center_of_lesion = np.mean(lesion_voxel, axis=1)
+                volume_of_lesion = len(lesion_voxel[0])*voxel_size[0]*voxel_size[1]*voxel_size[2]
+                top_of_lesion = np.max(lesion_voxel[2])
+                bottom_of_lesion = np.min(lesion_voxel[2])
+                length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size[2]
+                #if lesion center is between upper and lower bound, then it is in the level
+                if center_of_lesion[1] >= lower_bound:
+                    nb_lesions_above_1 += 1
+                    total_lesion_volume_above_1 += volume_of_lesion
+                    lesion_length_above_1 += length_of_lesion
+
+            #compute the average vertical length and volume
+            avg_lesion_length_above_1 = 0
+            avg_lesion_volume_above_1 = 0
+            if nb_lesions_above_1 != 0:
+                avg_lesion_length_above_1 = lesion_length_above_1/nb_lesions_above_1
+                avg_lesion_volume_above_1 = total_lesion_volume_above_1/nb_lesions_above_1
+
+            # add info to dictionary
+            patient_data[f"nb_lesions_above_01"] = nb_lesions_above_1
+            patient_data[f"total_lesion_volume_above_01"] = total_lesion_volume_above_1
+            patient_data[f"avg_lesion_volume_above_01"] = avg_lesion_volume_above_1
+            patient_data[f"avg_lesion_length_above_01"] = avg_lesion_length_above_1
+
+    # we now add the lesions which are below the last level (we consider that their between the last level and last level + 1)
+    i=len(levels)-1
+    level = levels[i]
+    # we only have an upper bound
+    upper_bound = np.where(disc_seg_data == level)
+    upper_bound = int(upper_bound[1])
+
+    #initialize the lesion_info_per_levels dictionary
+    nb_lesions_after_last = 0
+    total_lesion_volume_after_last = 0
+    lesion_length_after_last = 0
+
+    #now we look for the lesions in this level
+    ## get the lesions
+    lesions = np.unique(lesion_labelled_seg_data)
+    lesions = lesions[lesions != 0]
+    ## iterate over the lesions
+    for lesion in lesions:
+        lesion_voxel = np.where(lesion_labelled_seg_data == lesion)
+        center_of_lesion = np.mean(lesion_voxel, axis=1)
+        volume_of_lesion = len(lesion_voxel[0])*voxel_size[0]*voxel_size[1]*voxel_size[2]
+        top_of_lesion = np.max(lesion_voxel[2])
+        bottom_of_lesion = np.min(lesion_voxel[2])
+        length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size[2]
+        #if lesion center is between upper and lower bound, then it is in the level
+        if center_of_lesion[1] <= upper_bound:
+            nb_lesions_after_last += 1
+            total_lesion_volume_after_last += volume_of_lesion
+            lesion_length_after_last += length_of_lesion
+
+    #compute the average vertical length and volume
+    avg_lesion_length_after_last = 0
+    avg_lesion_volume_after_last = 0
+    if nb_lesions_after_last != 0:
+        avg_lesion_length_after_last = lesion_length_after_last/nb_lesions_after_last
+        avg_lesion_volume_after_last = total_lesion_volume_after_last/nb_lesions_after_last
+
+    # add info to dictionary
+    patient_data[f"nb_lesions_between_{int(levels[i]):02d}_and_{int(levels[i])+1:02d}"] = nb_lesions_after_last
+    patient_data[f"total_lesion_between_{int(levels[i]):02d}_and_{int(levels[i])+1:02d}"] = total_lesion_volume_after_last
+    patient_data[f"avg_lesion_between_{int(levels[i]):02d}_and_{int(levels[i])+1:02d}"] = avg_lesion_volume_after_last
+    patient_data[f"avg_lesion_between_{int(levels[i]):02d}_and_{int(levels[i])+1:02d}"] = avg_lesion_length_after_last
 
     return patient_data
 
@@ -259,6 +344,8 @@ def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     """
     patient_data = {}
     patient_data["participant_id"] = participant_id
+    #site
+    patient_data["site"] = participant_id.split('-')[1][:3]
     #sex
     patient_data["sex"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["sex"].values[0]
     #age at M0
@@ -313,11 +400,11 @@ def main():
     timepoint = args.timepoint # supposed to be written like M0 or M12
 
     #exclude some participants (list is like this [sub-mon118, sub-mon006])
-    include_list = []
-    if args.include_file is not None:
-       with open(args.include_file, 'r') as file:
-            include_list = yaml.load(file, Loader=yaml.FullLoader)
-
+    exclude_list = []
+    with open(args.exclude_file, 'r') as file:
+        exclude_list = yaml.load(file, Loader=yaml.FullLoader)
+    #only keep the participant_id
+    exclude_list = [participant.split('_')[0] for participant in exclude_list]
 
     #build the output folder
     output_folder = args.output
@@ -336,7 +423,8 @@ def main():
     for participant in participants_tsv["participant_id"]:
 
         # We skip the participant if it is in the exclude list
-        if participant not in include_list:
+        if participant in exclude_list:
+            print(f"Skipping {participant} because it is in the exclude list")
             continue
 
         #analyze the patient tsv file
@@ -354,11 +442,10 @@ def main():
         #add the patient to the dataset
         dataframe = pd.concat([dataframe, pd.DataFrame([patient_data])], ignore_index=True)
     
-        print(dataframe)
-        for col in dataframe.columns:
-            print(dataframe[col])
     #save the dataset in the output folder
     dataframe.to_csv(os.path.join(output_folder, 'dataframe.csv'), index=False)
+    print("Dataframe saved in " + os.path.join(output_folder, 'dataframe.csv'))
+    return None
 
 
 if __name__ == '__main__':
