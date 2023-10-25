@@ -57,6 +57,7 @@
 # Subjects only present at M12
 - sub-cal064_ses-M12
 - sub-edm161_ses-M12
+- sub-mon164_ses-M12
 # Subject with 4 dimensions
 - sub-cal123_ses-M12
 # Subject only present at M0
