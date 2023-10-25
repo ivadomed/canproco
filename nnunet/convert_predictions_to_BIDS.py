@@ -9,6 +9,7 @@ Args:
     --pred-folder : path to the folder containing the predictions of nnUNet
     --out-folder : path to the folder where the converted predictions should be saved
     --conversion-dict : path to the conversion dictionary
+    --not-imageTs : if the predictions are not in the imagesTs folder, set this flag to True
 
 Returns:
     None
@@ -41,6 +42,7 @@ def get_parser():
     parser.add_argument("--pred-folder", type=str, required=True, help="path to the folder containing the predictions of nnUNet")
     parser.add_argument("--out-folder", type=str, required=True, help="path to the folder where the converted predictions should be saved")
     parser.add_argument("--conversion-dict", type=str, required=True, help="path to the conversion dictionary")
+    parser.add_argument("--not-imageTs", action="store_true", help="if the predictions are not in the imagesTs folder, set this flag to True")
     return parser
 
 
@@ -82,7 +84,7 @@ def main():
         # we get the corresponding file in the conversion dictionary
         for files in conversion_dict:
 
-            if pred_name.split('.')[0] in conversion_dict[files].split("/")[-1] and 'imagesTs' in conversion_dict[files] :
+            if (pred_name.split('.')[0] in conversion_dict[files].split("/")[-1] and 'imagesTs' in conversion_dict[files] ) or (pred_name.split('.')[0] in conversion_dict[files].split("/")[-1] and args.not_imageTs) :
                 
                 subject_full = files.split("/")[-1]
                 subject = subject_full.split("_")[0]
