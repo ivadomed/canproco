@@ -99,9 +99,10 @@ def main():
                 new_name_sc = subject_full.split('.')[0] + '_seg-manual.nii.gz'
 
                 #we binarize the file in the case of the lesion and save it at the new location
-                os.system(f"seg_maths -i {pred} -bin 1.1 -o {os.path.join(output_subject_path, new_name_lesion)}")
+                os.system(f"sct_maths -i {pred} -bin 1.1 -o {os.path.join(output_subject_path, new_name_lesion)}")
+
                 #we binarize the file in the case of the spinal cord and save it at the new location
-                os.system(f"seg_maths -i {pred} -bin 0 -o {os.path.join(output_subject_path, new_name_sc)}")
+                os.system(f"sct_maths -i {pred} -bin 0 -o {os.path.join(output_subject_path, new_name_sc)}")
     
     return None
 
