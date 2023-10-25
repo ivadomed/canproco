@@ -1,10 +1,14 @@
 """
 This file generates the dataframe used for the analysis of the CanProCo dataset.
 For each patients in the CanProCo dataset, it gathers information about the patient, the pathology and the lesion(s).
-For now, this only focuses on the M0 timepoint.
+
 
 Args:
     --data : path to the CanProCo dataset
+    --lesion : path to the lesion segmentation file
+    --discs : path to the vertebral levels segmentation file
+    --spinal-cord : path to the spinal cord segmentation file
+    --timepoint : timepoint of the analysis (M0, M12)
     --output : path to the output folder
 
 Returns:
@@ -41,12 +45,16 @@ def get_parser():
     """
     parser = argparse.ArgumentParser(description='Generates the dataset used for the analysis of the CanProCo dataset.')
     parser.add_argument('--data', '-d', type=str, help='path to the CanProCo dataset')
+    parser.add_argument('--lesion', '-l', type=str, help='path to the lesion segmentation file')
+    parser.add_argument('--discs', type=str, help='path to the vertebral levels segmentation file')
+    parser.add_argument('--spinal-cord', type=str, help='path to the spinal cord segmentation file')
+    parser.add_argument('--timepoint', '-t', type=str, help='timepoint of the analysis (M0, M12)')
     parser.add_argument('--output', '-o', type=str, help='path to the output folder')
 
     return parser
 
 
-def get_spinal_cord_info(patient_data, dataset_path):
+def get_spinal_cord_info(patient_data, spinal_cord_path, dataset_path):
     """This functions computes the volume of the spinal cord for each patient.
     The volume is added to the patient_data dictionary.
     
@@ -62,10 +70,10 @@ def get_spinal_cord_info(patient_data, dataset_path):
     participant_id = patient_data["participant_id"]
 
     #now we find the spinal cord segmentation file
-    sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_seg-manual.nii.gz")
+    sc_seg_file = os.path.join(spinal_cord_path, participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_seg-manual.nii.gz")
     if not os.path.exists(sc_seg_file):
         # If PSIR doesn't exist, use STIR
-        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_seg-manual.nii.gz")
+        sc_seg_file = os.path.join(spinal_cord_path, participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_seg-manual.nii.gz")
     
     #now we read the spinal cord segmentation file
     sc_seg = nib.load(sc_seg_file)
@@ -81,7 +89,7 @@ def get_spinal_cord_info(patient_data, dataset_path):
     return patient_data
 
 
-def analyse_lesion_per_levels(patient_data, dataset_path, output_folder):
+def analyse_lesion_per_levels(patient_data, discs_path, output_folder):
     """
     This function focuses on lesions per spinal cord levels.
     It computes the number, volume and average length of lesions per spinal cord level.
@@ -99,39 +107,39 @@ def analyse_lesion_per_levels(patient_data, dataset_path, output_folder):
     #the output folder
     output_folder = os.path.join(output_folder, "tmp", participant_id)
 
-    #now we find the labelledlesion segmentation file (it was created at the previous step with sct_analyze lesions) and the vertebral levels segmentation file
+    #now we find the labelled lesion segmentation file (it was created at the previous step with sct_analyze lesions) and the disc levels segmentation file
     lesion_file_PSIR = os.path.join(output_folder, f"{participant_id}_ses-M0_PSIR_lesion-manual_label.nii.gz")
     if os.path.exists(lesion_file_PSIR):
         #if PSIR exists, use PSIR
         lesion_seg_file = lesion_file_PSIR
-        vert_levels_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_seg-manual_labeled_discs.nii.gz")
+        disc_seg_file = os.path.join(discs_path, participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_labels-disc.nii.gz")
     else:
         # If PSIR doesn't exist, use STIR
         lesion_seg_file = os.path.join(output_folder, f"{participant_id}_ses-M0_STIR_lesion-manual_label.nii.gz")
-        vert_levels_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_seg-manual_labeled_discs.nii.gz")
+        disc_seg_file = os.path.join(discs_path, participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_labels-disc.nii.gz")
     
-    #now we read the lesion segmentation file and the labelled spinal cord segmentation file
+    #now we read the lesion segmentation file and the disc segmentation file
     lesion_labelled_seg = nib.load(lesion_seg_file)
-    vert_levels_seg_file = nib.load(vert_levels_seg_file)
+    disc_seg_file = nib.load(disc_seg_file)
 
-    #we get the data from the lesion segmentation file and the labelled spinal cord segmentation file
+    #we get the data from the lesion segmentation file and the disc segmentation file
     lesion_labelled_seg_data = lesion_labelled_seg.get_fdata()
-    vert_levels_seg_data = vert_levels_seg_file.get_fdata()
+    disc_seg_data = disc_seg_file.get_fdata()
 
     #get voxel size
     voxel_size = lesion_labelled_seg.header.get_zooms()
 
     #the levels are the integer unique values without 0
-    levels = np.unique(vert_levels_seg_data)
+    levels = np.unique(disc_seg_data)
     levels = levels[levels != 0]
 
     #we iterate over the levels
     for i in range(len(levels)-1):
         #get upper bound of level
-        upper_bound = np.where(vert_levels_seg_data == levels[i])
+        upper_bound = np.where(disc_seg_data == levels[i])
         upper_bound = int(upper_bound[1])
         #get lower bound of level
-        lower_bound = np.where(vert_levels_seg_data == levels[i+1])
+        lower_bound = np.where(disc_seg_data == levels[i+1])
         lower_bound = int(lower_bound[1])
 
         #initialize the lesion_info_per_levels dictionary
@@ -171,7 +179,7 @@ def analyse_lesion_per_levels(patient_data, dataset_path, output_folder):
     return patient_data
 
 
-def analyze_patient_lesion(patient_data, dataset_path, output_folder):
+def analyze_patient_lesion(patient_data, lesion_path, timepoint, output_folder):
     """
     This function analyzes the lesions of a patient using the sct_analyse_lesions.
     It gathers information on the number of lesions, their volumes, their lengths and their equivalent diameters.
@@ -188,14 +196,14 @@ def analyze_patient_lesion(patient_data, dataset_path, output_folder):
     participant_id = patient_data["participant_id"]
 
     #now we find the lesion segmentation file and the spinal cord segmentation file
-    lesion_file_PISR = os.path.join(dataset_path,"derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_lesion-manual.nii.gz")
+    lesion_file_PISR = os.path.join(lesion_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_PSIR_lesion-manual.nii.gz")
     if os.path.exists(lesion_file_PISR):
         lesion_seg_file = lesion_file_PISR
-        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_seg-manual.nii.gz")
+        sc_seg_file = os.path.join(lesion_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint + "_PSIR_seg-manual.nii.gz")
     else:
         # If PSIR doesn't exist, use STIR
-        lesion_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_lesion-manual.nii.gz")
-        sc_seg_file = os.path.join(dataset_path, "derivatives", "labels", participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_seg-manual.nii.gz")
+        lesion_seg_file = os.path.join(lesion_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint + "_STIR_lesion-manual.nii.gz")
+        sc_seg_file = os.path.join(lesion_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint + "_STIR_seg-manual.nii.gz")
 
     #let's use sct to analyze the lesion
     output_folder = os.path.join(output_folder, "tmp", participant_id)
@@ -221,7 +229,7 @@ def analyze_patient_lesion(patient_data, dataset_path, output_folder):
     return patient_data
 
 
-def analyze_patient_tsv(participant_id, participants_tsv):
+def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     """
     This function gathers information from the participants.tsv file.
     It gathers information on each participant, their pathology (and the material used for image acquisition).
@@ -238,13 +246,13 @@ def analyze_patient_tsv(participant_id, participants_tsv):
     #sex
     patient_data["sex"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["sex"].values[0]
     #age at M0
-    patient_data["age"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["age_M0"].values[0]
+    patient_data["age"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["age_" + timepoint].values[0]
     #pathology
-    patient_data["pathology"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["pathology_M0"].values[0]
+    patient_data["pathology"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["pathology_" + timepoint].values[0]
     #phenotype_M0
-    patient_data["phenotype"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["phenotype_M0"].values[0]
+    patient_data["phenotype"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["phenotype_" + timepoint].values[0]
     #edss_M0
-    patient_data["edss"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["edss_M0"].values[0]
+    patient_data["edss"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["edss_" + timepoint].values[0]
 
     #### ------------- THE BELOW INFORMATION IS NOT USED FOR NOW -------------- ####
     # # #date_of_scan_M0
@@ -282,8 +290,12 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    # Get the path to the CanProCo dataset
+    # Get the parsed arguments
     data_path = args.data
+    lesion_path = args.lesion
+    discs_path = args.discs
+    spinal_cord_path = args.spinal_cord
+    timepoint = args.timepoint # supposed to be written like M0 or M12
 
     #build the output folder
     output_folder = args.output
@@ -302,16 +314,16 @@ def main():
     for participant in participants_tsv["participant_id"]:
 
         #analyze the patient tsv file
-        patient_data = analyze_patient_tsv(participant, participants_tsv)
+        patient_data = analyze_patient_tsv(participant, participants_tsv, timepoint)
 
         #analyze the patient lesion
-        patient_data = analyze_patient_lesion(patient_data, data_path, output_folder)
+        patient_data = analyze_patient_lesion(patient_data, lesion_path, timepoint, output_folder)
 
         #analyze the patient lesion distributions per levels
-        patient_data = analyse_lesion_per_levels(patient_data, data_path, output_folder)
+        patient_data = analyse_lesion_per_levels(patient_data, discs_path, output_folder)
 
         #analyze the patient spinal cord volume
-        patient_data = get_spinal_cord_info(patient_data, data_path)
+        patient_data = get_spinal_cord_info(patient_data, spinal_cord_path, data_path)
 
         #add the patient to the dataset
         dataframe = pd.concat([dataframe, pd.DataFrame([patient_data])], ignore_index=True)
