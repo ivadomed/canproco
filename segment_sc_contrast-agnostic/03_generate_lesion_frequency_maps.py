@@ -258,8 +258,9 @@ def main():
     participants_df = participants_df[participants_df.pathology_M0 == 'MS']
 
     # Loop across the subgroups and sites
-    for subgroup in ['MS', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high'] + \
-                    ['site_' + key for key in SITE_DCT.keys()]:
+#    for subgroup in ['MS', 'RRMS', 'PPMS', 'RIS', 'edss_low', 'edss_med', 'edss_high'] + \
+#                    ['site_' + key for key in SITE_DCT.keys()]:
+    for subgroup in ['MS', 'RRMS', 'PPMS', 'RIS']:
         path_lfm = os.path.join(path_out, 'spinalcord_LFM_' + subgroup + '.nii.gz')
         path_lfm_cst = os.path.join(path_out, 'spinalcord_LFM_' + subgroup + '_CST.nii.gz')
         if subgroup == 'MS':
