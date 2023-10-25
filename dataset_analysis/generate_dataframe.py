@@ -9,6 +9,7 @@ Args:
     --discs : path to the vertebral levels segmentation file
     --spinal-cord : path to the spinal cord segmentation file
     --timepoint : timepoint of the analysis (M0, M12)
+    --include-file : a .yml file containing the list of participants to include
     --output : path to the output folder
 
 Returns:
@@ -31,6 +32,7 @@ import json
 import shutil
 import nibabel as nib
 import numpy as np
+import yaml
 
 
 def get_parser():
@@ -49,12 +51,13 @@ def get_parser():
     parser.add_argument('--discs', type=str, help='path to the vertebral levels segmentation file')
     parser.add_argument('--spinal-cord', type=str, help='path to the spinal cord segmentation file')
     parser.add_argument('--timepoint', '-t', type=str, help='timepoint of the analysis (M0, M12)')
+    parser.add_argument('--include-file', '-e', type=str, help='a .yml file containing the list of participants to include')
     parser.add_argument('--output', '-o', type=str, help='path to the output folder')
 
     return parser
 
 
-def get_spinal_cord_info(patient_data, spinal_cord_path, dataset_path):
+def get_spinal_cord_info(patient_data, spinal_cord_path, timepoint):
     """This functions computes the volume of the spinal cord for each patient.
     The volume is added to the patient_data dictionary.
     
@@ -70,10 +73,10 @@ def get_spinal_cord_info(patient_data, spinal_cord_path, dataset_path):
     participant_id = patient_data["participant_id"]
 
     #now we find the spinal cord segmentation file
-    sc_seg_file = os.path.join(spinal_cord_path, participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_seg-manual.nii.gz")
+    sc_seg_file = os.path.join(spinal_cord_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_PSIR_seg-manual.nii.gz")
     if not os.path.exists(sc_seg_file):
         # If PSIR doesn't exist, use STIR
-        sc_seg_file = os.path.join(spinal_cord_path, participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_seg-manual.nii.gz")
+        sc_seg_file = os.path.join(spinal_cord_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_STIR_seg-manual.nii.gz")
     
     #now we read the spinal cord segmentation file
     sc_seg = nib.load(sc_seg_file)
@@ -89,7 +92,7 @@ def get_spinal_cord_info(patient_data, spinal_cord_path, dataset_path):
     return patient_data
 
 
-def analyse_lesion_per_levels(patient_data, discs_path, output_folder):
+def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder):
     """
     This function focuses on lesions per spinal cord levels.
     It computes the number, volume and average length of lesions per spinal cord level.
@@ -108,18 +111,23 @@ def analyse_lesion_per_levels(patient_data, discs_path, output_folder):
     output_folder = os.path.join(output_folder, "tmp", participant_id)
 
     #now we find the labelled lesion segmentation file (it was created at the previous step with sct_analyze lesions) and the disc levels segmentation file
-    lesion_file_PSIR = os.path.join(output_folder, f"{participant_id}_ses-M0_PSIR_lesion-manual_label.nii.gz")
+    lesion_file_PSIR = os.path.join(output_folder, f"{participant_id}_ses-" + timepoint+ "_PSIR_lesion-manual_label.nii.gz")
     if os.path.exists(lesion_file_PSIR):
         #if PSIR exists, use PSIR
         lesion_seg_file = lesion_file_PSIR
-        disc_seg_file = os.path.join(discs_path, participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_PSIR_labels-disc.nii.gz")
+        disc_seg_file = os.path.join(discs_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_PSIR_labels-disc.nii.gz")
     else:
         # If PSIR doesn't exist, use STIR
-        lesion_seg_file = os.path.join(output_folder, f"{participant_id}_ses-M0_STIR_lesion-manual_label.nii.gz")
-        disc_seg_file = os.path.join(discs_path, participant_id, "ses-M0", "anat", f"{participant_id}_ses-M0_STIR_labels-disc.nii.gz")
+        lesion_seg_file = os.path.join(output_folder, f"{participant_id}_ses-" + timepoint+ "_STIR_lesion-manual_label.nii.gz")
+        disc_seg_file = os.path.join(discs_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_STIR_labels-disc.nii.gz")
     
     #now we read the lesion segmentation file and the disc segmentation file
     lesion_labelled_seg = nib.load(lesion_seg_file)
+    
+    #we check if the lesion segmentation file is empty
+    if np.sum(lesion_labelled_seg.get_fdata()) == 0:
+        return patient_data
+
     disc_seg_file = nib.load(disc_seg_file)
 
     #we get the data from the lesion segmentation file and the disc segmentation file
@@ -165,7 +173,9 @@ def analyse_lesion_per_levels(patient_data, discs_path, output_folder):
                 total_lesion_volume_in_level += volume_of_lesion
                 avg_lesion_length_in_level += length_of_lesion
 
-        #compute the average vertical length
+        #compute the average vertical length and volume
+        avg_lesion_length_in_level = 0
+        avg_lesion_volume_in_level = 0
         if nb_lesions_in_level != 0:
             avg_lesion_length_in_level = avg_lesion_length_in_level/nb_lesions_in_level
             avg_lesion_volume_in_level = total_lesion_volume_in_level/nb_lesions_in_level
@@ -213,6 +223,12 @@ def analyze_patient_lesion(patient_data, lesion_path, timepoint, output_folder):
     output_file = str(lesion_seg_file).split('/')[-1].replace('.nii.gz', '_analysis.xls')
     output_file = os.path.join(output_folder, output_file)
     data = pd.read_excel(output_file)
+    
+    #we check if the data is empty
+    if data.empty:
+        #if it is empty we return the patient_data dictionary
+        return patient_data
+
     number_of_lesions = max(data['label'])
     total_lesion_volume = sum(data['volume [mm3]'])
     biggest_lesion_vol = max(data['volume [mm3]'])
@@ -248,11 +264,11 @@ def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     #age at M0
     patient_data["age"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["age_" + timepoint].values[0]
     #pathology
-    patient_data["pathology"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["pathology_" + timepoint].values[0]
+    patient_data["pathology"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["pathology_M0"].values[0]
     #phenotype_M0
-    patient_data["phenotype"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["phenotype_" + timepoint].values[0]
+    patient_data["phenotype"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["phenotype_M0"].values[0]
     #edss_M0
-    patient_data["edss"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["edss_" + timepoint].values[0]
+    patient_data["edss"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["edss_M0"].values[0]
 
     #### ------------- THE BELOW INFORMATION IS NOT USED FOR NOW -------------- ####
     # # #date_of_scan_M0
@@ -271,7 +287,6 @@ def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     # patient_data["software_versions"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["software_versions_M0"].values[0]
     #### ------------- ------------------------------------------ -------------- ####
     
-
     return patient_data
 
 
@@ -297,6 +312,13 @@ def main():
     spinal_cord_path = args.spinal_cord
     timepoint = args.timepoint # supposed to be written like M0 or M12
 
+    #exclude some participants (list is like this [sub-mon118, sub-mon006])
+    include_list = []
+    if args.include_file is not None:
+       with open(args.include_file, 'r') as file:
+            include_list = yaml.load(file, Loader=yaml.FullLoader)
+
+
     #build the output folder
     output_folder = args.output
     if not os.path.isdir(output_folder):
@@ -313,6 +335,10 @@ def main():
     #iterate over participant_id
     for participant in participants_tsv["participant_id"]:
 
+        # We skip the participant if it is in the exclude list
+        if participant not in include_list:
+            continue
+
         #analyze the patient tsv file
         patient_data = analyze_patient_tsv(participant, participants_tsv, timepoint)
 
@@ -320,18 +346,19 @@ def main():
         patient_data = analyze_patient_lesion(patient_data, lesion_path, timepoint, output_folder)
 
         #analyze the patient lesion distributions per levels
-        patient_data = analyse_lesion_per_levels(patient_data, discs_path, output_folder)
+        patient_data = analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder)
 
         #analyze the patient spinal cord volume
-        patient_data = get_spinal_cord_info(patient_data, spinal_cord_path, data_path)
+        patient_data = get_spinal_cord_info(patient_data, spinal_cord_path, timepoint)
 
         #add the patient to the dataset
         dataframe = pd.concat([dataframe, pd.DataFrame([patient_data])], ignore_index=True)
-
-    print(dataframe)
+    
+        print(dataframe)
+        for col in dataframe.columns:
+            print(dataframe[col])
     #save the dataset in the output folder
     dataframe.to_csv(os.path.join(output_folder, 'dataframe.csv'), index=False)
-
 
 
 if __name__ == '__main__':
