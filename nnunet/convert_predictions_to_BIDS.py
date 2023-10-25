@@ -95,10 +95,13 @@ def main():
                 if not os.path.isdir(output_subject_path):
                     os.makedirs(output_subject_path)
                 # and the new name
-                new_name = subject_full.split('.')[0] + '_pred.nii.gz'
-                
-                #we copy the file to the corresponding folder and rename it
-                shutil.copy(pred, os.path.join(output_subject_path, new_name))
+                new_name_lesion = subject_full.split('.')[0] + '_lesion-manual.nii.gz'
+                new_name_sc = subject_full.split('.')[0] + '_seg-manual.nii.gz'
+
+                #we binarize the file in the case of the lesion and save it at the new location
+                os.system(f"seg_maths -i {pred} -bin 1.1 -o {os.path.join(output_subject_path, new_name_lesion)}")
+                #we binarize the file in the case of the spinal cord and save it at the new location
+                os.system(f"seg_maths -i {pred} -bin 0 -o {os.path.join(output_subject_path, new_name_sc)}")
     
     return None
 
