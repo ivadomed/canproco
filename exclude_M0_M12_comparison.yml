@@ -114,6 +114,7 @@
 - sub-mon108_ses-M0
 - sub-mon109_ses-M0
 - sub-mon139_ses-M0
+- sub-mon163_ses-M0 # parent folder exist, missing only PSIR contrast
 - sub-mon180_ses-M0
 - sub-mon181_ses-M0
 - sub-tor004_ses-M0
