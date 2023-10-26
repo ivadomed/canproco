@@ -257,7 +257,7 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
         bottom_of_lesion = np.min(lesion_voxel[1])
         length_of_lesion = (top_of_lesion - bottom_of_lesion)*voxel_size_y
         #if lesion center is between upper and lower bound, then it is in the level
-        if center_of_lesion[1]*voxel_size_y[1] <= upper_bound:
+        if center_of_lesion[1]*voxel_size_y <= upper_bound:
             nb_lesions_after_last += 1
             total_lesion_volume_after_last += volume_of_lesion
             lesion_length_after_last += length_of_lesion
