@@ -89,6 +89,13 @@ def get_parser():
         help='Path to the output folder where LFM will be saved. Example: /results'
     )
     parser.add_argument(
+        '-session',
+        metavar="<str>",
+        required=True,
+        type=str,
+        help='Session. Example: M0 or M12',
+    )
+    parser.add_argument(
         '-lesion-suffix',
         metavar="<str>",
         required=False,
@@ -165,13 +172,14 @@ def mask_CST(fname_LFM, fname_LFM_CST, mask_lst):
     img_cst.save(fname_LFM_CST)
 
 
-def generate_LFM(path_data, df, fname_out, fname_out_cst, lesion_suffix, seg_suffix):
+def generate_LFM(path_data, df, fname_out, fname_out_cst, session, lesion_suffix, seg_suffix):
     """
     Generate the LFM (Lesion Frequency Map)
     :param path_data: path to the folder with processed MRI data
     :param df: dataframe with participant_id and institution_id_M0 columns
     :param fname_out: output file name
     :param fname_out_cst: output file name for CST
+    :param session: session, e.g. M0 or M12
     :param lesion_suffix: lesion mask suffix
     :param seg_suffix: spinal cord mask suffix
     """
@@ -191,13 +199,13 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst, lesion_suffix, seg_suf
         participant_id = row.participant_id
 
         # Construct path to subject folder with lesion and SC masks in PAM50 space
-        path_subject = os.path.join(path_data, participant_id, 'ses-M0', 'anat')
+        path_subject = os.path.join(path_data, participant_id, session, 'anat')
         # Lesion in PAM50 space
         lesion_path = os.path.join(path_subject,
-                                   f'{participant_id}_ses-M0_{SITE_DCT[row.institution_id_M0]}_{lesion_suffix}')
+                                   f'{participant_id}_{session}_{SITE_DCT[row.institution_id_M0]}_{lesion_suffix}')
         # Spinal cord in PAM50 space
         cord_path = os.path.join(path_subject,
-                                 f'{participant_id}_ses-M0_{SITE_DCT[row.institution_id_M0]}_{seg_suffix}')
+                                 f'{participant_id}_{session}_{SITE_DCT[row.institution_id_M0]}_{seg_suffix}')
 
         if os.path.isfile(lesion_path) and os.path.isfile(cord_path):
             subject_count += 1
@@ -239,8 +247,11 @@ def main():
     lesion_suffix = args.lesion_suffix
     seg_suffix = args.seg_suffix
 
+    session = args.session
+
     path_participants_tsv = args.participants_tsv
     # Read the participants.tsv file
+    # TODO: update pathology_M0, phenotype_M0, and edss_M0 columns to M12 once we have this information
     participants_df = pd.read_csv(path_participants_tsv, sep='\t',
                                   usecols=['participant_id', 'institution_id_M0', 'pathology_M0', 'phenotype_M0',
                                            'edss_M0'])
@@ -282,7 +293,7 @@ def main():
 
         if not os.path.isfile(path_lfm) or not os.path.isfile(path_lfm_cst):
             logger.info(f'\nGenerating the LFM for {subgroup}.')
-            generate_LFM(path_folder, lfm_df, path_lfm, path_lfm_cst, lesion_suffix, seg_suffix)
+            generate_LFM(path_folder, lfm_df, path_lfm, path_lfm_cst, session, lesion_suffix, seg_suffix)
 
 
 if __name__ == "__main__":
