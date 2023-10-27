@@ -138,7 +138,7 @@ def load_PAM50_gm():
     Load PAM50 grey matter mask
     """
     path_template = os.path.join(os.environ.get('SCT_DIR'), 'data', 'PAM50', 'template')
-    data = load_data(os.path.join(path_template, 'PAM50_gm.nii.gz'), thr_bin=0.85)
+    data = load_data(os.path.join(path_template, 'PAM50_gm.nii.gz'), thr_bin=0.7)
 
     return data
 
