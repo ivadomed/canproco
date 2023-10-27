@@ -151,6 +151,101 @@ def load_PAM50_gm():
     return data
 
 
+def create_axial_png(backgroud, lfm, thr, lfm_path, ofolder, include_gm):
+    """
+    Create axial png images from the LFM. The images are saved in the ofolder.
+    One image is created for vertebral level.
+    :param backgroud: background image (PAM50_t2)
+    :param lfm: LFM
+    :param thr: threshold for the LFM, e.g. 0.15 (meaning 15%)
+    :param lfm_path: path to the LFM, used to create the output file name
+    :param ofolder: path to the output folder
+    :param include_gm: include PAM50 gray matter contour in the output images
+    """
+    x_shape, y_shape, z_shape = backgroud.shape
+    x_mean, y_mean = x_shape // 2, y_shape // 2
+    # PAM50_t2
+    backgroud = backgroud[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
+    # LFM
+    lfm = lfm[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
+
+    if include_gm:
+        gm_mask = load_PAM50_gm()
+        gm_mask = gm_mask[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
+
+    path_pam50_disc = os.path.join(os.environ.get('SCT_DIR'), 'data', 'PAM50', 'template', 'PAM50_label_disc.nii.gz')
+    img_lvl = Image(path_pam50_disc)
+    data_lvl = img_lvl.data
+    del img_lvl
+
+    lvl_z_lst = [np.where(data_lvl == lvl)[2][0] for lvl in np.unique(data_lvl) if lvl in range(1, 9)]
+
+    lfm_lst, bkg_lst, gm_lst = [], [], []
+    # Loop across vertebral levels
+    for lvl_idx in range(len(lvl_z_lst) - 1):
+        # Get min top and bottom slices for current level
+        z_bot, z_top = lvl_z_lst[lvl_idx + 1], lvl_z_lst[lvl_idx] + 1
+        # Compute middle slice for current level
+        z_mid_lvl = (z_top + z_bot) // 2
+        # Average LFM across slices for current level
+        lfm_lst.append(np.mean(lfm[:, :, z_bot:z_top], axis=2))
+        # Get middle slice for background (PAM50_t2)
+        bkg_lst.append(backgroud[:, :, z_mid_lvl])
+        if include_gm:
+            gm_lst.append(gm_mask[:, :, z_mid_lvl])
+    # Construct list of of vert levels C1-C7
+    pref_lst = ['C' + str(i) for i in range(1, 8)]
+
+    if include_gm:
+        for img_cur, bkg_cur, gm_cur, pref_cur in zip(lfm_lst, bkg_lst, gm_lst, pref_lst):
+            fname_out_cur = os.path.join(ofolder, lfm_path.split('/')[-1].replace('.nii.gz', '_' + pref_cur + '.png'))
+            combine_img_w_bkg(img_cur, bkg_cur, gm_cur, rescale=4, thr=thr, fname_out=fname_out_cur)
+    else:
+        for img_cur, bkg_cur, pref_cur in zip(lfm_lst, bkg_lst, pref_lst):
+            fname_out_cur = os.path.join(ofolder, lfm_path.split('/')[-1].replace('.nii.gz', '_' + pref_cur + '.png'))
+            combine_img_w_bkg(img_cur, bkg_cur, gm=None, rescale=4, thr=thr, fname_out=fname_out_cur)
+
+
+def create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder, include_gm):
+    """
+    Create a single sagittal png image from the LFM. The image is saved in the ofolder.
+    :param backgroud: background image (PAM50_t2)
+    :param lfm: LFM
+    :param thr: threshold for the LFM, e.g. 0.15 (meaning 15%)
+    :param lfm_path: path to the LFM, used to create the output file name
+    :param ofolder: path to the output folder
+    :param include_gm: include PAM50 gray matter contour in the output image
+    """
+    x_shape, y_shape, z_shape = backgroud.shape
+    y_mean, z_mean = y_shape // 2, z_shape // 2
+    # PAM50_t2
+    backgroud = backgroud[:, y_mean - 50:y_mean + 50, 700:990]
+
+    # Include gray matter contour
+    if include_gm:
+        gm_mask = load_PAM50_gm()
+        gm_mask = gm_mask[:, y_mean - 50:y_mean + 50, 700:990]
+        # Get middle sagittal slice
+        # Note: 70 corresponds to the middle PAM50sagittal slice
+        gm = gm_mask[70, :, :]
+    else:
+        gm = None
+
+    # Get middle sagittal slice for background (PAM50_t2)
+    # Note: 70 corresponds to the middle PAM50sagittal slice
+    bkg = backgroud[70, :, :]
+
+    # LFM
+    # Get non-zero in the first dimension (sagittal)
+    lfm = lfm[np.where(np.sum(lfm, axis=(1, 2)) != 0)[0], :, :]
+    lfm = lfm[:, y_mean - 50:y_mean + 50, 700:990]
+    # Average the sagittal slices
+    lfm = np.mean(lfm, axis=0)
+
+    fname_out = os.path.join(ofolder, lfm_path.split('/')[-1].replace('.nii.gz', '_sagittal.png'))
+    combine_img_w_bkg(lfm, bkg, gm=gm, rescale=4, thr=thr, fname_out=fname_out)
+
+
 def main():
     # Parse the command line arguments
     parser = get_parser()
@@ -171,41 +266,9 @@ def main():
     img_pam50_t2 = Image(path_pam50_t2)
     backgroud = img_pam50_t2.data
     del img_pam50_t2
-    x_shape, y_shape, z_shape = backgroud.shape
-    x_mean, y_mean = x_shape // 2, y_shape // 2
-    # PAM50_t2
-    backgroud = backgroud[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
-    # LFM
-    img = img[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
 
-    gm_mask = load_PAM50_gm()
-    gm_mask = gm_mask[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
-
-    path_pam50_disc = os.path.join(os.environ.get('SCT_DIR'), 'data', 'PAM50', 'template', 'PAM50_label_disc.nii.gz')
-    img_lvl = Image(path_pam50_disc)
-    data_lvl = img_lvl.data
-    del img_lvl
-
-    lvl_z_lst = [np.where(data_lvl == lvl)[2][0] for lvl in np.unique(data_lvl) if lvl in range(1, 9)]
-
-    img_lst, bkg_lst, gm_lst = [], [], []
-    # Loop across vertebral levels
-    for lvl_idx in range(len(lvl_z_lst) - 1):
-        # Get min top and bottom slices for current level
-        z_bot, z_top = lvl_z_lst[lvl_idx + 1], lvl_z_lst[lvl_idx] + 1
-        # Compute middle slice for current level
-        z_mid_lvl = (z_top + z_bot) // 2
-        # Average LFM across slices for current level
-        img_lst.append(np.mean(img[:, :, z_bot:z_top], axis=2))
-        # Get middle slice for background (PAM50_t2)
-        bkg_lst.append(backgroud[:, :, z_mid_lvl])
-        gm_lst.append(gm_mask[:, :, z_mid_lvl])
-    # Construct list of of vert levels C1-C7
-    pref_lst = ['C' + str(i) for i in range(1, 8)]
-
-    for img_cur, bkg_cur, gm_cur, pref_cur in zip(img_lst, bkg_lst, gm_lst, pref_lst):
-        fname_out_cur = os.path.join(ofolder, lfm_path.split('/')[-1].replace('.nii.gz', '_' + pref_cur + '.png'))
-        combine_img_w_bkg(img_cur, bkg_cur, gm_cur, rescale=4, thr=thr, fname_out=fname_out_cur)
+    create_axial_png(backgroud, lfm, thr, lfm_path, ofolder, args.include_gm)
+    create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder, args.include_gm)
 
     # Save colormap
     save_colormap(os.path.join(ofolder, 'jet_0_' + str(int(thr * 100)) + '.png'))
