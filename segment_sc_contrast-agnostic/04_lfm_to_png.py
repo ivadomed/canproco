@@ -149,7 +149,7 @@ def main():
     args = parser.parse_args()
 
     lfm_path = args.lfm_path
-    thr = float(args.thr)
+    thr = float(args.thr)       # max value for colormap, e.g., 15%
     ofolder = args.ofolder
 
     if not os.path.isdir(ofolder):
