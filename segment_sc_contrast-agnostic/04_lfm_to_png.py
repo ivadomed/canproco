@@ -152,6 +152,9 @@ def main():
     thr = float(args.thr)
     ofolder = args.ofolder
 
+    if not os.path.isdir(ofolder):
+        os.makedirs(ofolder)
+
     img_img = Image(lfm_path).change_orientation('RPI')
     img = img_img.data
     del img_img
@@ -190,14 +193,9 @@ def main():
     # Construct list of of vert levels C1-C7
     pref_lst = ['C' + str(i) for i in range(1, 8)]
 
-    linewidth = 10
-
-    if not os.path.isdir(ofolder):
-        os.makedirs(ofolder)
-
     for img_cur, bkg_cur, gm_cur, pref_cur in zip(img_lst, bkg_lst, gm_lst, pref_lst):
         fname_out_cur = os.path.join(ofolder, lfm_path.split('/')[-1].replace('.nii.gz', '_' + pref_cur + '.png'))
-        combine_img_w_bkg(img_cur, bkg_cur, gm_cur, rescale=4, thr=thr, fname_out=fname_out_cur, linewidth=linewidth)
+        combine_img_w_bkg(img_cur, bkg_cur, gm_cur, rescale=4, thr=thr, fname_out=fname_out_cur)
 
     # Save colormap
     save_colormap(os.path.join(ofolder, 'jet_0_' + str(int(thr * 100)) + '.png'))
