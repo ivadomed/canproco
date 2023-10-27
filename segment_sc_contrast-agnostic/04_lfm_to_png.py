@@ -112,9 +112,7 @@ def combine_img_w_bkg(img, bkg, gm, rescale, thr, fname_out, linewidth=4):
     # Include GM contour
     if gm is not None:
         gm = rescale_rot(gm, rescale)
-        #print(np.unique(gm))
         gm_dilated = binary_dilation(gm)
-        #print(np.unique(gm))
         contours = find_contours(gm_dilated, .5)
         for n, contour in enumerate(contours):
             plt.plot(contour[:, 1], contour[:, 0], 'white', linewidth=linewidth)
