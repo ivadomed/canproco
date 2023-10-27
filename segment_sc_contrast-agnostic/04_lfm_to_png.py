@@ -1,5 +1,7 @@
 """
-Generate axial png images from the Lesion Frequency Maps (LFM) for each vertebral level.
+From  the Lesion Frequency Map (LFM), generate:
+    - axial png images for each vertebral level (average across axial slices for each vertebral level)
+    - a single sagittal png image (average across sagittal slices)
 
 The script requires the SCT conda environment to be activated:
     source ${SCT_DIR}/python/etc/profile.d/conda.sh
@@ -25,7 +27,7 @@ def get_parser():
     """
 
     parser = argparse.ArgumentParser(
-        description='Generate axial png images from the Lesion Frequency Maps (LFM).',
+        description='Generate sagittal and axial png images from the Lesion Frequency Map (LFM).',
         prog=os.path.basename(__file__).strip('.py')
     )
     parser.add_argument(
