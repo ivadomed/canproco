@@ -40,7 +40,7 @@ def get_parser():
         metavar="<file>",
         required=False,
         type=str,
-        help='Threshold for the LFM in range of 0-1. Default: 0.1 (meaning 10%)',
+        help='Threshold for the LFM in range of 0-1. Default: 0.15 (meaning 15%)',
         default=0.1
     )
     parser.add_argument(
