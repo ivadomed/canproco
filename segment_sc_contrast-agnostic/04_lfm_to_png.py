@@ -119,7 +119,7 @@ def combine_img_w_bkg(img, bkg, gm, rescale, thr, fname_out, linewidth=4):
         for n, contour in enumerate(contours):
             plt.plot(contour[:, 1], contour[:, 0], 'black', linewidth=linewidth // 2)
 
-    plt.savefig(fname_out, dpi=800)
+    plt.savefig(fname_out, dpi=300)
     plt.close()
     print('Saved: ' + fname_out)
 
