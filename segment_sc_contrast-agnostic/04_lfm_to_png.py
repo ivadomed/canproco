@@ -159,10 +159,10 @@ def main():
     img = img_img.data
     del img_img
 
-    path_pam50 = os.path.join(os.environ.get('SCT_DIR'), 'data', 'PAM50', 'template', 'PAM50_t2.nii.gz')
-    img_background = Image(path_pam50)
-    backgroud = img_background.data
-    del img_background
+    path_pam50_t2 = os.path.join(os.environ.get('SCT_DIR'), 'data', 'PAM50', 'template', 'PAM50_t2.nii.gz')
+    img_pam50_t2 = Image(path_pam50_t2)
+    backgroud = img_pam50_t2.data
+    del img_pam50_t2
     x_shape, y_shape, z_shape = backgroud.shape
     x_mean, y_mean = x_shape // 2, y_shape // 2
     backgroud = backgroud[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
