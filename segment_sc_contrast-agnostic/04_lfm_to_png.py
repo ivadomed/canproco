@@ -165,7 +165,9 @@ def main():
     del img_pam50_t2
     x_shape, y_shape, z_shape = backgroud.shape
     x_mean, y_mean = x_shape // 2, y_shape // 2
+    # PAM50_t2
     backgroud = backgroud[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
+    # LFM
     img = img[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
 
     gm_mask = load_PAM50_gm()
