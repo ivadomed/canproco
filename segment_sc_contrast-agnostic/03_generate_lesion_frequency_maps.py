@@ -250,7 +250,7 @@ def main():
     lesion_suffix = args.lesion_suffix
     seg_suffix = args.seg_suffix
 
-    session = args.session
+    session = 'ses' + args.session
 
     path_participants_tsv = args.participants_tsv
     # Read the participants.tsv file
