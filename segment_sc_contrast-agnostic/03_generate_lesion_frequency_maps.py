@@ -215,6 +215,9 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst, session, lesion_suffix
         else:
             logger.warning(f'Lesion or spinal cord mask not found for {participant_id}')
 
+    # Include number of subjects in fname_out
+    fname_out = fname_out.replace('.nii.gz', f'_{subject_count}.nii.gz')
+
     # Calculate the LFM (in %) by dividing the sum of lesions by the sum of the spinal cords
     os.system('sct_maths'
               ' -i ' + fname_out_lesion +
@@ -223,7 +226,7 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst, session, lesion_suffix
 
     clean_LFM(fname_out, pam50_cord, pam50_lvl)
     mask_CST(fname_out, fname_out_cst, [os.path.join(path_pam50, 'atlas', t) for t in TRACTS_LST])
-    logger.info(f'LFM generated for {subject_count} subjects')
+    logger.info(f'{fname_out} generated for {subject_count} subjects')
 
 
 def main():
