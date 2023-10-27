@@ -155,9 +155,9 @@ def main():
     if not os.path.isdir(ofolder):
         os.makedirs(ofolder)
 
-    img_img = Image(lfm_path).change_orientation('RPI')
-    img = img_img.data
-    del img_img
+    img_lfm = Image(lfm_path).change_orientation('RPI')
+    lfm = img_lfm.data
+    del img_lfm
 
     path_pam50_t2 = os.path.join(os.environ.get('SCT_DIR'), 'data', 'PAM50', 'template', 'PAM50_t2.nii.gz')
     img_pam50_t2 = Image(path_pam50_t2)
