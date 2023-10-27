@@ -49,7 +49,7 @@ def get_parser():
         '-include-gm',
         required=False,
         action='store_true',
-        help='Include PAM50 gray matter contour in the output images.'
+        help='Include PAM50 gray matter contour in the output axial images.'
     )
     parser.add_argument(
         '-ofolder',
@@ -206,7 +206,7 @@ def create_axial_png(backgroud, lfm, thr, lfm_path, ofolder, include_gm):
             combine_img_w_bkg(img_cur, bkg_cur, gm=None, rescale=4, thr=thr, fname_out=fname_out_cur)
 
 
-def create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder, include_gm):
+def create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder):
     """
     Create a single sagittal png image from the LFM. The image is saved in the ofolder.
     :param backgroud: background image (PAM50_t2)
@@ -214,22 +214,11 @@ def create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder, include_gm):
     :param thr: threshold for the LFM, e.g. 0.15 (meaning 15%)
     :param lfm_path: path to the LFM, used to create the output file name
     :param ofolder: path to the output folder
-    :param include_gm: include PAM50 gray matter contour in the output image
     """
     x_shape, y_shape, z_shape = backgroud.shape
     y_mean, z_mean = y_shape // 2, z_shape // 2
     # PAM50_t2
     backgroud = backgroud[:, y_mean - 50:y_mean + 50, 700:990]
-
-    # Include gray matter contour
-    if include_gm:
-        gm_mask = load_PAM50_gm()
-        gm_mask = gm_mask[:, y_mean - 50:y_mean + 50, 700:990]
-        # Get middle sagittal slice
-        # Note: 70 corresponds to the middle PAM50sagittal slice
-        gm = gm_mask[70, :, :]
-    else:
-        gm = None
 
     # Get middle sagittal slice for background (PAM50_t2)
     # Note: 70 corresponds to the middle PAM50sagittal slice
@@ -243,7 +232,7 @@ def create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder, include_gm):
     lfm = np.mean(lfm, axis=0)
 
     fname_out = os.path.join(ofolder, lfm_path.split('/')[-1].replace('.nii.gz', '_sagittal.png'))
-    combine_img_w_bkg(lfm, bkg, gm=gm, rescale=4, thr=thr, fname_out=fname_out)
+    combine_img_w_bkg(lfm, bkg, gm=None, rescale=4, thr=thr, fname_out=fname_out)
 
 
 def main():
@@ -268,7 +257,7 @@ def main():
     del img_pam50_t2
 
     create_axial_png(backgroud, lfm, thr, lfm_path, ofolder, args.include_gm)
-    create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder, args.include_gm)
+    create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder)
 
     # Save colormap
     save_colormap(os.path.join(ofolder, 'jet_0_' + str(int(thr * 100)) + '.png'))
