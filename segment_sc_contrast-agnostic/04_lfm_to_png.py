@@ -44,6 +44,12 @@ def get_parser():
         default=0.1
     )
     parser.add_argument(
+        '-include-gm',
+        required=False,
+        action='store_true',
+        help='Include PAM50 gray matter contour in the output images.'
+    )
+    parser.add_argument(
         '-ofolder',
         metavar="<folder>",
         required=True,
@@ -94,7 +100,6 @@ def combine_img_w_bkg(img, bkg, gm, rescale, thr, fname_out, linewidth=4):
     img_out[i_nonzero] = img_jet[i_nonzero]
 
     img_out = rescale_rot(img_out, rescale)
-    gm = rescale_rot(gm, rescale)
 
     ratio_shape = img_out.shape[0] * 1. / img_out.shape[1]
     plt.figure(figsize=(10, 10 * ratio_shape))
@@ -102,14 +107,17 @@ def combine_img_w_bkg(img, bkg, gm, rescale, thr, fname_out, linewidth=4):
     plt.axis("off")
     plt.imshow(img_out, interpolation='nearest', aspect='auto')
 
-    #print(np.unique(gm))
-    gm_dilated = binary_dilation(gm)
-    #print(np.unique(gm))
-    contours = find_contours(gm_dilated, .5)
-    for n, contour in enumerate(contours):
-        plt.plot(contour[:, 1], contour[:, 0], 'white', linewidth=linewidth)
-    for n, contour in enumerate(contours):
-        plt.plot(contour[:, 1], contour[:, 0], 'black', linewidth=linewidth // 2)
+    # Include GM contour
+    if gm is not None:
+        gm = rescale_rot(gm, rescale)
+        #print(np.unique(gm))
+        gm_dilated = binary_dilation(gm)
+        #print(np.unique(gm))
+        contours = find_contours(gm_dilated, .5)
+        for n, contour in enumerate(contours):
+            plt.plot(contour[:, 1], contour[:, 0], 'white', linewidth=linewidth)
+        for n, contour in enumerate(contours):
+            plt.plot(contour[:, 1], contour[:, 0], 'black', linewidth=linewidth // 2)
 
     plt.savefig(fname_out, dpi=800)
     plt.close()
