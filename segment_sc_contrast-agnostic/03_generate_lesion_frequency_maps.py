@@ -59,7 +59,8 @@ def get_parser():
         metavar="<file>",
         required=True,
         type=str,
-        help='Path to the folder with processed MRI data. Example: /data_processed'
+        help='Path to the folder with processed MRI data. The script expects lesion and spinal cord segmentations '
+             'registered to the PAM50 template. Example: /data_processed'
     )
     parser.add_argument(
         '-participants-tsv',
