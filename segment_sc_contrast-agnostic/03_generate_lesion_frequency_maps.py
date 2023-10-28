@@ -71,17 +71,6 @@ def get_parser():
              'Example: canproco/participants.tsv'
     )
     parser.add_argument(
-        '-exclude-yml',
-        metavar="<file>",
-        required=True,
-        type=str,
-        help='Path to the exclude.yml file containing the list of subjects to exclude. '
-             'Example: canproco/exclude.yml '
-             '\nExample format: '
-                '\n\t# PSIR '
-                '\n\t  - sub-001 '
-    )
-    parser.add_argument(
         '-ofolder',
         metavar="<folder>",
         required=True,
@@ -94,6 +83,17 @@ def get_parser():
         required=True,
         type=str,
         help='Session. Example: M0 or M12',
+    )
+    parser.add_argument(
+        '-exclude-yml',
+        metavar="<file>",
+        required=False,
+        type=str,
+        help='Path to the exclude.yml file containing subjects to exclude. '
+             'Example: canproco/exclude.yml '
+             '\nExample format: '
+                '\n\t# PSIR '
+                '\n\t  - sub-001 '
     )
     parser.add_argument(
         '-lesion-suffix',
@@ -259,17 +259,19 @@ def main():
                                   usecols=['participant_id', 'institution_id_M0', 'pathology_M0', 'phenotype_M0',
                                            'edss_M0'])
 
-    path_exclude_yml = args.exclude_yml
-    # Read the exclude.yml file
-    with open(path_exclude_yml, 'r') as stream:
-        exclude_list = yaml.safe_load(stream)
-    # Remove 'ses-M0' from the exclude list
-    exclude_list = [participant_id.replace('_ses-M0', '') for participant_id in exclude_list]
+    # Exclude participants if exclude_yml is provided
+    if args.exclude_yml is not None:
+        path_exclude_yml = args.exclude_yml
+        # Read the exclude.yml file
+        with open(path_exclude_yml, 'r') as stream:
+            exclude_list = yaml.safe_load(stream)
+        # Remove 'ses-M0' from the exclude list
+        exclude_list = [participant_id.replace('_ses-M0', '') for participant_id in exclude_list]
 
-    print(f'Number of excluded participants: {len(exclude_list)}')
+        print(f'Number of excluded participants: {len(exclude_list)}')
 
-    # Remove participants from the exclude list
-    participants_df = participants_df[~participants_df.participant_id.isin(exclude_list)]
+        # Remove participants from the exclude list
+        participants_df = participants_df[~participants_df.participant_id.isin(exclude_list)]
 
     # Keep only participants with pathology_M0 = MS
     participants_df = participants_df[participants_df.pathology_M0 == 'MS']
