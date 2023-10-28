@@ -14,7 +14,7 @@
 # {
 #  "path_data"   : "<PATH_TO_DATASET>/canproco",
 #  "path_output" : "<PATH_TO_DATASET>/canproco_register_to_PAM50_2023-10-21",
-#  "script"      : "<PATH_TO_REPO>/canproco/segment_sc_contrast-agnostic/02_register_to_pam50.sh",
+#  "script"      : "<PATH_TO_REPO>/canproco/segment_sc_contrast-agnostic/01_register_to_pam50.sh",
 #  "jobs"        : 16,
 #  "exclude_list"     : "sub-mon118 sub-mon006 ..."
 # }
