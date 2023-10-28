@@ -218,7 +218,7 @@ def create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder):
     x_shape, y_shape, z_shape = backgroud.shape
     y_mean, z_mean = y_shape // 2, z_shape // 2
     # PAM50_t2
-    backgroud = backgroud[:, y_mean - 50:y_mean + 50, 700:990]
+    backgroud = backgroud[:, y_mean - 30:y_mean + 30, 730:970]
 
     # Get middle sagittal slice for background (PAM50_t2)
     # Note: 70 corresponds to the middle PAM50sagittal slice
@@ -227,7 +227,7 @@ def create_sagittal_png(backgroud, lfm, thr, lfm_path, ofolder):
     # LFM
     # Get non-zero in the first dimension (sagittal)
     lfm = lfm[np.where(np.sum(lfm, axis=(1, 2)) != 0)[0], :, :]
-    lfm = lfm[:, y_mean - 50:y_mean + 50, 700:990]
+    lfm = lfm[:, y_mean - 30:y_mean + 30, 730:970]
     # Average the sagittal slices
     lfm = np.mean(lfm, axis=0)
 
