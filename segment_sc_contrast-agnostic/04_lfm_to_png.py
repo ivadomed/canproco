@@ -165,13 +165,13 @@ def create_axial_png(backgroud, lfm, thr, lfm_path, ofolder, include_gm):
     x_shape, y_shape, z_shape = backgroud.shape
     x_mean, y_mean = x_shape // 2, y_shape // 2
     # PAM50_t2
-    backgroud = backgroud[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
+    backgroud = backgroud[x_mean - 25:x_mean + 25, y_mean - 20:y_mean + 20, :]
     # LFM
-    lfm = lfm[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
+    lfm = lfm[x_mean - 25:x_mean + 25, y_mean - 20:y_mean + 20, :]
 
     if include_gm:
         gm_mask = load_PAM50_gm()
-        gm_mask = gm_mask[x_mean - 25:x_mean + 25, y_mean - 25:y_mean + 25, :]
+        gm_mask = gm_mask[x_mean - 25:x_mean + 25, y_mean - 20:y_mean + 20, :]
 
     path_pam50_disc = os.path.join(os.environ.get('SCT_DIR'), 'data', 'PAM50', 'template', 'PAM50_label_disc.nii.gz')
     img_lvl = Image(path_pam50_disc)
