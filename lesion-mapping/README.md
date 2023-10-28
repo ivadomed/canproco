@@ -45,8 +45,8 @@ python 02_generate_lesion_frequency_maps.py \
 ### 3. Generate png images of the LFM
 
 From the Lesion Frequency Map (LFM), generate:
-    - axial png images for each vertebral level (average across axial slices for each vertebral level)
-    - a single sagittal png image (average across sagittal slices)
+- axial png images for each vertebral level (average across axial slices for each vertebral level)
+- a single sagittal png image (average across sagittal slices)
 
 ℹ️ The `03_lfm_to_png.py` script requires the SCT conda environment to be activated:
 ```console
