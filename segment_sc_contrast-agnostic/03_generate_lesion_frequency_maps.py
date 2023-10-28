@@ -223,6 +223,8 @@ def generate_LFM(path_data, df, fname_out, fname_out_cst, session, lesion_suffix
               ' -i ' + fname_out_lesion +
               ' -div ' + fname_out_cord +
               ' -o ' + fname_out)
+    # TODO: if there is no lesion at a given voxel, the LFM is set to zero (0). However, the background has a value
+    #  zero (0) too. Thus, when creating png images, LFM contains empty "wholes".
 
     clean_LFM(fname_out, pam50_cord, pam50_lvl)
     # mask_CST(fname_out, fname_out_cst, [os.path.join(path_pam50, 'atlas', t) for t in TRACTS_LST])
