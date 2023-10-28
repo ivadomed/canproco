@@ -7,6 +7,14 @@ The script requires the SCT conda environment to be activated:
     source ${SCT_DIR}/python/etc/profile.d/conda.sh
     conda activate venv_sct
 
+Usage:
+    python 02_generate_lesion_frequency_maps.py \
+        -ifolder canproco_register_to_PAM50_2023-10-21/data_processed \
+        -participants-tsv canproco/participants.tsv \
+        -exclude-yml exclude_M0_M12_comparison.yml \
+        -ofolder canproco_register_to_PAM50_2023-10-21/results \
+        -session M0
+
 Author: Jan Valosek
 Inspired by https://github.com/neuropoly/lesion-mapping/blob/master/spinalcord/3_generate_LFM.py from Charley Gros
 Also be aware of https://github.com/yw7/sc_lesion_frequency_map from Yehuda Warszawer

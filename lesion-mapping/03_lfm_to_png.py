@@ -1,11 +1,18 @@
 """
-From  the Lesion Frequency Map (LFM), generate:
+From the Lesion Frequency Map (LFM), generate:
     - axial png images for each vertebral level (average across axial slices for each vertebral level)
     - a single sagittal png image (average across sagittal slices)
 
 The script requires the SCT conda environment to be activated:
     source ${SCT_DIR}/python/etc/profile.d/conda.sh
     conda activate venv_sct
+
+Usage:
+    python 03_lfm_to_png.py \
+        -lfm-path spinalcord_LFM_MS_200_participants.nii.gz \
+        -ofolder lfm \
+        -thr 0.15 \
+        -include-gm
 
 Author: Jan Valosek
 Inspired by https://github.com/neuropoly/lesion-mapping/blob/master/lfm_2_png.py from Charley Gros
