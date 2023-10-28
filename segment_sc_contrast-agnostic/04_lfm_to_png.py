@@ -87,7 +87,7 @@ def rescale_rot(img, rescale):
     return img
 
 
-def combine_img_w_bkg(img, bkg, gm, rescale, thr, fname_out, linewidth=4):
+def combine_img_w_bkg(img, bkg, gm, rescale, thr, fname_out, linewidth=6):
     """
     Combine the LFM with the background image (PAM50_t2) and the grey matter segmentation.
     """
