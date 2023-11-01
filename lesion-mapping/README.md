@@ -30,6 +30,9 @@ Example `config.json` file:
 }
 ```
 
+`exclude_list` is used to exclude subjects from the processing, for example, due to artifacts or missing data. 
+The subjects in the `exclude_list` are listed in the [exclude.yml file](https://github.com/ivadomed/canproco/blob/main/exclude.yml).
+
 ### 2. Generate the lesion frequency map
 
 Generate the lesion frequency map (LFM) in the PAM50 space.
