@@ -1,9 +1,18 @@
 # Lesion mapping
 
+This folder contains the scripts to generate the lesion frequency map (LFM) in the PAM50 space.
+
+Namely:
+- `01_register_to_pam50.sh`: Register STIR/PSIR images to the PAM50 space and bring the GT lesion and spinal cord masks template space.
+- `02_generate_lesion_frequency_maps.py`: Generate the lesion frequency map (LFM) in the PAM50 space.
+- `03_lfm_to_png.py`: Save the LFM as a PNG image.
+
 ### 1. Register STIR/PSIR images to the PAM50 space 
 
 Register STIR/PSIR images to the PAM50 space and bring the GT lesion and spinal cord masks (located under 
 `derivatives/labels`) to the PAM50 template space.
+
+Run the script across all subjects using `sct_run_batch` wrapper:
 
 ```console
 sct_run_batch -config config.json
