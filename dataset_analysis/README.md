@@ -18,6 +18,9 @@ To generate the dataframe run :
 python generate_dataframe.py --data /path/to/CanProCo --lesion /path/to/lesion/segmentation --discs /path/to/discs/segmentation --spinal-cord /path/to/spinal/cord/segmentation --timepoint M0 --exclude-file /path/to/exclude/file --output /path/to/output/folder
 ~~~
 
+> **Note**
+> It uses the file `image.py` to fix the orientation of masks if they are not the same as the image's orientation
+
 # Dataframe analysis
 
 The following Notebook `dataframe_analysis.ipynb` details the analysis of the generated dataframe. To use it, update the link to the CSV dataframes. 
