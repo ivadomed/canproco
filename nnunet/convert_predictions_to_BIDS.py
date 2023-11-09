@@ -1,6 +1,9 @@
 """
 Convert region-based nnUNet predictions to BIDS format
-This scripts takes the predictions of nnUNet and converts them to BIDS format with the correct file names. 
+This scripts takes the predictions of nnUNet and converts them to BIDS format with the correct file names.
+It has two options:
+    - either the predictions are from test set and therefore in the imagesTs folder and the script will convert them to BIDS format 
+    - or the predictions are not in the imagesTs folder and the script will convert them to BIDS format : then use the --not-imageTs flag
 
 Example:
     python convert_predictions_to_BIDS.py --pred-folder /path/to/predictions --out-folder /path/to/output/folder --conversion-dict /path/to/conversion/dict
@@ -103,7 +106,6 @@ def main():
 
                 #we binarize the file in the case of the spinal cord and save it at the new location
                 os.system(f"sct_maths -i {pred} -bin 0 -o {os.path.join(output_subject_path, new_name_sc)}")
-    
     return None
 
 
