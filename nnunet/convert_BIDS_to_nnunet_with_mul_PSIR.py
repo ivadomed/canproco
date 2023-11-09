@@ -21,7 +21,6 @@ Arguments:
     --type : Type of use of the data (default=training)
     --exclude-file : Path to the file containing the list of subjects to exclude from the dataset (default=None)
 
-
 Returns:
     None
     
@@ -37,7 +36,6 @@ import json
 import os
 import shutil
 from collections import OrderedDict
-from tqdm import tqdm
 
 import nibabel as nib
 import numpy as np
@@ -115,6 +113,7 @@ def  create_multi_label_mask(lesion_mask_file, sc_seg_file, disc_level_file, lab
     #we save it in the destination folder
     multi_label_file = nib.Nifti1Image(multi_label, lesion_affine, lesion_header)
     nib.save(multi_label_file, str(label_file_nnunet))
+    return None
 
 
 def build_dataset_for_training(args):
@@ -125,10 +124,6 @@ def build_dataset_for_training(args):
     Because we only focus on the spinal cord lesions, we remove the lesion and the sc seg which are above the first vertebral level. 
 
     Input:
-        path_in_images : Path to the images
-        path_in_labels : Path to the labels
-        path_out : Path to the output directory
-        contrasts : List of contrasts
         args : Arguments of the script
     
     Returns:
@@ -272,7 +267,7 @@ def build_dataset_for_training(args):
             conversion_dict[str(os.path.abspath(lesion_mask_file))] = label_file_nnunet
 
         else:
-            #then we add the image to the test set
+            #if not for training, we add the image to the test set
             scan_cnt_test += 1
             #we update the count of images of the site
             count_subj_per_site_dict[file_site] += 1
@@ -370,7 +365,6 @@ def build_dataset_for_training(args):
     dataset_dict_name = f"dataset.json"
     with open(os.path.join(path_out, dataset_dict_name), "w") as outfile:
         outfile.write(json_object)
-
     return None
 
 
@@ -379,6 +373,12 @@ def build_dataset_for_inference(args):
     This script builds a dataset for inference in the nnunet format.
     It uses only the contrast and the time point given in the arguments.
     It only builds one folder with all the images in the correct naming convention.
+
+    Input:
+        args : Arguments of the script
+    
+    Returns:
+        None
     """
 
     #------------- DEFINITION OF THE PATHS --------------------------
@@ -446,7 +446,6 @@ def build_dataset_for_inference(args):
 
     #print the number of images
     print("Number of images: " + str(scan_cnt))
-
     return None
 
 
@@ -471,7 +470,6 @@ def main():
     elif args.type == 'inference':
         #we build a dataset for inference in the nnunet format
         build_dataset_for_inference(args)
-    
     return None
 
 
