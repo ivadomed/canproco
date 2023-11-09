@@ -6,7 +6,7 @@ This script was adapted to build a test set with a given ratio of each site.
 It can also build the test set with only unlabelled images.
 
 Example of run:
-    $ python convert_bids_to_nnunet.py --path-data /path/to/data_extracted --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID  --contrasts PSIR,STIR --test-ratio 0.2 --time-point ses-M0 --type training --exclude-file /path/to/exclude_file.yml
+    $ python convert_bids_to_nnunet.py --path-data /path/to/BIDS/dataset --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID  --contrasts PSIR,STIR --test-ratio XX --time-point ses-XX --type training --exclude-file /path/to/exclude_file.yml
 
 Arguments:
     --path-data : Path to BIDS structured dataset. Accepts both cross-sectional and longitudinal datasets
@@ -18,7 +18,6 @@ Arguments:
     --time-point : Time point of the data to be used (default=ses-M0)
     --type : Type of use of the data (default=training)
     --exclude-file : Path to the file containing the list of subjects to exclude from the dataset (default=None)
-
 
 Returns:
     None
@@ -35,7 +34,6 @@ import json
 import os
 import shutil
 from collections import OrderedDict
-from tqdm import tqdm
 
 import nibabel as nib
 import numpy as np
@@ -113,6 +111,7 @@ def  create_multi_label_mask(lesion_mask_file, sc_seg_file, disc_level_file, lab
     #we save it in the destination folder
     multi_label_file = nib.Nifti1Image(multi_label, lesion_affine, lesion_header)
     nib.save(multi_label_file, str(label_file_nnunet))
+    return None
 
 
 def build_dataset_for_training(args):
@@ -123,10 +122,6 @@ def build_dataset_for_training(args):
     Because we only focus on the spinal cord lesions, we remove the lesion and the sc seg which are above the first vertebral level. 
 
     Input:
-        path_in_images : Path to the images
-        path_in_labels : Path to the labels
-        path_out : Path to the output directory
-        contrasts : List of contrasts
         args : Arguments of the script
     
     Returns:
@@ -366,6 +361,12 @@ def build_dataset_for_inference(args):
     This script builds a dataset for inference in the nnunet format.
     It uses only the contrast and the time point given in the arguments.
     It only builds one folder with all the images in the correct naming convention.
+
+    Input:
+        args : Arguments of the script
+    
+    Returns:
+        None
     """
 
     #------------- DEFINITION OF THE PATHS --------------------------
