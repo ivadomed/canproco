@@ -7,6 +7,8 @@ Namely:
 - `02_generate_lesion_frequency_maps.py`: Generate the lesion frequency map (LFM) in the PAM50 space.
 - `03_lfm_to_png.py`: Save the LFM as a PNG image.
 
+---
+
 ### 1. Register STIR/PSIR images to the PAM50 space 
 
 Register STIR/PSIR images to the PAM50 space and bring the GT lesion and spinal cord masks (located under 
@@ -33,6 +35,8 @@ Example `config.json` file:
 `exclude_list` is used to exclude subjects from the processing, for example, due to artifacts or missing data. 
 The subjects in the `exclude_list` are listed in the [exclude.yml file](https://github.com/ivadomed/canproco/blob/main/exclude.yml).
 
+---
+
 ### 2. Generate the lesion frequency map
 
 Generate the lesion frequency map (LFM) in the PAM50 space.
@@ -53,6 +57,8 @@ python 02_generate_lesion_frequency_maps.py \
     -ofolder canproco_register_to_PAM50_2023-10-21/results \
     -session M0
 ```
+
+---
 
 ### 3. Generate png images of the LFM
 
