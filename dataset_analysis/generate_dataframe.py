@@ -16,10 +16,10 @@ Returns:
     None
 
 Example:
-    python generate_dataframe.py --data /path/to/CanProCo --output /path/to/output
+    python generate_dataframe.py --data /path/to/CanProCo --lesion /path/to/lesion/segmentation --discs /path/to/discs/segmentation --spinal-cord /path/to/spinal/cord/segmentation --timepoint M0 --exclude-file /path/to/exclude/file --output /path/to/output/folder
 
 Todo:
-    * UPDATE documentation of this file
+    *
 
 Pierre-Louis Benveniste
 """
@@ -59,12 +59,14 @@ def get_parser():
 
 
 def get_spinal_cord_info(patient_data, spinal_cord_path, timepoint):
-    """This functions computes the volume of the spinal cord for each patient.
+    """
+    This functions computes the volume of the spinal cord for each patient.
     The volume is added to the patient_data dictionary.
     
     Input:
         patient_data : dictionary containing information about the patient
         dataset_path : path to the CanProCo dataset
+        timepoint : timepoint of the analysis (M0, M12)
     
     Returns:
         patient_data : dictionary containing information about the patient
@@ -101,6 +103,8 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
     Input:
         lesion_seg_file : path to the lesion segmentation file
         labelled_sc_seg_file : path to the labelled spinal cord segmentation file
+        timepoint : timepoint of the analysis (M0, M12)
+        output_folder : path to the output folder where the analysis will be saved
 
     Returns:
         patient_data : dictionary containing information about the patient
@@ -286,6 +290,7 @@ def analyze_patient_lesion(patient_data, lesion_path, timepoint, output_folder):
     Input:
         patient_data : dictionary containing information about the patient
         dataset_path : path to the CanProCo dataset
+        timepoint : timepoint of the analysis (M0, M12)
         output_folder : path to the output folder where the analysis will be saved
     
     Returns:
@@ -342,6 +347,7 @@ def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     Input:
         participant_id : id of the participant
         participants_tsv : pandas dataframe containing information about the participants
+        timepoint : timepoint of the analysis (M0, M12)
     
     Returns:
         patient_data : dictionary containing information about the patient
