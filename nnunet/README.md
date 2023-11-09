@@ -37,6 +37,11 @@ To install required libraries to train an nnUNet v2:
 pip install -r requirements_nnunet.txt
 ```
 
+Install SpinalCordToolbox 6.0 :
+
+Installation link : https://spinalcordtoolbox.com/user_section/installation.html
+
+
 # Data preparation
 
 Create the following folders:
