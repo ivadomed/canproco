@@ -5,7 +5,7 @@ This script prepares the data for the training of a nnU-Net model taking two cha
 This script was adapted to build a test set with a given ratio of each site.
 
 Example of run:
-    python convert_BIDS_to_nnunet_mul_PSIR.py --path-data /Users/pbenveniste/Documents/Work/MS_Spine/MS_Spine_2020/MS_Spine_2020 --path-out /Users/pbenveniste/Documents/Work/MS_Spine/MS_Spine_2020/nnunet_2_channels --taskname MSSpineLesion --tasknumber 501 --contrasts PSIR,STIR --test-ratio 0.2 --time-point M0
+    python convert_BIDS_to_nnunet_mul_PSIR.py --path-data /path/to/data --path-out /output/path --taskname MSSCLesion --tasknumber 111 --contrasts PSIR,STIR --test-ratio 0.2 --time-point M0 --exclude-file /path/to/exclude_file
 
 Arguments:
     --path-data : Path to BIDS structured dataset. Accepts both cross-sectional and longitudinal datasets
@@ -15,6 +15,8 @@ Arguments:
     --contrasts : Contrasts used for the images (default='PSIR') (separated by a comma)
     --test-ratio : Ratio of the data to be used for testing (default=0.2)
     --time-point : Time point of the data to be used (default=ses-M0)
+    --exclude-file : Path to the file containing the list of subjects to exclude from the dataset (default=None)
+
 
 Returns:
     None
