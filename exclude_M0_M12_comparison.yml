@@ -1,0 +1,171 @@
+# PSIR
+- sub-mon118_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/43
+- sub-mon006_ses-M0   # FOV covers the whole brain. The SC has only C1-C6; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
+- sub-mon009_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758684880
+- sub-mon032_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686509
+- sub-mon097_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686772
+- sub-mon113_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760175861
+- sub-mon148_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686965
+- sub-mon152_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760248384
+- sub-mon168_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687112
+- sub-mon191_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687352
+- sub-van134_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761698648
+- sub-van135_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761702591
+- sub-van171_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761910863
+- sub-van176_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687602
+- sub-van181_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1767235494
+- sub-van201_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1767238882
+- sub-van206_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758688851
+- sub-van207_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761973064
+- sub-tor014_ses-M0   # Poor data quality and no disc labeling file; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760420705
+- sub-tor133_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758689928
+# STIR
+- sub-cal149_ses-M0   # FOV does not cover the whole SC in sagittal plane; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
+# Similar accross timepoints
+- sub-edm005_ses-M0
+- sub-edm031_ses-M0
+- sub-edm035_ses-M0
+- sub-edm054_ses-M0
+- sub-edm065_ses-M0
+- sub-edm088_ses-M0
+- sub-mon002_ses-M0
+- sub-mon003_ses-M0
+- sub-mon005_ses-M0
+- sub-mon006_ses-M0
+- sub-mon007_ses-M0
+- sub-mon009_ses-M0
+- sub-mon010_ses-M0
+- sub-mon011_ses-M0
+- sub-mon014_ses-M0
+- sub-mon031_ses-M0
+- sub-mon032_ses-M0
+- sub-mon041_ses-M0
+- sub-mon052_ses-M0
+- sub-mon060_ses-M0
+- sub-tor010_ses-M0
+- sub-tor012_ses-M0
+- sub-tor014_ses-M0
+- sub-tor016_ses-M0
+- sub-tor021_ses-M0
+- sub-tor029_ses-M0
+- sub-tor036_ses-M0
+- sub-tor038_ses-M0
+- sub-tor039_ses-M0
+- sub-tor043_ses-M0
+- sub-tor044_ses-M0
+- sub-tor051_ses-M0
+# Subjects only present at M12
+- sub-cal064_ses-M12
+- sub-edm161_ses-M12
+- sub-mon164_ses-M12
+# Subject with 4 dimensions
+- sub-cal123_ses-M12
+# Subject only present at M0
+- sub-cal080_ses-M0
+- sub-cal113_ses-M0
+- sub-cal125_ses-M0
+- sub-cal130_ses-M0
+- sub-cal131_ses-M0
+- sub-cal136_ses-M0
+- sub-cal140_ses-M0
+- sub-cal151_ses-M0
+- sub-cal153_ses-M0
+- sub-cal154_ses-M0
+- sub-cal156_ses-M0
+- sub-cal162_ses-M0
+- sub-cal173_ses-M0
+- sub-cal185_ses-M0
+- sub-cal191_ses-M0
+- sub-cal197_ses-M0
+- sub-cal198_ses-M0
+- sub-cal199_ses-M0
+- sub-cal200_ses-M0
+- sub-cal206_ses-M0
+- sub-cal207_ses-M0
+- sub-cal209_ses-M0
+- sub-cal210_ses-M0
+- sub-cal213_ses-M0
+- sub-cal214_ses-M0
+- sub-edm008_ses-M0
+- sub-edm010_ses-M0
+- sub-edm018_ses-M0
+- sub-edm023_ses-M0
+- sub-edm029_ses-M0
+- sub-edm034_ses-M0
+- sub-edm038_ses-M0
+- sub-edm053_ses-M0
+- sub-edm064_ses-M0
+- sub-edm067_ses-M0
+- sub-edm089_ses-M0
+- sub-edm095_ses-M0
+- sub-edm098_ses-M0
+- sub-edm107_ses-M0
+- sub-edm138_ses-M0
+- sub-edm157_ses-M0
+- sub-edm162_ses-M0
+- sub-edm164_ses-M0
+- sub-edm169_ses-M0
+- sub-edm178_ses-M0
+- sub-edm181_ses-M0
+- sub-edm183_ses-M0
+- sub-mon013_ses-M0
+- sub-mon027_ses-M0
+- sub-mon064_ses-M0
+- sub-mon107_ses-M0
+- sub-mon108_ses-M0
+- sub-mon109_ses-M0
+- sub-mon139_ses-M0
+- sub-mon163_ses-M0 # parent folder exist, missing only PSIR contrast
+- sub-mon180_ses-M0
+- sub-mon181_ses-M0
+- sub-tor004_ses-M0
+- sub-tor018_ses-M0
+- sub-tor024_ses-M0
+- sub-tor025_ses-M0
+- sub-tor031_ses-M0
+- sub-tor032_ses-M0
+- sub-tor041_ses-M0
+- sub-tor055_ses-M0
+- sub-tor063_ses-M0
+- sub-tor066_ses-M0
+- sub-tor073_ses-M0
+- sub-tor076_ses-M0
+- sub-tor077_ses-M0
+- sub-tor106_ses-M0
+- sub-tor109_ses-M0
+- sub-tor110_ses-M0
+- sub-tor112_ses-M0
+- sub-tor124_ses-M0
+- sub-tor125_ses-M0
+- sub-tor147_ses-M0
+- sub-van009_ses-M0
+- sub-van093_ses-M0
+- sub-van112_ses-M0
+- sub-van116_ses-M0
+- sub-van123_ses-M0
+- sub-van125_ses-M0
+- sub-van129_ses-M0
+- sub-van131_ses-M0
+- sub-van134_ses-M0
+- sub-van144_ses-M0
+- sub-van145_ses-M0
+- sub-van147_ses-M0
+- sub-van149_ses-M0
+- sub-van150_ses-M0
+- sub-van151_ses-M0
+- sub-van154_ses-M0
+- sub-van168_ses-M0
+- sub-van172_ses-M0
+- sub-van173_ses-M0
+- sub-van178_ses-M0
+- sub-van184_ses-M0
+- sub-van186_ses-M0
+- sub-van204_ses-M0
+- sub-van210_ses-M0
+- sub-van211_ses-M0
+- sub-van214_ses-M0
+- sub-van215_ses-M0
+- sub-van217_ses-M0
+- sub-van219_ses-M0
+- sub-van221_ses-M0
+- sub-van222_ses-M0
