@@ -31,6 +31,16 @@ echo "extra-data-root = ${HOME}/anima/Anima-Scripts-Data-Public/" >> .anima/conf
 
 ## Installation of required libraries
 
+Create a virtual invironment: 
+~~~
+conda create -n venv_nnunet python=3.9
+~~~
+
+Activate the environment with the following command:
+~~~
+conda activate venv_nnunet
+~~~
+
 To install required libraries to train an nnUNet v2:
 
 ```
