@@ -57,7 +57,7 @@ We are training a region-based nnUNet taking an image from contrasts PSIR or STI
 Convert the data to the nnUNet format :
 
 ~~~
-python convert_bids_to_nnunet.py --path-data /path/to/BIDS/dataset --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID  --contrasts PSIR,STIR --test-ratio XX --time-point ses-XX --type training --exclude-file /path/to/exclude_file.yml
+python convert_BIDS_to_nnunet.py --path-data /path/to/BIDS/dataset --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID  --contrasts PSIR,STIR --test-ratio XX --time-point ses-XX --type training --exclude-file /path/to/exclude_file.yml
 ~~~
 
 > **Note**
