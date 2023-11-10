@@ -207,8 +207,11 @@ def build_dataset_for_training(args):
             else:
                 shutil.copyfile(image_file, image_file_nnunet_channel_1)
 
-            #we also copy the sc mask to the nnunet dataset
-            shutil.copyfile(sc_mask_file, image_file_nnunet_channel_2)
+            # modify the header of channel 2 to have same spacing as channel 1
+            spacing = nib.load(image_file_nnunet_channel_1).header.get_zooms()
+            img = nib.load(sc_mask_file)
+            img.header.set_zooms(spacing)
+            nib.save(img, image_file_nnunet_channel_2)
 
             #we copy the label file 
             shutil.copyfile(lesion_mask_file, label_file_nnunet)
@@ -242,8 +245,11 @@ def build_dataset_for_training(args):
             else:
                 shutil.copyfile(image_file, image_file_nnunet_channel_1)
 
-            #we also copy the sc mask to the nnunet dataset
-            shutil.copyfile(sc_mask_file, image_file_nnunet_channel_2)
+            # modify the header of channel 2 to have same spacing as channel 1
+            spacing = nib.load(image_file_nnunet_channel_1).header.get_zooms()
+            img = nib.load(sc_mask_file)
+            img.header.set_zooms(spacing)
+            nib.save(img, image_file_nnunet_channel_2)
 
             #we copy the label file 
             shutil.copyfile(lesion_mask_file, label_file_nnunet)
