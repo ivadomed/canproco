@@ -93,7 +93,7 @@ CUDA_VISIBLE_DEVICES=XXX nnUNetv2_train DATASET-ID CONFIG FOLD --npz
 
 # Model inference
 
-Convert data to nnUNet format for inference using `convert_bids_to_nnunet.py` or `convert_BIDS_to_nnunet_with_mul_PSIR.py` with `--type`=inference.
+Convert data to nnUNet format for inference using `convert_BIDS_to_nnunet.py` or `convert_BIDS_to_nnunet_with_mul_PSIR.py` with `--type=inference`.
 
 Then perform inference:
 ~~~
