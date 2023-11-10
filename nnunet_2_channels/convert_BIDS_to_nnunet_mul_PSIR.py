@@ -209,7 +209,9 @@ def build_dataset_for_training(args):
 
             #we also copy the sc mask to the nnunet dataset
             shutil.copyfile(sc_mask_file, image_file_nnunet_channel_2)
-                
+
+            #we copy the label file 
+            shutil.copyfile(lesion_mask_file, label_file_nnunet)
            
             #we update the conversion dict (for label we only point to the lesion mask)
             conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet_channel_1
@@ -242,6 +244,9 @@ def build_dataset_for_training(args):
 
             #we also copy the sc mask to the nnunet dataset
             shutil.copyfile(sc_mask_file, image_file_nnunet_channel_2)
+
+            #we copy the label file 
+            shutil.copyfile(lesion_mask_file, label_file_nnunet)
         
             conversion_dict[str(os.path.abspath(image_file))] = image_file_nnunet_channel_1
             conversion_dict[str(os.path.abspath(sc_mask_file))] = image_file_nnunet_channel_2
