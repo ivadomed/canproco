@@ -60,6 +60,7 @@ def get_parser():
     parser.add_argument('--contrasts', help='Contrast used for the images', default='PSIR', type=str)
     parser.add_argument('--test-ratio', help='Ratio of the data to be used for testing', default=0.2, type=float)
     parser.add_argument('--time-point', help='Time point of the data to be used', default='M0', type=str)
+    parser.add_argument('--exclude-file', help='Path to the file containing the list of subjects to exclude from the dataset', default=None, type=str)
 
     return parser
 
