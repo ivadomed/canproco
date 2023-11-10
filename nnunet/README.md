@@ -71,7 +71,7 @@ python convert_BIDS_to_nnunet.py --path-data /path/to/BIDS/dataset --path-out /p
 ~~~
 
 > **Note**
-> The test ratio is 0.2 for 20%. For M0 images, the time point is ses-M0.
+> The test ratio is 0.2 for 20% (train ratio is therefore 80%). For M0 images, the time point is ses-M0.
 
 To mutliply PSIR images by -1 before training and convert the data to the nnUNet format :
 
