@@ -196,7 +196,7 @@ def build_dataset_for_training(args):
             label_file_nnunet = os.path.join(path_out_labelsTr,f'{args.taskname}_{scan_cnt_train:03d}.nii.gz')
             
             train_images.append(str(image_file_nnunet_channel_1))
-            train_images.append(str(image_file_nnunet_channel_2))
+            #train_images.append(str(image_file_nnunet_channel_2))
             train_labels.append(str(label_file_nnunet))
 
             # copy the image to new structure
@@ -229,7 +229,7 @@ def build_dataset_for_training(args):
             label_file_nnunet = os.path.join(path_out_labelsTs,f'{args.taskname}_{scan_cnt_test:03d}.nii.gz')
             
             test_images.append(str(image_file_nnunet_channel_1))
-            test_images.append(str(image_file_nnunet_channel_2))
+            #test_images.append(str(image_file_nnunet_channel_2))
             test_labels.append(str(label_file_nnunet))
             
             # copy the files to new structure
@@ -294,7 +294,6 @@ def build_dataset_for_training(args):
                                  for i in range(len(train_images))]
     # Note: See https://github.com/MIC-DKFZ/nnUNet/issues/407 for how this should be described
 
-    #Removed because useless in this case
     json_dict['test'] = [{'image': str(test_labels[i]).replace("labelsTs", "imagesTs") , "label": test_labels[i] }
                                  for i in range(len(test_images))]
 
