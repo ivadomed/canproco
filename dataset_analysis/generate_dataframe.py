@@ -97,7 +97,7 @@ def get_spinal_cord_info(patient_data, spinal_cord_path, timepoint):
 
 def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder):
     """
-    This function focuses on lesions per spinal cord levels.
+    This function focuses on lesions per vertebral levels.
     It computes the number, volume and average length of lesions per spinal cord level.
 
     Input:
