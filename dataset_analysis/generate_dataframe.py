@@ -358,7 +358,7 @@ def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     patient_data["site"] = participant_id.split('-')[1][:3]
     #sex
     patient_data["sex"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["sex"].values[0]
-    #age at M0
+    #age at scan
     patient_data["age"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["age_" + timepoint].values[0]
     #pathology
     patient_data["pathology"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["pathology_M0"].values[0]
