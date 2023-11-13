@@ -149,7 +149,7 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
     levels = np.unique(disc_seg_data)
     levels = levels[levels != 0]
 
-    #we iterate over the levels
+    #we iterate over the intervetebral discs (aka levels here)
     for i in range(len(levels)-1):
         #get upper bound of level
         upper_bound = np.where(disc_seg_data == levels[i])
