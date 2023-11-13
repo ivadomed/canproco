@@ -342,7 +342,7 @@ def analyze_patient_lesion(patient_data, lesion_path, timepoint, output_folder):
 def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     """
     This function gathers information from the participants.tsv file.
-    It gathers information on each participant, their pathology (and the material used for image acquisition).
+    It gathers information on each participant, their pathology (and the acquisition parameters used for image acquisition).
 
     Input:
         participant_id : id of the participant
