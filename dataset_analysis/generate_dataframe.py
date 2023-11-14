@@ -129,8 +129,8 @@ def get_spinal_cord_info(patient_data, spinal_cord_path, discs_path, timepoint):
 
 def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder):
     """
-    This function focuses on lesions per spinal cord levels.
-    It computes the number, volume and average length of lesions per spinal cord level.
+    This function focuses on lesions per vertebral levels.
+    It computes the number, volume and average length of lesions per vertebral levels.
 
     Input:
         lesion_seg_file : path to the lesion segmentation file
@@ -181,7 +181,7 @@ def analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder
     levels = np.unique(disc_seg_data)
     levels = levels[levels != 0]
 
-    #we iterate over the levels
+    #we iterate over the intervetebral discs (aka levels here)
     for i in range(len(levels)-1):
         #get upper bound of level
         upper_bound = np.where(disc_seg_data == levels[i])
@@ -374,7 +374,7 @@ def analyze_patient_lesion(patient_data, lesion_path, timepoint, output_folder):
 def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     """
     This function gathers information from the participants.tsv file.
-    It gathers information on each participant, their pathology (and the material used for image acquisition).
+    It gathers information on each participant, their pathology (and the acquisition parameters used for image acquisition).
 
     Input:
         participant_id : id of the participant
@@ -390,7 +390,7 @@ def analyze_patient_tsv(participant_id, participants_tsv, timepoint):
     patient_data["site"] = participant_id.split('-')[1][:3]
     #sex
     patient_data["sex"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["sex"].values[0]
-    #age at M0
+    #age at scan
     patient_data["age"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["age_" + timepoint].values[0]
     #pathology
     patient_data["pathology"] = participants_tsv.loc[participants_tsv["participant_id"] == participant_id]["pathology_M0"].values[0]
