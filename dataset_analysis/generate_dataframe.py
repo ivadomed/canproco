@@ -58,7 +58,7 @@ def get_parser():
     return parser
 
 
-def get_spinal_cord_info(patient_data, spinal_cord_path, timepoint):
+def get_spinal_cord_info(patient_data, spinal_cord_path, discs_path, timepoint):
     """
     This functions computes the volume of the spinal cord for each patient.
     The volume is added to the patient_data dictionary.
@@ -77,17 +77,49 @@ def get_spinal_cord_info(patient_data, spinal_cord_path, timepoint):
 
     #now we find the spinal cord segmentation file
     sc_seg_file = os.path.join(spinal_cord_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_PSIR_seg-manual.nii.gz")
+    disc_seg_file = os.path.join(discs_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_PSIR_labels-disc.nii.gz")
+
     if not os.path.exists(sc_seg_file):
         # If PSIR doesn't exist, use STIR
         sc_seg_file = os.path.join(spinal_cord_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_STIR_seg-manual.nii.gz")
+        disc_seg_file = os.path.join(discs_path, participant_id, "ses-" + timepoint, "anat", f"{participant_id}_ses-" + timepoint+ "_STIR_labels-disc.nii.gz")
+
     
     #now we read the spinal cord segmentation file
-    sc_seg = nib.load(sc_seg_file)
+    sc_seg = Image(sc_seg_file)
 
-    #now we get the total volume of the spinal cord
-    sc_seg_data = sc_seg.get_fdata()
-    voxel_size = sc_seg.header.get_zooms()
-    sc_volume = np.sum(sc_seg_data)*voxel_size[0]*voxel_size[1]*voxel_size[2]
+    # we read the disc segmentation file
+    disc_seg_file = Image(disc_seg_file)
+    disc_seg_file = change_orientation(disc_seg_file, sc_seg.orientation)
+
+    #we get the data from  the disc segmentation file
+    disc_seg_data = disc_seg_file.data
+
+    #if level 0 and level 7 don't exist we move on to the next patient
+    if 1 not in disc_seg_data or 8 not in disc_seg_data:
+        patient_data["sc_volume"] = None
+        return patient_data
+    
+    #get voxel size
+    _,_,_,_,disc_voxel_size_x,disc_voxel_size_y,disc_voxel_size_z,_ = get_dimension(disc_seg_file)
+    
+    #else we get their coordinates
+    level_0 = np.where(disc_seg_data == 1)
+    level_0_bottom = int(level_0[1])
+    level_7 = np.where(disc_seg_data == 8)
+    level_7_top = int(level_7[1])
+
+    #now we get the spinal cord segmentation data
+    sc_seg_data = sc_seg.data
+
+    #we crop the spinal cord above disc level 0 (in the data its the bottom) and bellow disc level 7 (in the data its the top)
+    sc_seg_data = sc_seg_data[:, level_7_top:level_0_bottom, :]
+
+    #we get the voxel size
+    _,_,_,_,voxel_size_x,voxel_size_y,voxel_size_z,_ = get_dimension(sc_seg)
+
+    #we compute the spinal cord volume 
+    sc_volume = np.sum(sc_seg_data)*voxel_size_x*voxel_size_y*voxel_size_z
 
     #we add this information to the patient_data dictionary
     patient_data["sc_volume"] = sc_volume
@@ -447,10 +479,12 @@ def main():
         patient_data = analyse_lesion_per_levels(patient_data, discs_path, timepoint, output_folder)
 
         #analyze the patient spinal cord volume
-        patient_data = get_spinal_cord_info(patient_data, spinal_cord_path, timepoint)
+        patient_data = get_spinal_cord_info(patient_data, spinal_cord_path, discs_path, timepoint)
 
         #add the patient to the dataset
         dataframe = pd.concat([dataframe, pd.DataFrame([patient_data])], ignore_index=True)
+
+        print(dataframe['sc_volume'])
 
     #save the dataset in the output folder
     dataframe.to_csv(os.path.join(output_folder, 'dataframe.csv'), index=False)
