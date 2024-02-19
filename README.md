@@ -159,7 +159,7 @@ pip install -r packaging/requirements.txt
 To segment a single image using the trained model, run the following command from the terminal. This assumes that the model has been downloaded and is available locally. The release contains two models, the 2D nnUNet as well as the 3D nnUNet. Our experiments showed that both worked similarly. 
 
 ```bash
-python packaging/run_inference_single_subject.py --path-image /path/to/image --path-out /path/to/output --path-model /path/to/model 
+python packaging/run_inference_single_subject.py --path-image /path/to/image --path-out /path/to/output/directory --path-model /path/to/model 
 ```
 
 The output contains the spinal cord segmentation (with value 1) and the MS lesion segmentation (with value 2). It uses a region-based approach, meaning that lesions are always located within the spinal cord segmentation. 
