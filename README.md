@@ -152,7 +152,7 @@ cd canproco
 pip install -r packaging/requirements.txt
 ```
 
-4. Download the model from the repository's latest release which can be found [here](https://github.com/ivadomed/canproco/releases) and unzip it. 
+4. Download the model (`model_ms_seg_sc-lesion_regionBased.zip`) from the repository's latest release, which can be found [here](https://github.com/ivadomed/canproco/releases/tag/r20240125), and unzip it. 
  
 ### Step 3: Getting the Predictions
 
