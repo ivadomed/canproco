@@ -120,3 +120,48 @@ python manual_correction.py -path-in <INPUT_PATH> -config <CONFIG_FILE> -path-ou
   </details>
 
 Here are several helpful videos reviewing how to correct manual lesion segmentations: [1](https://www.dropbox.com/s/j1f81vtmmmkddtv/Screen%20Recording%202023-01-09%20at%209.45.40%20AM.mov?dl=0), [2](https://www.dropbox.com/s/bm6vpcqe062t2j0/Screen%20Recording%202023-01-11%20at%201.54.36%20PM.mov?dl=0), [3](https://www.dropbox.com/s/00xjsk917wwkp7b/Screen%20Recording%202023-01-11%20at%202.20.58%20PM.mov?dl=0), [4](https://www.dropbox.com/s/3gkrfslf6gflsjg/Screen%20Recording%202023-01-11%20at%203.38.47%20PM.mov?dl=0).
+
+
+## How to use the model for MS lesion segmentation
+
+### Step 1: Cloning the Repository
+
+Open a terminal and clone the repository using the following command:
+
+~~~
+git clone https://github.com/ivadomed/canproco.git
+~~~
+
+### Step 2: Setting up the Environment
+
+The following commands show how to set up the environment. Note that the documentation assumes that the user has `conda` installed on their system. Instructions on installing `conda` can be found [here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
+
+1. Create a conda environment with the following command:
+```
+conda create -n venv_nnunet python=3.9
+```
+
+2. Activate the environment with the following command:
+```
+conda activate venv_nnunet
+```
+
+3. Install the required packages with the following command:
+```
+cd canproco
+pip install -r packaging/requirements.txt
+```
+
+4. Download the model from the repository's latest release which can be found [here](https://github.com/ivadomed/canproco/releases) and unzip it. 
+ 
+### Step 3: Getting the Predictions
+
+To segment a single image using the trained model, run the following command from the terminal. This assumes that the model has been downloaded and is available locally. The release contains two models, the 2D nnUNet as well as the 3D nnUNet. Our experiments showed that both worked similarly. 
+
+```bash
+python packaging/run_inference_single_subject.py --path-image /path/to/image --path-out /path/to/output --path-model /path/to/model 
+```
+
+The output contains the spinal cord segmentation (with value 1) and the MS lesion segmentation (with value 2). It uses a region-based approach, meaning that lesions are always located within the spinal cord segmentation. 
+
+ℹ️ The script also supports getting segmentations on a GPU. To do so, simply add the flag `--use-gpu` at the end of the above commands. By default, the inference is run on the CPU. It is useful to note that obtaining the predictions from the GPU is significantly faster than the CPU.
