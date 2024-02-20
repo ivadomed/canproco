@@ -1,6 +1,6 @@
 # CanProCo
 
-This repository contains the code used in the different projects of the Canadian Prospective Cohort to Understand Progression in People Living with MS (CanProCo). 
+This repository contains the code used in the different projects of the Canadian Prospective Cohort to Understand Progression in MS (CanProCo). 
 
 
 For manual correction and manual segmentation of MS lesions, please refer to this repository : [manual-correction](https://github.com/spinalcordtoolbox/manual-correction).
