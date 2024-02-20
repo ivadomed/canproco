@@ -15,5 +15,5 @@ This repository contains the code used in the different projects of the Canadian
 
 ---
 
-```suggestion
-For manual corrections of spinal cord masks and MS lesion maks, please refer to this repository: [manual-correction](https://github.com/spinalcordtoolbox/manual-correction) and its [wiki](https://github.com/spinalcordtoolbox/manual-correction/wiki) for examples.
+> [!TIP]
+>For manual corrections of spinal cord masks and MS lesion maks, please refer to this repository: [manual-correction](https://github.com/spinalcordtoolbox/manual-correction) and its [wiki](https://github.com/spinalcordtoolbox/manual-correction/wiki) for examples.
