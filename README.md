@@ -7,7 +7,6 @@ For manual correction and manual segmentation of MS lesions, please refer to thi
 
 
 ## Table of Contents
-=================
 * [Computing Cross-Sectional Area (CSA)](scripts-t2w_csa/README.md)
 * [Spinal-cord segmentation](segment_sc_contrast-agnostic/README.md)
 * [nnUNet training](/nnunet/README.md)
