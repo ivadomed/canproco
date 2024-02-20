@@ -3,6 +3,9 @@
 This repository contains the code used in the different projects of the Canadian Prospective Cohort to Understand Progression in People Living with MS (CanProCo). 
 
 
+For manual correction and manual segmentation of MS lesions, please refer to this repository : [manual-correction](https://github.com/spinalcordtoolbox/manual-correction).
+
+
 ## Table of Contents
 =================
 * [Computing Cross-Sectional Area (CSA)](https://github.com/ivadomed/canproco/blob/main/scripts-t2w_csa/README.md)
