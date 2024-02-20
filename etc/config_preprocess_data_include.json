@@ -1,7 +1,0 @@
-{
-  "path_data"   : "./canproco",
-  "path_output" : "./canproco_preprocess",
-  "script"      : "/usr/local/lib/ivadomed/canproco/preprocess/sct-preprocess_data.sh",
-  "include"     : "sub-mon001",
-  "jobs"        : 1
-}
