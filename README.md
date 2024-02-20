@@ -12,3 +12,8 @@ This repository contains the code used in the different projects of the Canadian
 * [Dataset analysis of MS lesions](dataset_analysis/README.md)
 * [Building lesion frequency maps](lesion-mapping/README.md)
 * [Using the model for MS lesion segmentation](packaging/README.md)
+
+---
+
+```suggestion
+For manual corrections of spinal cord masks and MS lesion maks, please refer to this repository: [manual-correction](https://github.com/spinalcordtoolbox/manual-correction) and its [wiki](https://github.com/spinalcordtoolbox/manual-correction/wiki) for examples.
