@@ -1,11 +1,14 @@
 # The nnUNet pipeline
 
-Here we detail all the necessary steps to train and use the nnUNetv2 framework with the CanProCo dataset. We show how to: 
+Here, we detail all the necessary steps we made to train and use the nnUNetv2 framework with the CanProCo dataset. We show how to: 
 - set-up the environment
 - preprocess the data
 - train the model
 - perform inference
 - evaluate the predictions
+- compare the performances of different models
+
+Use this steps if you want to retrain the entire model on the CanProCo dataset and evaluate its performance.
 
 ## Installation instructions
 
