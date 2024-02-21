@@ -2,9 +2,9 @@
 
 
 <p float="left">
-  <img src="https://github.com/ivadomed/canproco/assets/67429280/7b0ac2f8-5cb8-41b2-9de3-305105b5c6df" height="200" />
-  <img src="https://github.com/ivadomed/canproco/assets/67429280/a9db6646-4632-46b7-8b67-4df059dd920a" height="200" /> 
-  <img src="https://github.com/ivadomed/canproco/assets/67429280/de27418b-fbd0-40cb-bf3d-3238489cb85f" height="200" />
+  <img src="https://github.com/ivadomed/canproco/assets/67429280/7b0ac2f8-5cb8-41b2-9de3-305105b5c6df" height="150" />
+  <img src="https://github.com/ivadomed/canproco/assets/67429280/a9db6646-4632-46b7-8b67-4df059dd920a" height="150" /> 
+  <img src="https://github.com/ivadomed/canproco/assets/67429280/de27418b-fbd0-40cb-bf3d-3238489cb85f" height="150" />
 </p>
 
 
