@@ -1,6 +1,18 @@
-# Installation instructions
+# The nnUNet pipeline
 
-## Installation of Anima metrics
+Here, we detail all the necessary steps we made to train and use the nnUNetv2 framework with the CanProCo dataset. We show how to: 
+- set-up the environment
+- preprocess the data
+- train the model
+- perform inference
+- evaluate the predictions
+- compare the performances of different models
+
+Use this steps if you want to retrain the entire model on the CanProCo dataset and evaluate its performance.
+
+## Installation instructions
+
+### Installation of Anima metrics
 
 Installation of 
 
@@ -29,7 +41,7 @@ echo "anima-scripts-public-root = ${HOME}/anima/Anima-Scripts-Public/" >> .anima
 echo "extra-data-root = ${HOME}/anima/Anima-Scripts-Data-Public/" >> .anima/config.txt
 ```
 
-## Installation of required libraries
+### Installation of required libraries
 
 Create a virtual invironment: 
 ~~~
@@ -52,7 +64,7 @@ Install SpinalCordToolbox 6.0 :
 Installation link : https://spinalcordtoolbox.com/user_section/installation.html
 
 
-# Data preparation
+## Data preparation
 
 Create the following folders:
 
@@ -79,7 +91,7 @@ To mutliply PSIR images by -1 before training and convert the data to the nnUNet
 python convert_BIDS_to_nnunet_with_mul_PSIR.py --path-data /path/to/BIDS/dataset --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID  --contrasts PSIR,STIR --test-ratio XX --time-point ses-XX --type training --exclude-file /path/to/exclude_file.yml
 ~~~
 
-# Model training
+## Model training
 
 Before training the model, nnU-Net performs data preprocessing and checks the integrity of the dataset:
 
@@ -101,7 +113,7 @@ CUDA_VISIBLE_DEVICES=XXX nnUNetv2_train DATASET-ID CONFIG FOLD --npz
 > **Note**
 > Example for Dataset 101, on 2d config on fold 0: CUDA_VISIBLE_DEVICES=2 nnUNetv2_train 101 2d 0 --npz
 
-# Model inference
+## Model inference
 
 Convert data to nnUNet format for inference using `convert_BIDS_to_nnunet.py` or `convert_BIDS_to_nnunet_with_mul_PSIR.py` with `--type=inference`.
 
@@ -110,7 +122,7 @@ Then perform inference:
 CUDA_VISIBLE_DEVICES=XXX nnUNetv2_predict -i /path/to/image/folder -o /path/to/predictions -d DATASET_ID -c CONFIG --save_probabilities -chk checkpoint_best.pth -f FOLD
 ~~~
 
-# Inference evaluation
+## Inference evaluation
 
 First, convert the predictions back the BIDS format ; this only keeps the lesion segmentation and discards spinal cord segmentation :
 
@@ -126,7 +138,7 @@ Then, you can evaluate the lesion prediction with Anima metrics
 python evaluate_lesion_seg_prediction.py --pred-folder path/to/predictions --dataset path/to/dataset --animaPath path/to/animaSegPerfAnalyzer --output-folder path/to/output_folder
 ~~~
 
-# Evaluation analysis
+## Evaluation analysis
 
 The following Notebook `nnUNet_inference_analysis.ipynb` was used to perform analysis of the nnUNet segmentations. 
 To use it, change the path to the csv files. 

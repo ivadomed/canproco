@@ -1,167 +1,24 @@
 # CanProCo
 
-Code for preprocessing the CanProCo brain and spinal cord dataset
 
-## Requirements
-
-* SCT
-* Python 3
-    * pyyaml
-    * coloredlogs
-* [ITK-SNAP](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.SNAP3) for correcting cord segmentations
-
-    **NOTE:** 
-    Make sure to add ITK-SNAP to the system path:
-    - For Windows, select the option during installation.
-    - For macOS, after installation, go to **Help->Install Command-Line Tools**.
-
-## Dataset
-
-Detailed instructions where data are stored and how to download them are available on the [intranet.neuro.polymtl.ca](https://intranet.neuro.polymtl.ca/computing-resources/data/git-datasets.html#usage).
-the dataset is under the name: `canproco`
-
-## Preprocessing
-
-### 1. Clone this repo
-
-```commandline
-git clone https://github.com/ivadomed/canproco.git
-```
-
-### 2. Run analysis across all subjects
-
-```commandline
-cd <PATH_TO_DATA>
-sct_run_batch -c <PATH_TO_REPO>/etc/config_preprocess_data.json
-```
-
-Tip: You can run the analysis only across selected subjects. For details, see examples at the beginning of the preprocessing script.
-
-Tip: Since analysis across many subjects can take a long time, it is recommended to run the analysis within a virtual terminal such as `screen`, details [here](https://intranet.neuro.polymtl.ca/geek-tips/bash-shell/README.html#screen-for-background-processes).
-
-### 3. Manual correction of spinal cord segmentation
-
-After running the analysis, check your Quality Control (qc) report by opening the file `./qc/index.html`. Use the "search" feature of the QC report to quickly jump to segmentations issues.
-
-#### 1. Assess quality of segmentation
-
-If segmentation issues are noticed while checking the quality report, proceed to manual correction using the procedure below:
-
-1. In QC report, search for "deepseg" to only display results of spinal cord segmentation.
-2. Review spinal cord segmentation.
-3. Click on the `F` key to indicate if the segmentation/label is OK ✅, needs manual correction ❌ or if the data is not usable ⚠️ (artifact). Two .yml lists, one for manual corrections and one for the unusable data, will automatically be generated. 
-4. Download the lists by clicking on `Download QC Fails` and on `Download Qc Artifacts`. 
-
-The lists will have the following format:
-
-*.yml list for correcting cord segmentation:*
-~~~
-FILES_SEG:
-- sub-1000032_T1w.nii.gz
-- sub-1000083_T2w.nii.gz
-~~~
-
-For the next steps, the script `/preprocess/manual_correction.py` loops through all the files listed in .yml file and opens an interactive window to manually correct segmentation. Each manually-corrected segmentation is saved under `derivatives/labels/` folder at the root of `PATH_DATA` according to the BIDS convention. Each manually-corrected file has the suffix `-manual`.
-
-#### 2. Correct segmentations
-For manual segmentation, you will need ITK-SNAP and this repository only. See **[Requirements](#requirements)**.
-
-Here is a tutorial to manually correct segmentations. Note that the new QC report format with interactive features (✅/❌/⚠️) is not included in the tutorial.
-
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/vCVEGmKKY3o/sddefault.jpg)](https://youtu.be/vCVEGmKKY3o "Correcting segmentations across multiple subjects")
-
-Run the following line and specify the .yml list for spinal cord segmentation with the flag `-config`:
-~~~
-cd canproco
-python preprocess/manual_correction.py -config <.yml file> -path-in <PATH-PREPROCESSING>/data_processed -path-out <PATH_DATA>
-~~~
-
-After all corrections are done, you can generate a QC report by adding the flag `-qc-only-` to the command above. Note that SCT is required for generating QC report.
-
-Here is another video for correcting manual segmentation: [Youtube manual](https://www.youtube.com/watch?v=lB-F8WOHGeg)
-
-#### 3. Adding corrected segmentations to git-annex
-After validating in the QC report the manual corrections, upload the manually-corrected segmentations in git-annex (see internal [documentation](https://intranet.neuro.polymtl.ca/computing-resources/data/git-datasets.html#upload)).
-
-To update the dataset, add all manually-corrected files `derivatives/labels/`,  and include the qc zip file in the body of the PR.
-
-## Manual lesion segmentation
-
-Lesions are segmented on the PSIR or STIR contrasts (when available). The workflow is the following:
-
-- Loop across subjects,
-- Load PSIR/STIR in FSLeyes, and overlay the lesion segmentation (if it already exists),
-- User create/adjust the segmentation mask using editing tools. Toggle the lesion overlay on/off to help validate the accuracy of the label ('Command F' on a Mac),
-- Save the mask
-
-We created a script to do this, which you can download [here](https://github.com/spinalcordtoolbox/manual-correction/tree/r20230302). 
-
-Then, run:
-
-```bash
-python manual_correction.py -path-in <INPUT_PATH> -config <CONFIG_FILE> -path-out <OUTPUT_PATH>
-```
-
-- `INPUT_PATH`: BIDS dataset from which manual lesions will be identified
-- `CONFIG_FILE`: YML file that lists all subjects to be included in the manual lesion segmentation. This file can either be generated by SCT's QC report (see section [3. Manual correction of spinal cord segmentation](#3-manual-correction-of-spinal-cord-segmentation) or manually. See example of a YML file below:
-- `OUTPUT_PATH`: Optional. If not specified, output segmentations will be generated in the `INPUT_PATH`.
-
-  <details><summary>Example of the CONFIG_FILE file:</summary>
-
-  ```yaml
-  FILES_LESION:
-    - sub-edm005_ses-M0_PSIR.nii.gz
-    - sub-edm008_ses-M0_PSIR.nii.gz
-    - sub-edm010_ses-M0_PSIR.nii.gz
-    - sub-edm011_ses-M0_PSIR.nii.gz
-    - sub-edm013_ses-M0_PSIR.nii.gz
-  ```
-
-  </details>
-
-Here are several helpful videos reviewing how to correct manual lesion segmentations: [1](https://www.dropbox.com/s/j1f81vtmmmkddtv/Screen%20Recording%202023-01-09%20at%209.45.40%20AM.mov?dl=0), [2](https://www.dropbox.com/s/bm6vpcqe062t2j0/Screen%20Recording%202023-01-11%20at%201.54.36%20PM.mov?dl=0), [3](https://www.dropbox.com/s/00xjsk917wwkp7b/Screen%20Recording%202023-01-11%20at%202.20.58%20PM.mov?dl=0), [4](https://www.dropbox.com/s/3gkrfslf6gflsjg/Screen%20Recording%202023-01-11%20at%203.38.47%20PM.mov?dl=0).
+<p float="left">
+  <img src="https://github.com/ivadomed/canproco/assets/67429280/7b0ac2f8-5cb8-41b2-9de3-305105b5c6df" height="150" />
+  <img src="https://github.com/ivadomed/canproco/assets/67429280/a9db6646-4632-46b7-8b67-4df059dd920a" height="150" /> 
+  <img src="https://github.com/ivadomed/canproco/assets/67429280/de27418b-fbd0-40cb-bf3d-3238489cb85f" height="150" />
+</p>
 
 
-## How to use the model for MS lesion segmentation
+This repository contains the code used in the different projects of the Canadian Prospective Cohort to Understand Progression in MS (CanProCo). 
 
-### Step 1: Cloning the Repository
 
-Open a terminal and clone the repository using the following command:
+## Table of Contents
+* [Computing Cross-Sectional Area (CSA)](scripts-t2w_csa/README.md)
+* [nnUNet training](/nnunet/README.md)
+* [Dataset analysis of MS lesions](dataset_analysis/README.md)
+* [Building lesion frequency maps](lesion-mapping/README.md)
+* [Using the model for MS lesion segmentation](packaging/README.md)
 
-~~~
-git clone https://github.com/ivadomed/canproco.git
-~~~
+---
 
-### Step 2: Setting up the Environment
-
-The following commands show how to set up the environment. Note that the documentation assumes that the user has `conda` installed on their system. Instructions on installing `conda` can be found [here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
-
-1. Create a conda environment with the following command:
-```
-conda create -n venv_nnunet python=3.9
-```
-
-2. Activate the environment with the following command:
-```
-conda activate venv_nnunet
-```
-
-3. Install the required packages with the following command:
-```
-cd canproco
-pip install -r packaging/requirements.txt
-```
-
-4. Download the model (`model_ms_seg_sc-lesion_regionBased.zip`) from the repository's latest release, which can be found [here](https://github.com/ivadomed/canproco/releases/tag/r20240125), and unzip it. 
- 
-### Step 3: Getting the Predictions
-
-To segment a single image using the trained model, run the following command from the terminal. This assumes that the model has been downloaded and is available locally. The release contains two models, the 2D nnUNet as well as the 3D nnUNet. Our experiments showed that both worked similarly. 
-
-```bash
-python packaging/run_inference_single_subject.py --path-image /path/to/image --path-out /path/to/output/directory --path-model /path/to/model 
-```
-
-The output contains the spinal cord segmentation (with value 1) and the MS lesion segmentation (with value 2). It uses a region-based approach, meaning that lesions are always located within the spinal cord segmentation. 
-
-ℹ️ The script also supports getting segmentations on a GPU. To do so, simply add the flag `--use-gpu` at the end of the above commands. By default, the inference is run on the CPU. It is useful to note that obtaining the predictions from the GPU is significantly faster than the CPU.
+> [!TIP]
+>For manual corrections of spinal cord masks and MS lesion maks, please refer to this repository: [manual-correction](https://github.com/spinalcordtoolbox/manual-correction) and its [wiki](https://github.com/spinalcordtoolbox/manual-correction/wiki) for examples.

@@ -1,7 +1,0 @@
-{
-  "path_data"   : "./canproco",
-  "path_output" : "./canproco_preprocess",
-  "script"      : "/usr/local/lib/ivadomed/canproco/preprocess/sct-preprocess_data.sh",
-  "include_list": ["sub-van222", "sub-cal056", "sub-cal085", "sub-edm005"],
-  "jobs"        : 4
-}
