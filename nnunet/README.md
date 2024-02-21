@@ -82,7 +82,7 @@ Convert the data to the nnUNet format :
 python convert_BIDS_to_nnunet.py --path-data /path/to/BIDS/dataset --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID  --contrasts PSIR,STIR --test-ratio XX --time-point ses-XX --type training --exclude-file /path/to/exclude_file.yml
 ~~~
 
-> **Note**
+> [!NOTE]
 > The test ratio is 0.2 for 20% (train ratio is therefore 80%). For M0 images, the time point is ses-M0.
 
 To mutliply PSIR images by -1 before training and convert the data to the nnUNet format :
@@ -110,7 +110,7 @@ To train the model, use the following command:
 CUDA_VISIBLE_DEVICES=XXX nnUNetv2_train DATASET-ID CONFIG FOLD --npz
 ~~~
 
-> **Note**
+> [!NOTE]
 > Example for Dataset 101, on 2d config on fold 0: CUDA_VISIBLE_DEVICES=2 nnUNetv2_train 101 2d 0 --npz
 
 ## Model inference
