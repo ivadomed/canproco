@@ -1,4 +1,38 @@
-Segment SC using contrast-agnostic MONAI model from STIR/PSIR contrast and perform vertebral labeling
+# Segment SC using contrast-agnostic MONAI model from STIR/PSIR contrast and perform vertebral labeling
+
+This part of the repo was created to segment the spinal cord of every subject in CanProCo. Below, we detail a recommended method (latest) and the one used previously. 
+
+## New method to segment spinal cord (recommended)
+
+This method uses the Spinal Cord Toolbox (SCT)
+
+### Install dependencies
+
+- [Spinal Cord Toolbox (SCT) v6.2](https://github.com/spinalcordtoolbox/spinalcordtoolbox/releases/tag/6.2) or higher -- follow the installation instructions [here](https://github.com/spinalcordtoolbox/spinalcordtoolbox?tab=readme-ov-file#installation)
+- [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) 
+- Python
+
+Once the dependencies are installed, download the latest rootlets model:
+
+```bash
+sct_deepseg -install-task seg_sc_contrast_agnostic
+```
+
+### Getting the rootlet segmentation
+
+To segment a single image, run the following command: 
+
+```bash
+sct_deepseg -i <INPUT> -o <OUTPUT> -task seg_sc_contrast_agnostic
+```
+
+For example:
+
+```bash
+sct_deepseg -i sub-001_T2w.nii.gz -o sub-001_T2w_sc-seg.nii.gz -task seg_sc_contrast_agnostic
+```
+
+## Our previous method of segmenting the spinal cord (not recommended)
 
 1. Create a conda virtual environment and install dependencies
 
