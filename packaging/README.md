@@ -32,7 +32,9 @@ pip install -r packaging/requirements.txt
  
 ## Step 3: Getting the Predictions
 
-To segment a single image using the trained model, run the following command from the terminal. This assumes that the model has been downloaded and is available locally. The release contains two models, the 2D nnUNet as well as the 3D nnUNet. Our experiments showed that both worked similarly. 
+To segment a single image using the trained model, run the following command from the terminal. This assumes that the model has been downloaded and is available locally. The release contains two models, the 2D nnUNet as well as the 3D nnUNet. Our experiments showed that both worked similarly.
+
+However, because the model was trained on inverted PSIR (multiplied by -1) and STIR images, for performance purposes, we recommend inverting your PSIR images before performing inference. That can be done using `sct_maths -i <INPUT> -mul -1 -o <OUTPUT>` 
 
 ```bash
 python packaging/run_inference_single_subject.py --path-image /path/to/image --path-out /path/to/output/directory --path-model /path/to/model 
