@@ -112,17 +112,33 @@ def main():
     print('Starting inference...')
     start = time.time()
 
-    # instantiate the nnUNetPredictor
-    predictor = nnUNetPredictor(
-        tile_step_size=args.step_size,     # changing it from 0.5 to 0.9 makes inference faster
-        use_gaussian=True,                      # applies gaussian noise and gaussian blur
-        use_mirroring=args.use_mirroring,                    # test time augmentation by mirroring on all axes
-        perform_everything_on_gpu=True if args.use_gpu else False,
-        device=torch.device('cuda') if args.use_gpu else torch.device('cpu'),
-        verbose=False,
-        verbose_preprocessing=False,
-        allow_tqdm=True
-    )
+
+    if args.use_gpu : 
+        # instantiate the nnUNetPredictor
+        predictor = nnUNetPredictor(
+            tile_step_size=args.step_size,     # changing it from 0.5 to 0.9 makes inference faster
+            use_gaussian=True,                      # applies gaussian noise and gaussian blur
+            use_mirroring=args.use_mirroring,                    # test time augmentation by mirroring on all axes
+            perform_everything_on_gpu=True if args.use_gpu else False,
+            device=torch.device('cuda') if args.use_gpu else torch.device('cpu'),
+            verbose=False,
+            verbose_preprocessing=False,
+            allow_tqdm=True
+        )
+    
+    if not args.use_gpu :  
+        # instantiate the nnUNetPredictor
+        predictor = nnUNetPredictor(
+            tile_step_size=args.step_size,     # changing it from 0.5 to 0.9 makes inference faster
+            use_gaussian=True,                      # applies gaussian noise and gaussian blur
+            use_mirroring=args.use_mirroring,                    # test time augmentation by mirroring on all axes
+            #perform_everything_on_gpu=True if args.use_gpu else False, # this line need to be hidden otherwise it will bug 
+            device=torch.device('cuda') if args.use_gpu else torch.device('cpu'),
+            verbose=False,
+            verbose_preprocessing=False,
+            allow_tqdm=True
+        )
+        
     print('Running inference on device: {}'.format(predictor.device))
 
     # initializes the network architecture, loads the checkpoint
