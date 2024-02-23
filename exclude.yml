@@ -1,9 +1,9 @@
-# t2w
+t2w:
 - sub-cal088_ses-M0   # Poor data quality
 - sub-cal209_ses-M0   # Missing T2w file
-# MT
+MT:
 - sub-cal161          # Missing MT data
-# PSIR
+PSIR:
 - sub-mon006_ses-M12   # FOV covers the whole brain. The SC has only C1-C6; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207 # image was moved from M0 to M12; see https://github.com/ivadomed/canproco/issues/39
 - sub-mon009_ses-M12   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758684880 # image was moved from M0 to M12; see https://github.com/ivadomed/canproco/issues/39
 - sub-mon032_ses-M12   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686509 # image was moved from M0 to M12; see https://github.com/ivadomed/canproco/issues/39
@@ -24,5 +24,5 @@
 - sub-van207_ses-M0   # No disc labeling file : impossible to do it : https://github.com/ivadomed/canproco/issues/53#issuecomment-1761973064
 - sub-tor014_ses-M12   # Poor data quality and no disc labeling file; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760420705  # image was moved from M0 to M12; see https://github.com/ivadomed/canproco/issues/39
 - sub-tor133_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758689928
-# STIR
+STIR:
 - sub-cal149_ses-M0   # FOV does not cover the whole SC in sagittal plane; see https://github.com/ivadomed/canproco/issues/22#issue-1568568207
