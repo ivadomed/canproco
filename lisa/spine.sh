@@ -1,16 +1,15 @@
 #!/bin/bash
-# Written by Lisa Eunyoung Lee - Jun 2022
-# Revised by Lisa Eunyoung Lee - May 2024
-# Spinal Cord Toolbox - Version 5.7
-
-# Process data
-# Compute CSA in whole spinal cord between C2-C4
-# Compute MTR in whole spinal cord, white matter, gray matter, dorsal columns, lateral funiculi, ventral funiculi between C2-C4
-# Related issue: https://github.com/ivadomed/canproco/issues/88
-# Related pull request: https://github.com/ivadomed/canproco/pull/90
-
+# 
+# Process data for the CanProCo project. This script does the following:
+# - Compute CSA in whole spinal cord between C2-C4
+# - Compute MTR in whole spinal cord, white matter, gray matter, dorsal columns, lateral funiculi, ventral funiculi between C2-C4
+# 
 # Usage: sh spine.sh <SUBJECT> <qc>
 # Example command line: sh spine.sh /Users/msresearch/Downloads/canproco/data/CAN-01-CON-039-M0 /Users/msresearch/Downloads/canproco/data/qc 
+# 
+# Tested with Spinal Cord Toolbox - Version 5.7
+# 
+# Author: Lisa Eunyoung Lee
 
 SUBJECT=$1
 qc=$2
