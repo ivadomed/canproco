@@ -51,7 +51,7 @@ sct_process_segmentation -i t2_seg.nii.gz -vert 2:4 -vertfile ./label/template/P
 # MT
 # ===========================================================================================
 
-cd ${SUBJECT}/mt
+cd ${SUBJECT}/mt;
 
 # Segment spinal cord
 
