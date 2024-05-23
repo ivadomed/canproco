@@ -14,8 +14,12 @@
 SUBJECT=$1
 qc=$2
 
+SUBJECT_BASENAME=`basename ${SUBJECT}`
+
+
 # Display start time
 echo "${SUBJECT}: spine.sh started at $(date +%x_%r)";
+echo "Subject: ${SUBJECT_BASENAME}"
 start=$(date +%s);
 
 # T2
@@ -98,7 +102,7 @@ sct_register_multimodal -i ../psir/psir.nii.gz -iseg ../psir/psir_seg.nii.gz -d 
 # Bring lesion mask onto mt_t1 space
 # TODO: extract subject name from absolute PATH
 
-sct_apply_transfo -i ../../derivatives/lesion_masks/CAN-03-RRM-092-M0_lesion.nii.gz -d mt_t1.nii.gz -w warp_psir2mt_t1.nii.gz -x linear -o lesion.nii.gz
+sct_apply_transfo -i ../../derivatives/lesion_masks/${SUBJECT_BASENAME}_lesion.nii.gz -d mt_t1.nii.gz -w warp_psir2mt_t1.nii.gz -x linear -o lesion.nii.gz
 
 # Extract MTR in whole cord, GM, WM, WM regions (DC, LF, VF, CST) averaged between C2-C4
 
