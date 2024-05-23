@@ -4,8 +4,8 @@
 # - Compute CSA in whole spinal cord between C2-C4
 # - Compute MTR in whole spinal cord, white matter, gray matter, dorsal columns, lateral funiculi, ventral funiculi between C2-C4
 # 
-# Usage: sh spine.sh <SUBJECT> <qc>
-# Example command line: sh spine.sh /Users/msresearch/Downloads/canproco/data/CAN-01-CON-039-M0 /Users/msresearch/Downloads/canproco/data/qc 
+# Usage: sh spine.sh <ABSOLUTE_PATH_SUBJECT> <qc>
+# Example command line: sh spine.sh /Users/msresearch/Downloads/canproco/data/CAN-01-CON-039-M0 /Users/msresearch/Downloads/canproco/data/qc
 # 
 # Tested with Spinal Cord Toolbox - Version 5.7
 # 
