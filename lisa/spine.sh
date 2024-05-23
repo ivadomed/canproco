@@ -7,7 +7,7 @@
 # Usage: sh spine.sh <ABSOLUTE_PATH_SUBJECT> <qc>
 # Example command line: sh spine.sh /Users/msresearch/Downloads/canproco/data/CAN-01-CON-039-M0 /Users/msresearch/Downloads/canproco/data/qc
 # 
-# Tested with Spinal Cord Toolbox - Version 5.7
+# Tested with Spinal Cord Toolbox - Version 6.3
 # 
 # Author: Lisa Eunyoung Lee
 
@@ -48,6 +48,16 @@ sct_warp_template -d t2.nii.gz -w warp_template2anat.nii.gz -a 0 -qc $qc;
 sct_process_segmentation -i t2_seg.nii.gz -vert 2:4 -vertfile ./label/template/PAM50_levels.nii.gz -o csa_c2c4.csv -append 0;
 
 
+# PSIR
+# ===========================================================================================
+
+cd ${SUBJECT}/psir;
+
+# Segment spinal cord
+
+sct_deepseg -i psir.nii.gz -task seg_sc_contrast_agnostic -qc $qc;
+
+
 # MT
 # ===========================================================================================
 
@@ -80,6 +90,15 @@ sct_register_multimodal -i mt1.nii.gz -d mt_t1.nii.gz -dseg mt_t1_seg.nii.gz -m 
 # Compute MTR
 
 sct_compute_mtr -mt0 mt0_reg.nii.gz -mt1 mt1_reg.nii.gz;
+
+# Register PSIR -> mt_t1
+
+sct_register_multimodal -i ../psir/psir.nii.gz -iseg ../psir/psir_seg.nii.gz -d mt_t1.nii.gz -dseg mt_t1_seg.nii.gz -param step=1,type=seg,algo=centermass -x spline -o psir_reg.nii.gz -qc $qc;
+
+# Bring lesion mask onto mt_t1 space
+# TODO: extract subject name from absolute PATH
+
+sct_apply_transfo -i ../../derivatives/lesion_masks/CAN-03-RRM-092-M0_lesion.nii.gz -d mt_t1.nii.gz -w warp_psir2mt_t1.nii.gz -x linear -o lesion.nii.gz
 
 # Extract MTR in whole cord, GM, WM, WM regions (DC, LF, VF, CST) averaged between C2-C4
 
