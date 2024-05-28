@@ -11,7 +11,8 @@ PSIR:
 - sub-mon052_ses-M0    # Poor data quality; see https://github.com/ivadomed/canproco/issues/39#issuecomment-1927904467
 - sub-mon097_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686772
 - sub-mon113_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760175861
-- sub-mon118_ses-M12   # Poor data quality; see https://github.com/ivadomed/canproco/issues/43 # image was moved from M0 to M12; see https://github.com/ivadomed/canproco/issues/39
+- sub-mon118_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/43
+- sub-mon118_ses-M12  # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-2135315742
 - sub-mon148_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758686965
 - sub-mon152_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1760248384
 - sub-mon168_ses-M0   # Poor data quality; see https://github.com/ivadomed/canproco/issues/53#issuecomment-1758687112
