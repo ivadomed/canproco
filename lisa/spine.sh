@@ -57,9 +57,13 @@ sct_process_segmentation -i t2_seg.nii.gz -vert 2:4 -vertfile ./label/template/P
 
 cd ${SUBJECT}/psir;
 
-# Segment spinal cord
+# Upsample PSIR image
 
-sct_deepseg -i psir.nii.gz -task seg_sc_contrast_agnostic -qc $qc;
+sct_resample -i psir.nii.gz -mm 0.7x0.7x0.7;
+
+# Segment spinal cord on upsampled PSIR image
+
+sct_deepseg -i psir_r.nii.gz -task seg_sc_contrast_agnostic -qc $qc;
 
 
 # MT
@@ -97,12 +101,12 @@ sct_compute_mtr -mt0 mt0_reg.nii.gz -mt1 mt1_reg.nii.gz;
 
 # Register PSIR -> mt_t1
 
-sct_register_multimodal -i ../psir/psir.nii.gz -iseg ../psir/psir_seg.nii.gz -d mt_t1.nii.gz -dseg mt_t1_seg.nii.gz -param step=1,type=seg,algo=centermass -x spline -o psir_reg.nii.gz -qc $qc;
+sct_register_multimodal -i ../psir/psir_r.nii.gz -iseg ../psir/psir_r_seg.nii.gz -d mt_t1.nii.gz -dseg mt_t1_seg.nii.gz -param step=1,type=seg,algo=centermass -x spline -o psir_r_reg.nii.gz -qc $qc;
 
 # Bring lesion mask onto mt_t1 space
 # TODO: extract subject name from absolute PATH
 
-sct_apply_transfo -i ../../derivatives/lesion_masks/${SUBJECT_BASENAME}_lesion.nii.gz -d mt_t1.nii.gz -w warp_psir2mt_t1.nii.gz -x linear -o lesion.nii.gz
+sct_apply_transfo -i ../../derivatives/lesion_masks/${SUBJECT_BASENAME}_lesion.nii.gz -d mt_t1.nii.gz -w warp_psir_r2mt_t1.nii.gz -x linear -o lesion.nii.gz
 
 # Extract MTR in whole cord, GM, WM, WM regions (DC, LF, VF, CST) averaged between C2-C4
 
