@@ -111,13 +111,36 @@ sct_apply_transfo -i ../../derivatives/lesion_masks/${SUBJECT_BASENAME}_lesion.n
 # Extract MTR in whole cord, GM, WM, WM regions (DC, LF, VF, CST) averaged between C2-C4
 
 mkdir -p ${SUBJECT}/mt/csv;
-
 sct_extract_metric -i mtr.nii.gz -f label/atlas -method map -l 50 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_cord.csv -append 0;
 sct_extract_metric -i mtr.nii.gz -f label/atlas -method map -l 52 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_gm.csv -append 0;
 sct_extract_metric -i mtr.nii.gz -f label/atlas -method map -l 51 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_wm.csv -append 0;
 sct_extract_metric -i mtr.nii.gz -f label/atlas -method map -l 53 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_dc.csv -append 0;
 sct_extract_metric -i mtr.nii.gz -f label/atlas -method map -l 54 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_lf.csv -append 0;
 sct_extract_metric -i mtr.nii.gz -f label/atlas -method map -l 55 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_vf.csv -append 0;
+
+# Generate labels without lesions
+# First, invert lesion mask
+sct_maths -i lesion_new.nii.gz -sub 1 -o lesion_new_inv.nii.gz 
+sct_maths -i lesion_new_inv.nii.gz -mul -1 -o lesion_new_inv.nii.gz
+# Then, loop through all the atlas files and multiply it by the inverted lesion mask
+mkdir label/atlas_nolesion
+for file in label/atlas/*; do
+  # Check if it's a file (not a directory)
+  if [[ "$file" == *.nii.gz ]]; then
+    new_file="${file//atlas/atlas_nolesion}"
+    sct_maths -i $file -mul lesion_new_inv.nii.gz -o $new_file
+  fi
+done
+# Finally, copy infor_label.txt to atlas_nolesion
+cp label/atlas/info_label.txt label/atlas_nolesion/info_label.txt
+
+# Extract MTR in whole cord, GM, WM, WM regions (DC, LF, VF, CST) averaged between C2-C4 without lesion
+sct_extract_metric -i mtr.nii.gz -f label/atlas_nolesion -method map -l 50 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_cord_nolesion.csv -append 0;
+sct_extract_metric -i mtr.nii.gz -f label/atlas_nolesion -method map -l 52 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_gm_nolesion.csv -append 0;
+sct_extract_metric -i mtr.nii.gz -f label/atlas_nolesion -method map -l 51 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_wm_nolesion.csv -append 0;
+sct_extract_metric -i mtr.nii.gz -f label/atlas_nolesion -method map -l 53 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_dc_nolesion.csv -append 0;
+sct_extract_metric -i mtr.nii.gz -f label/atlas_nolesion -method map -l 54 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_lf_nolesion.csv -append 0;
+sct_extract_metric -i mtr.nii.gz -f label/atlas_nolesion -method map -l 55 -vert 2:4 -vertfile label/template/PAM50_levels.nii.gz -z 3:18 -o csv/mtr_vf_nolesion.csv -append 0;
 
 # Display end time
 
